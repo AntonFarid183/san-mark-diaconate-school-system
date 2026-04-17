@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DiaconateSchool.Api/DiaconateSchool.Api.csproj" />
+  <Project Path="DiaconateSchool.Application/DiaconateSchool.Application.csproj" />
+  <Project Path="DiaconateSchool.Domain/DiaconateSchool.Domain.csproj" />
+  <Project Path="DiaconateSchool.Infrastructure/DiaconateSchool.Infrastructure.csproj" />
+</Solution>

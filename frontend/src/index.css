@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  /* Premium Color Palette */
+  --bg-primary: #0f172a;       /* Deep slate dark mode */
+  --bg-secondary: #1e293b;
+  --accent-gold: #fbbf24;      /* Elegant Church Gold */
+  --accent-gold-hover: #f59e0b;
+  --accent-blue: #3b82f6;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --danger: #ef4444;
+  --success: #10b981;
+  
+  /* Glass effects */
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --input-bg: rgba(15, 23, 42, 0.6);
+}
+
+body {
+  margin: 0;
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #020617 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  direction: rtl; /* Right to Left for Arabic */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Global inputs resetting */
+* {
+  box-sizing: border-box;
+}
+
+/* Typography Base */
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Premium Card (Glassmorphism) */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Input Fields styling */
+.premium-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+.premium-input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+.premium-input::placeholder {
+  color: #64748b;
+}
+
+/* Beautiful Primary Button */
+.btn-primary {
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-hover) 100%);
+  color: #1e293b;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}

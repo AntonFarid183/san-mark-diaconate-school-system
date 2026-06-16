@@ -1,222 +1,353 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
+import Layout from '../Layout';
 
 const RegisterStudentScreen = () => {
-    const [formData, setFormData] = useState({
-        firstName: '', secondName: '', thirdName: '', lastName: '',
-        gender: 1, dateOfBirth: '', 
-        stage: 2, // Used for UI filtering
-        gradeId: '', // The actual Guid to be saved
-        isDeacon: false, deaconRank: null, fatherOfConfession: '',
-        fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
-        address: '', landmark: '', hasPaidFees: false
-    });
+  const STAGE_IDS = {
+    primary: '00000000-0000-0000-0001-000000000001',
+    preparatory: '00000000-0000-0000-0002-000000000001',
+    secondary: '00000000-0000-0000-0003-000000000001'
+  };
 
-    const [grades, setGrades] = useState([]); // List of grades fetched from API
-    const [isGradesLoading, setIsGradesLoading] = useState(false);
-    const [credentials, setCredentials] = useState(null);
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '', secondName: '', thirdName: '', lastName: '',
+    gender: 1, dateOfBirth: '',
+    stage: STAGE_IDS.primary,
+    gradeId: '',
+    isDeacon: false, deaconRank: null, fatherOfConfession: '',
+    fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
+    address: '', landmark: '', hasPaidFees: false
+  });
 
-    // Fetch grades automatically whenever the Stage dropdown changes
-    useEffect(() => {
-        const fetchGrades = async () => {
-            setIsGradesLoading(true);
-            try {
-                const response = await apiClient.get(`/students/grades/${formData.stage}`);
-                setGrades(response.data);
-                
-                // Reset the gradeId to the first item in the new list
-                if (response.data.length > 0) {
-                    setFormData(prev => ({ ...prev, gradeId: response.data[0].id }));
-                }
-            } catch (err) {
-                console.error("Failed to fetch grades", err);
-                setGrades([]); // Clear if error
-                setError("لم يتم العثور على سنوات دراسية لهذه المرحلة في قاعدة البيانات.");
-            } finally {
-                setIsGradesLoading(false);
-            }
-        };
+  const [grades, setGrades] = useState([]);
+  const [isGradesLoading, setIsGradesLoading] = useState(false);
+  const [credentials, setCredentials] = useState(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
-        fetchGrades();
-    }, [formData.stage]);
+  const formSections = [
+    { key: 'basic', icon: 'person', title: 'البيانات الأساسية' },
+    { key: 'church', icon: 'church', title: 'البيانات الكنسية' },
+    { key: 'contact', icon: 'contact_phone', title: 'بيانات التواصل والعنوان' },
+  ];
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        
-        let parsedValue = type === 'checkbox' ? checked : value;
-        // Convert Enum selects to integers
-        if (name === 'gender' || name === 'stage' || name === 'deaconRank') {
-            parsedValue = value ? parseInt(value) : null;
+  useEffect(() => {
+    const fetchGrades = async () => {
+      setIsGradesLoading(true);
+      try {
+        const response = await apiClient.get(`/students/grades/${formData.stage}`);
+        setGrades(response.data);
+        if (response.data.length > 0) {
+          setFormData(prev => ({ ...prev, gradeId: response.data[0].id }));
         }
-
-        setFormData(prev => ({
-            ...prev,
-            [name]: parsedValue
-        }));
+      } catch (err) {
+        console.error("Failed to fetch grades", err);
+        setGrades([]);
+        setError("لم يتم العثور على سنوات دراسية لهذه المرحلة في قاعدة البيانات.");
+      } finally {
+        setIsGradesLoading(false);
+      }
     };
+    fetchGrades();
+  }, [formData.stage]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setIsLoading(true);
-
-        try {
-            const response = await apiClient.post('/students/register', formData);
-            setCredentials({
-                userName: response.data.userName,
-                temporaryPassword: response.data.temporaryPassword
-            });
-        } catch (err) {
-            console.error("API Error Response:", err.response?.data || err);
-            
-            let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
-            
-            if (err.response?.data?.Message) {
-                // Our custom backend message
-                errorMsg = err.response.data.Message;
-            } else if (err.response?.data?.errors) {
-                // ASP.NET Core automatic validation form errors
-                const firstError = Object.values(err.response.data.errors)[0];
-                errorMsg = `خطأ في البيانات: ${firstError}`;
-            } else if (!err.response) {
-                // Network error
-                errorMsg = 'لا يمكن الاتصال بالخادم. يرجى التأكد من تشغيل الـ Backend.';
-            }
-
-            setError(errorMsg);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // --- SUCCESS VIEW ---
-    if (credentials) {
-        return (
-            <div className="glass-card" style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-                <h1 style={{ color: 'var(--success)' }}>تم التسجيل بنجاح! 🎉</h1>
-                <p>يرجى إعطاء هذه البيانات للطالب للقدرة على تسجيل الدخول.</p>
-                
-                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', marginTop: '20px', borderRadius: '10px', border: '1px solid var(--accent-gold)' }}>
-                    <h2 style={{ letterSpacing: '2px', marginBottom: '10px' }}>
-                        اسم المستخدم: <br/><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
-                    </h2>
-                    <h2 style={{ letterSpacing: '2px' }}>
-                        كلمة المرور: <br/><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
-                    </h2>
-                </div>
-                
-                <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px' }}>
-                    تسجيل طالب آخر
-                </button>
-            </div>
-        );
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let parsedValue = type === 'checkbox' ? checked : value;
+    if (name === 'gender' || name === 'deaconRank') {
+      parsedValue = value ? parseInt(value) : null;
     }
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
+  };
 
-    // --- REGISTRATION FORM VIEW ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const response = await apiClient.post('/students/register', formData);
+      setCredentials({
+        userName: response.data.userName,
+        temporaryPassword: response.data.temporaryPassword
+      });
+    } catch (err) {
+      console.error("API Error Response:", err.response?.data || err);
+      let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
+      if (err.response?.data?.Message) {
+        errorMsg = err.response.data.Message;
+      } else if (err.response?.data?.errors) {
+        const firstError = Object.values(err.response.data.errors)[0];
+        errorMsg = `خطأ في البيانات: ${firstError}`;
+      } else if (!err.response) {
+        errorMsg = 'لا يمكن الاتصال بالخادم. يرجى التأكد من تشغيل الـ Backend.';
+      }
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- SUCCESS VIEW ---
+  if (credentials) {
     return (
-        <div className="glass-card" style={{ maxWidth: '900px', width: '100%', margin: '2rem 0' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ color: 'var(--accent-gold)' }}>تسجيل طالب جديد</h1>
-                <p>يرجى تعبئة كافة البيانات بدقة</p>
-            </div>
+      <Layout title="تسجيل طالب جديد">
+        <div className="glass-card" style={{ maxWidth: '500px', margin: '2rem auto', textAlign: 'center' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
+          <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
+          <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
 
-            {error && <div style={{ color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '15px', borderRadius: '8px', border: '1px solid var(--danger)', marginBottom: '20px' }}>{error}</div>}
+          <div style={{
+            padding: '20px',
+            background: 'rgba(255,255,255,0.05)',
+            marginTop: '20px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--accent-gold)',
+          }}>
+            <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
+              اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
+            </h2>
+            <h2 style={{ letterSpacing: '2px' }}>
+              كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
+            </h2>
+          </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                
-                {/* 1. Core Profile */}
-                <fieldset style={{ border: '1px solid var(--glass-border)', padding: '1.5rem', borderRadius: '10px' }}>
-                    <legend style={{ padding: '0 10px', color: 'var(--accent-gold)', fontWeight: 'bold' }}>البيانات الأساسية</legend>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div><label>الاسم الأول</label><input type="text" name="firstName" className="premium-input" required onChange={handleChange} value={formData.firstName} /></div>
-                        <div><label>الاسم الثاني</label><input type="text" name="secondName" className="premium-input" required onChange={handleChange} value={formData.secondName} /></div>
-                        <div><label>الاسم الثالث</label><input type="text" name="thirdName" className="premium-input" required onChange={handleChange} value={formData.thirdName} /></div>
-                        <div><label>الاسم الأخير</label><input type="text" name="lastName" className="premium-input" required onChange={handleChange} value={formData.lastName} /></div>
-                        
-                        <div>
-                            <label>النوع</label>
-                            <select name="gender" className="premium-input" value={formData.gender} onChange={handleChange}>
-                                <option value={1}>ذكر</option>
-                                <option value={2}>أنثى</option>
-                            </select>
-                        </div>
-                        <div><label>تاريخ الميلاد</label><input type="date" name="dateOfBirth" className="premium-input" required onChange={handleChange} value={formData.dateOfBirth} /></div>
-                        <div>
-                            <label>المرحلة الدراسية</label>
-                            <select name="stage" className="premium-input" value={formData.stage} onChange={handleChange}>
-                                <option value={2}>ابتدائي</option>
-                                <option value={3}>إعدادي</option>
-                                <option value={4}>ثانوي</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>السنة الدراسية</label>
-                            <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
-                                {isGradesLoading ? (
-                                    <option>جاري التحميل...</option>
-                                ) : grades.length > 0 ? (
-                                    grades.map(g => (
-                                        <option key={g.id} value={g.id}>{g.name}</option>
-                                    ))
-                                ) : (
-                                    <option value="">لا يوجد بيانات</option>
-                                )}
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
-
-                {/* 2. Church Info */}
-                <fieldset style={{ border: '1px solid var(--glass-border)', padding: '1.5rem', borderRadius: '10px' }}>
-                    <legend style={{ padding: '0 10px', color: 'var(--accent-gold)', fontWeight: 'bold' }}>البيانات الكنسية</legend>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div><label>أب الاعتراف</label><input type="text" name="fatherOfConfession" className="premium-input" required onChange={handleChange} value={formData.fatherOfConfession} /></div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" name="isDeacon" checked={formData.isDeacon} onChange={handleChange} style={{ width: '20px', height: '20px' }}/>
-                            <label style={{ margin: 0 }}>شماس؟</label>
-                        </div>
-                        {formData.isDeacon && (
-                            <div>
-                                <label>رتبة الشماسية</label>
-                                <select name="deaconRank" className="premium-input" required onChange={handleChange}>
-                                    <option value="">اختر الرتبة</option>
-                                    <option value={1}>إبصالتس (مرتل)</option>
-                                    <option value={2}>أغنسطس (قارئ)</option>
-                                    <option value={3}>إيبدياكون (مساعد شماس)</option>
-                                    <option value={4}>دياكون (شماس كامل)</option>
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                </fieldset>
-
-                {/* 3. Contact & Address */}
-                <fieldset style={{ border: '1px solid var(--glass-border)', padding: '1.5rem', borderRadius: '10px' }}>
-                    <legend style={{ padding: '0 10px', color: 'var(--accent-gold)', fontWeight: 'bold' }}>التواصل والأسرة</legend>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div><label>موبايل الأب</label><input type="tel" name="fatherMobile" className="premium-input" required onChange={handleChange} value={formData.fatherMobile} /></div>
-                        <div><label>موبايل الأم</label><input type="tel" name="motherMobile" className="premium-input" required onChange={handleChange} value={formData.motherMobile} /></div>
-                        <div><label>رقم الواتساب</label><input type="tel" name="whatsAppNumber" className="premium-input" required onChange={handleChange} value={formData.whatsAppNumber} /></div>
-                        <div><label>التليفون الأرضي</label><input type="tel" name="landline" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landline} /></div>
-                        <div style={{ gridColumn: '1 / -1' }}><label>العنوان بالكامل</label><input type="text" name="address" className="premium-input" required onChange={handleChange} value={formData.address} /></div>
-                        <div style={{ gridColumn: '1 / -1' }}><label>أقرب علامة مميزة</label><input type="text" name="landmark" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landmark} /></div>
-                    </div>
-                </fieldset>
-
-                {/* Submit */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-                    <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ width: '20px', height: '20px' }}/>
-                    <label style={{ margin: 0, fontWeight: 'bold' }}>تم دفع الاشتراك؟</label>
-                </div>
-
-                <button type="submit" className="btn-primary" disabled={isLoading} style={{ padding: '1rem', fontSize: '1.2rem' }}>
-                    {isLoading ? 'جاري إنشاء الحساب...' : 'تسجيل واستخراج البيانات'}
-                </button>
-            </form>
+          <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px', width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+            تسجيل طالب آخر
+          </button>
         </div>
+      </Layout>
     );
+  }
+
+  // --- REGISTRATION FORM VIEW ---
+  return (
+    <Layout title="تسجيل طالب جديد">
+      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        أدخل بيانات الطالب الجديد بدقة لضمان دمج البيانات في نظام مدرسة الشمامسة والسجلات الأكاديمية.
+      </p>
+
+      {/* Stepper */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
+        {formSections.map((section, i) => (
+          <div
+            key={section.key}
+            onClick={() => setCurrentStep(i)}
+            style={{
+              flex: 1,
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-sm)',
+              background: i === currentStep ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
+              border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--glass-border)',
+              cursor: 'pointer',
+              textAlign: 'center',
+              transition: 'all 0.2s',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{
+              fontSize: '20px',
+              display: 'block',
+              marginBottom: '0.25rem',
+              color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-muted)',
+            }}>
+              {i < currentStep ? 'check_circle' : section.icon}
+            </span>
+            <div style={{ fontSize: '0.75rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-muted)' }}>
+              {section.title}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="glass-card" style={{ maxWidth: '900px', margin: '0 auto 2rem' }}>
+          {error && <div className="error-box" style={{ marginBottom: '1.5rem' }}>{error}</div>}
+
+          {/* Step 1: Basic Info */}
+          {currentStep === 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>person</span>
+                <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>البيانات الأساسية</h2>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div><label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الاسم الرباعي</label></div>
+                <div></div>
+                <div><input type="text" name="firstName" className="premium-input" placeholder="الاسم الأول" required onChange={handleChange} value={formData.firstName} /></div>
+                <div><input type="text" name="secondName" className="premium-input" placeholder="الاسم الثاني" required onChange={handleChange} value={formData.secondName} /></div>
+                <div><input type="text" name="thirdName" className="premium-input" placeholder="الاسم الثالث" required onChange={handleChange} value={formData.thirdName} /></div>
+                <div><input type="text" name="lastName" className="premium-input" placeholder="الاسم الأخير" required onChange={handleChange} value={formData.lastName} /></div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>تاريخ الميلاد</label>
+                  <input type="date" name="dateOfBirth" className="premium-input" required onChange={handleChange} value={formData.dateOfBirth} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>النوع</label>
+                  <div style={{ display: 'flex', gap: '1.5rem', padding: '0.75rem 0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem' }}>
+                      <input type="radio" name="gender" value={1} checked={formData.gender === 1} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} />
+                      ذكر
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem' }}>
+                      <input type="radio" name="gender" value={2} checked={formData.gender === 2} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} />
+                      أنثى
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>المرحلة الدراسية</label>
+                  <select name="stage" className="premium-input" value={formData.stage} onChange={handleChange}>
+                    <option value={STAGE_IDS.primary}>ابتدائي</option>
+                    <option value={STAGE_IDS.preparatory}>إعدادي</option>
+                    <option value={STAGE_IDS.secondary}>ثانوي</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>السنة الدراسية (الترم)</label>
+                  <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
+                    {isGradesLoading ? (
+                      <option>جاري التحميل...</option>
+                    ) : grades.length > 0 ? (
+                      grades.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))
+                    ) : (
+                      <option value="">لا يوجد بيانات</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Church Info */}
+          {currentStep === 1 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>church</span>
+                <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>البيانات الكنسية</h2>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>أب الاعتراف</label>
+                  <input type="text" name="fatherOfConfession" className="premium-input" required onChange={handleChange} value={formData.fatherOfConfession} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الرتبة الشماسية (إن وجد)</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <input type="checkbox" name="isDeacon" checked={formData.isDeacon} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
+                    <label style={{ fontSize: '0.9rem' }}>شماس؟</label>
+                  </div>
+                  {formData.isDeacon && (
+                    <select name="deaconRank" className="premium-input" required onChange={handleChange} value={formData.deaconRank || ''}>
+                      <option value="">اختر الرتبة</option>
+                      <option value={1}>إبصالتس (مرتل)</option>
+                      <option value={2}>أغنسطس (قارئ)</option>
+                      <option value={3}>إيبدياكون (مساعد شماس)</option>
+                      <option value={4}>دياكون (شماس كامل)</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Contact */}
+          {currentStep === 2 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>contact_phone</span>
+                <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>بيانات التواصل والعنوان</h2>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>رقم الموبايل</label>
+                  <input type="tel" name="fatherMobile" className="premium-input" required onChange={handleChange} value={formData.fatherMobile} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>موبايل الأم</label>
+                  <input type="tel" name="motherMobile" className="premium-input" required onChange={handleChange} value={formData.motherMobile} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>رقم الواتساب</label>
+                  <div style={{ position: 'relative' }}>
+                    <span className="material-symbols-outlined" style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--text-muted)', fontSize: '18px', pointerEvents: 'none',
+                    }}>chat</span>
+                    <input type="tel" name="whatsAppNumber" className="premium-input" required onChange={handleChange} value={formData.whatsAppNumber} style={{ paddingRight: '40px' }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>التليفون الأرضي</label>
+                  <input type="tel" name="landline" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landline} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>العنوان بالتفصيل</label>
+                <input type="text" name="address" className="premium-input" required onChange={handleChange} value={formData.address} />
+              </div>
+
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>أقرب علامة مميزة</label>
+                <input type="text" name="landmark" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landmark} />
+              </div>
+
+              <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
+                <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>تم سداد المصاريف الإدارية للترم الحالي</label>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>
+                تأكد من استلام الوصل قبل التحديد
+              </p>
+            </div>
+          )}
+
+          {/* Navigation buttons */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
+            <div>
+              {currentStep > 0 && (
+                <button type="button" onClick={() => setCurrentStep(s => s - 1)} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+                  السابق
+                </button>
+              )}
+            </div>
+            <div>
+              {currentStep < formSections.length - 1 ? (
+                <button type="button" onClick={() => setCurrentStep(s => s + 1)} className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  التالي
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                </button>
+              ) : (
+                <button type="submit" className="btn-primary" disabled={isLoading} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.75rem 2rem' }}>
+                  {isLoading ? 'جاري إنشاء الحساب...' : 'تسجيل الطالب'}
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', padding: '0.75rem', background: 'rgba(251, 191, 36, 0.05)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>info</span>
+            بمجرد الحفظ، سيتم إنشاء ملف أكاديمي للطالب فوراً.
+          </div>
+        </div>
+      </form>
+    </Layout>
+  );
 };
 
 export default RegisterStudentScreen;

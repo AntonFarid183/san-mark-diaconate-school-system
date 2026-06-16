@@ -1,8 +1,5 @@
 namespace DiaconateSchool.Domain.Enums;
 
-/// <summary>
-/// Defines the system access levels.
-/// </summary>
 public enum Role
 {
     Admin = 1,
@@ -10,33 +7,70 @@ public enum Role
     Student = 3
 }
 
-/// <summary>
-/// Specifies the gender of the student.
-/// </summary>
 public enum Gender
 {
     Male = 1,
     Female = 2
 }
 
-/// <summary>
-/// Represents the educational stage of the student.
-/// </summary>
-public enum Stage
-{
-    KG = 1,
-    Primary = 2,
-    Preparatory = 3,
-    Secondary = 4
-}
-
-/// <summary>
-/// Defines the ecclesiastical rank of a deacon.
-/// </summary>
 public enum DeaconRank
 {
-    Epsaltos = 1,   // Chanter
-    Oghnostos = 2,  // Reader
-    Epediakon = 3,  // Subdeacon
-    Diakon = 4      // Deacon
+    Epsaltos = 1,
+    Oghnostos = 2,
+    Epediakon = 3,
+    Diakon = 4
+}
+
+public enum StudentStatus
+{
+    Pending = 0,
+    Active = 1,
+    Suspended = 2,
+    Withdrawn = 3,
+    Transferred = 4,
+    Graduated = 5
+}
+
+public enum ContentType
+{
+    Pdf = 0,
+    Video = 1,
+    Audio = 2,
+    Image = 3
+}
+
+public enum AccessType
+{
+    View = 0,
+    Download = 1,
+    Listen = 2,
+    Watch = 3
+}
+
+public enum LessonStatus
+{
+    Draft = 0,
+    Published = 1,
+    Archived = 2
+}
+
+public enum SubmissionStatus
+{
+    Pending = 0,
+    Submitted = 1,
+    Approved = 2,
+    Rejected = 3
+}
+
+public enum QuestionType
+{
+    MultipleChoice = 0,
+    Essay = 1
+}
+
+public enum ExamAttemptStatus
+{
+    InProgress = 0,
+    Submitted = 1,
+    Graded = 2
 }

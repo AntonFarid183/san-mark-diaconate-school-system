@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DiaconateSchool.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260417205847_AddGradeEntity")]
-    partial class AddGradeEntity
+    [Migration("20260615230610_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,18 +31,52 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("MiddleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("RequiresPasswordChange")
-                        .HasColumnType("bit");
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("StudentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ThirdName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -52,6 +86,10 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
                     b.HasIndex("UserName")
                         .IsUnique();
+
+                    b.HasIndex("FirstName", "MiddleName", "ThirdName", "LastName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_User_UniqueFullName");
 
                     b.ToTable("Users");
                 });
@@ -69,10 +107,12 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Stage")
-                        .HasColumnType("int");
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StageId");
 
                     b.ToTable("Grades");
 
@@ -82,84 +122,142 @@ namespace DiaconateSchool.Infrastructure.Migrations
                             Id = new Guid("00000000-0000-0000-0001-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000004"),
                             Level = 4,
                             Name = "الصف 4 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000005"),
                             Level = 5,
                             Name = "الصف 5 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000006"),
                             Level = 6,
                             Name = "الصف 6 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
+                        });
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Servants");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Stage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0001-000000000001"),
+                            DisplayOrder = 1,
+                            Name = "ابتدائي"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0002-000000000001"),
+                            DisplayOrder = 2,
+                            Name = "إعدادي"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000001"),
+                            DisplayOrder = 3,
+                            Name = "ثانوي"
                         });
                 });
 
@@ -187,18 +285,14 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<bool>("FeesPaid")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
 
                     b.Property<Guid>("GradeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("HasPaidFees")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeacon")
                         .HasColumnType("bit");
@@ -209,24 +303,18 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Landmark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("MotherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfileImagePath")
+                    b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SecondName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("RegisteredByUserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ThirdName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<DateTime>("RegisteredDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -242,11 +330,29 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.HasIndex("FirstName", "SecondName", "ThirdName", "LastName", "DateOfBirth")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Student_UniqueNameAndDob");
-
                     b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany("Grades")
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Stage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("DiaconateSchool.Domain.Entities.Servant", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Student", b =>
@@ -276,6 +382,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
                 {
                     b.Navigation("Students");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Stage", b =>
+                {
+                    b.Navigation("Grades");
                 });
 #pragma warning restore 612, 618
         }

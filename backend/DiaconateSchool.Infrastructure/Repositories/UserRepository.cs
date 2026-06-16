@@ -2,6 +2,7 @@ using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Infrastructure.Repositories;
@@ -22,6 +23,15 @@ public class UserRepository : IUserRepository
 
     public async Task<ApplicationUser?> GetByUserNameAsync(string userName)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
+        return await _context.Users
+            .Include(u => u.Student)
+            .FirstOrDefaultAsync(u => u.UserName == userName);
+    }
+
+    public async Task<ApplicationUser?> GetByIdAsync(Guid id)
+    {
+        return await _context.Users
+            .Include(u => u.Student)
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 }

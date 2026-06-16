@@ -22,24 +22,82 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.AcademicYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AcademicYears");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("MiddleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("RequiresPasswordChange")
-                        .HasColumnType("bit");
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("StudentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ThirdName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -50,13 +108,255 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
+                    b.HasIndex("FirstName", "MiddleName", "ThirdName", "LastName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_User_UniqueFullName");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AccessCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AccessType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ContentItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("LastPosition")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Progress")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContentItemId");
+
+                    b.HasIndex("StudentId", "ContentItemId")
+                        .IsUnique();
+
+                    b.ToTable("ContentAccesses");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CompletionThreshold")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DownloadAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonId");
+
+                    b.ToTable("ContentItems");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PassingScore")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeId");
+
+                    b.HasIndex("StageId");
+
+                    b.ToTable("Exams");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAnswer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EssayAnswer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ExamAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SelectedOptionIndex")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamAttemptId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("ExamAnswers");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("ExamAttempts");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("CorrectAnswerIndex")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Options")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
+                    b.ToTable("ExamQuestions");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AcademicYearId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Level")
@@ -66,10 +366,14 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Stage")
-                        .HasColumnType("int");
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AcademicYearId");
+
+                    b.HasIndex("StageId");
 
                     b.ToTable("Grades");
 
@@ -79,84 +383,267 @@ namespace DiaconateSchool.Infrastructure.Migrations
                             Id = new Guid("00000000-0000-0000-0001-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000004"),
                             Level = 4,
                             Name = "الصف 4 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000005"),
                             Level = 5,
                             Name = "الصف 5 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0001-000000000006"),
                             Level = 6,
                             Name = "الصف 6 الابتدائي",
-                            Stage = 2
+                            StageId = new Guid("00000000-0000-0000-0001-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0002-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الإعدادي",
-                            Stage = 3
+                            StageId = new Guid("00000000-0000-0000-0002-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000001"),
                             Level = 1,
                             Name = "الصف 1 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000002"),
                             Level = 2,
                             Name = "الصف 2 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0003-000000000003"),
                             Level = 3,
                             Name = "الصف 3 الثانوي",
-                            Stage = 4
+                            StageId = new Guid("00000000-0000-0000-0003-000000000001")
+                        });
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeId");
+
+                    b.ToTable("Hymns");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AudioUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Feedback")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Grade")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("HymnId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("HymnId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("HymnSubmissions");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Lesson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("LessonNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WeekNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeId");
+
+                    b.HasIndex("StageId");
+
+                    b.ToTable("Lessons");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Servants");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Stage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0001-000000000001"),
+                            DisplayOrder = 1,
+                            Name = "ابتدائي"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0002-000000000001"),
+                            DisplayOrder = 2,
+                            Name = "إعدادي"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000001"),
+                            DisplayOrder = 3,
+                            Name = "ثانوي"
                         });
                 });
 
@@ -176,6 +663,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<int?>("DeaconRank")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("EnrollmentDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FatherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -184,18 +674,14 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<bool>("FeesPaid")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
 
                     b.Property<Guid>("GradeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("HasPaidFees")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeacon")
                         .HasColumnType("bit");
@@ -206,22 +692,23 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Landmark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("MotherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfileImagePath")
+                    b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SecondName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("RegisteredByUserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ThirdName")
+                    b.Property<DateTime>("RegisteredDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -236,14 +723,230 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
                     b.HasIndex("GradeId");
 
+                    b.HasIndex("StudentCode")
+                        .IsUnique();
+
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.HasIndex("FirstName", "SecondName", "ThirdName", "LastName", "DateOfBirth")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Student_UniqueNameAndDob");
-
                     b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.StudentProgressSummary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("AverageScore")
+                        .HasColumnType("float");
+
+                    b.Property<int>("CompletedContentItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompletedLessons")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalContentItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalLessons")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
+
+                    b.ToTable("StudentProgressSummaries");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentAccess", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.ContentItem", "ContentItem")
+                        .WithMany()
+                        .HasForeignKey("ContentItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ContentItem");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentItem", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Lesson", "Lesson")
+                        .WithMany("ContentItems")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
+                        .WithMany()
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+
+                    b.Navigation("Stage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAnswer", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.ExamAttempt", "ExamAttempt")
+                        .WithMany("Answers")
+                        .HasForeignKey("ExamAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.ExamQuestion", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ExamAttempt");
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Exam", "Exam")
+                        .WithMany("Attempts")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamQuestion", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Exam", "Exam")
+                        .WithMany("Questions")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany("Grades")
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AcademicYear");
+
+                    b.Navigation("Stage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
+                        .WithMany()
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnSubmission", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Hymn", "Hymn")
+                        .WithMany("Submissions")
+                        .HasForeignKey("HymnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Hymn");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Lesson", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
+                        .WithMany("Lessons")
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+
+                    b.Navigation("Stage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("DiaconateSchool.Domain.Entities.Servant", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Student", b =>
@@ -265,14 +968,54 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.StudentProgressSummary", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
+                {
+                    b.Navigation("Attempts");
+
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
+                {
+                    b.Navigation("Answers");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
                 {
+                    b.Navigation("Lessons");
+
                     b.Navigation("Students");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
+                {
+                    b.Navigation("Submissions");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Lesson", b =>
+                {
+                    b.Navigation("ContentItems");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Stage", b =>
+                {
+                    b.Navigation("Grades");
                 });
 #pragma warning restore 612, 618
         }

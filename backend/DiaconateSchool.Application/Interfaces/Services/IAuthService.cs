@@ -7,4 +7,5 @@ public interface IAuthService
 {
     Task<AuthResultDto> LoginAsync(LoginDto dto);
     Task<bool> ChangePasswordAsync(ChangePasswordDto dto);
+    Task<CurrentUserDto?> GetCurrentUserAsync(string userId);
 }

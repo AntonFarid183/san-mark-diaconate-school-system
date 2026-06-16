@@ -2,11 +2,11 @@ using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Application.Interfaces.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Application.Services;
 
-// A small interface purely for this layer to ask for a token
 public interface IJwtTokenGenerator
 {
     string GenerateToken(Domain.Entities.ApplicationUser user);
@@ -20,7 +20,7 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _uow;
 
     public AuthService(
-        IUserRepository userRepo, 
+        IUserRepository userRepo,
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtGenerator,
         IUnitOfWork uow)
@@ -33,28 +33,24 @@ public class AuthService : IAuthService
 
     public async Task<AuthResultDto> LoginAsync(LoginDto dto)
     {
-        // 1. Find User by Username
         var user = await _userRepo.GetByUserNameAsync(dto.UserName);
         if (user == null)
             return new AuthResultDto { ErrorMessage = "Invalid credentials." };
 
-        // 2. Verify Password using PBKDF2 hash
         if (!_passwordHasher.VerifyPassword(dto.Password, user.PasswordHash))
             return new AuthResultDto { ErrorMessage = "Invalid credentials." };
 
-        // 3. Enforce Mandatory Password Change
-        if (user.RequiresPasswordChange)
+        if (user.MustChangePassword)
         {
-            return new AuthResultDto 
-            { 
-                RequiresPasswordChange = true,
-                ErrorMessage = "You must change your password before accessing the system." 
+            return new AuthResultDto
+            {
+                MustChangePassword = true,
+                ErrorMessage = "You must change your password before accessing the system."
             };
         }
 
-        // 4. All checks passed -> Generate JWT
         string token = _jwtGenerator.GenerateToken(user);
-        
+
         return new AuthResultDto { Token = token };
     }
 
@@ -67,9 +63,28 @@ public class AuthService : IAuthService
             return false;
 
         user.PasswordHash = _passwordHasher.HashPassword(dto.NewPassword);
-        user.RequiresPasswordChange = false; 
+        user.MustChangePassword = false;
 
         await _uow.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<CurrentUserDto?> GetCurrentUserAsync(string userId)
+    {
+        if (!Guid.TryParse(userId, out var parsedId))
+            return null;
+
+        var user = await _userRepo.GetByIdAsync(parsedId);
+        if (user == null) return null;
+
+        return new CurrentUserDto
+        {
+            Id = user.Id.ToString(),
+            UserName = user.UserName,
+            Role = user.Role.ToString(),
+            FullName = $"{user.FirstName} {user.MiddleName} {user.ThirdName} {user.LastName}",
+            MustChangePassword = user.MustChangePassword,
+            StudentId = user.Student?.Id.ToString()
+        };
     }
 }

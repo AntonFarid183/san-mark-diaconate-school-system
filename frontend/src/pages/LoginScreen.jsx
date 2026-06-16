@@ -1,89 +1,138 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
 
 const LoginScreen = () => {
-    const navigate = useNavigate();
-    const [userName, setUserName] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login, fetchCurrentUser } = useAuth();
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setIsLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
-        try {
-            // Trigger the C# Backend /api/auth/login endpoint
-            const response = await apiClient.post('/auth/login', { userName, password });
+    try {
+      const response = await apiClient.post('/auth/login', { userName, password });
+      login(response.data.token);
+      await fetchCurrentUser();
+      navigate('/dashboard');
+    } catch (err) {
+      if (err.response && err.response.data) {
+        const { mustChangePassword, message, MustChangePassword, Message } = err.response.data;
+        const isPasswordChangeRequired = mustChangePassword || MustChangePassword;
+        const errorMsg = message || Message;
 
-            // If success (HTTP 200), globally save the JWT token
-            localStorage.setItem('token', response.data.token);
-            alert('تم تسجيل الدخول بنجاح!'); // Will be replaced by dashboard redirect later
-            
-        } catch (err) {
-            // Did the server respond?
-            if (err.response && err.response.data) {
-                const { requiresPasswordChange, message, RequiresPasswordChange, Message } = err.response.data;
-                const isPasswordChangeRequired = requiresPasswordChange || RequiresPasswordChange;
-                const errorMsg = message || Message;
-
-                // Enforcing Business Rule #4:
-                if (isPasswordChangeRequired) {
-                    // Automatically route them, and silently pass their username via memory!
-                    navigate('/change-password', { state: { userName } });
-                } else {
-                    setError(errorMsg || 'بيانات الدخول غير صحيحة.');
-                }
-            } else {
-                setError('حدث خطأ في الاتصال بالخادم. تأكد من أن الـ Backend يعمل.');
-            }
-        } finally {
-            setIsLoading(false);
+        if (isPasswordChangeRequired) {
+          navigate('/change-password', { state: { userName } });
+        } else {
+          setError(errorMsg || 'بيانات الدخول غير صحيحة.');
         }
-    };
+      } else {
+        setError('حدث خطأ في الاتصال بالخادم. تأكد من أن الـ Backend يعمل.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <div className="glass-card" style={{ maxWidth: '400px', width: '100%' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ color: 'var(--accent-gold)' }}>نظام مدرسة الشمامسة</h1>
-                <p>تسجيل الدخول للنظام</p>
-            </div>
-
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {error && <div style={{ color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid var(--danger)' }}>{error}</div>}
-                
-                <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>اسم المستخدم</label>
-                    <input 
-                        type="text" 
-                        className="premium-input" 
-                        placeholder="مثال: ST-1001"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>كلمة المرور</label>
-                    <input 
-                        type="password" 
-                        className="premium-input" 
-                        placeholder="أدخل كلمة المرور"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-
-                <button type="submit" className="btn-primary" disabled={isLoading}>
-                    {isLoading ? 'جاري التحقق...' : 'دخول'}
-                </button>
-            </form>
+  return (
+    <div className="auth-page">
+      <div className="glass-card" style={{ maxWidth: '420px', width: '100%' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)', marginBottom: '1rem' }}>church</span>
+          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.5rem' }}>نظام إدارة الشمامسة</h1>
+          <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>مدرسة سان مارك للألحان والطقوس</p>
         </div>
-    );
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {error && <div className="error-box">{error}</div>}
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+              اسم المستخدم
+            </label>
+            <div style={{ position: 'relative' }}>
+              <span className="material-symbols-outlined" style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
+              }}>person</span>
+              <input
+                type="text"
+                className="premium-input"
+                placeholder="مثال: ST-1001"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                required
+                style={{ paddingRight: '40px' }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+              كلمة المرور
+            </label>
+            <div style={{ position: 'relative' }}>
+              <span className="material-symbols-outlined" style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
+              }}>lock</span>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="premium-input"
+                placeholder="أدخل كلمة المرور"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ paddingRight: '40px', paddingLeft: '40px' }}
+              />
+              <span
+                className="material-symbols-outlined"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer',
+                }}
+              >{showPassword ? 'visibility_off' : 'visibility'}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <input type="checkbox" style={{ accentColor: 'var(--accent-gold)' }} />
+              تذكرني
+            </label>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'default' }}>نسيت كلمة المرور؟</span>
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={isLoading}>
+            {isLoading ? 'جاري التحقق...' : 'تسجيل الدخول'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
+          <p style={{ fontSize: '0.85rem' }}>
+            ليس لديك حساب؟
+            <span style={{ color: 'var(--accent-gold)', marginRight: '0.25rem' }}>تواصل مع إدارة المدرسة</span>
+          </p>
+        </div>
+
+        {/* Footer icons */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1.5rem', opacity: 0.4 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>auto_stories</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>school</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>history_edu</span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default LoginScreen;

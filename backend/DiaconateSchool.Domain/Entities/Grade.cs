@@ -1,38 +1,20 @@
 using System;
 using System.Collections.Generic;
-using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Domain.Entities;
 
-/// <summary>
-/// Represents a specific academic year/grade within a broader Stage.
-/// e.g., Grade "1" inside the "Primary" stage.
-/// </summary>
 public class Grade
 {
-    /// <summary>
-    /// Unique identifier for the Grade in the database.
-    /// </summary>
     public Guid Id { get; set; }
-    
-    /// <summary>
-    /// The display name for the grade (e.g., "الصف الأول الابتدائي" or "Primary 1").
-    /// </summary>
-    public required string Name { get; set; } 
-    
-    /// <summary>
-    /// The numeric level of the grade used for logical ordering and automated promotions (e.g., 1, 2, 3..).
-    /// </summary>
+    public required string Name { get; set; }
     public int Level { get; set; }
-    
-    /// <summary>
-    /// The Stage enum securely links this grade to its overarching category (e.g., Primary vs Secondary).
-    /// </summary>
-    public Stage Stage { get; set; }
-    
-    /// <summary>
-    /// Navigation Property: One-to-Many relationship. 
-    /// Automatically manages all registered students who are currently sitting in this specific grade.
-    /// </summary>
+
+    public Guid StageId { get; set; }
+    public Stage Stage { get; set; } = null!;
+
+    public Guid? AcademicYearId { get; set; }
+    public AcademicYear? AcademicYear { get; set; }
+
     public ICollection<Student> Students { get; set; } = new List<Student>();
+    public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 }

@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.Services;
 using DiaconateSchool.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -11,24 +12,33 @@ namespace DiaconateSchool.Infrastructure.Security;
 
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
-    private const string SecretKey = "SuperSecretKeyThatMustBeAtLeast32BytesLongForSHA256";
+    private readonly string _secretKey;
+    private readonly int _expiryHours;
+
+    public JwtTokenGenerator(IConfiguration configuration)
+    {
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        _secretKey = jwtSettings["SecretKey"] ?? "SuperSecretKeyThatMustBeAtLeast32BytesLongForSHA256";
+        _expiryHours = int.TryParse(jwtSettings["ExpiryHours"], out var hours) ? hours : 8;
+    }
 
     public string GenerateToken(ApplicationUser user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(SecretKey);
+        var key = Encoding.ASCII.GetBytes(_secretKey);
 
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("fullName", $"{user.FirstName} {user.MiddleName} {user.ThirdName} {user.LastName}")
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(8),
+            Expires = DateTime.UtcNow.AddHours(_expiryHours),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 

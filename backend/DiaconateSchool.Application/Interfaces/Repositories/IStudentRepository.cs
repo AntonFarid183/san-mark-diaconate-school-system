@@ -1,15 +1,18 @@
 using DiaconateSchool.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Application.Interfaces.Repositories;
 
 public interface IStudentRepository
 {
-    Task<bool> ExistsAsync(string firstName, string secondName, string thirdName, string lastName, DateOnly dateOfBirth);
+    Task<bool> ExistsAsync(string firstName, string middleName, string thirdName, string lastName, DateOnly dateOfBirth);
     Task AddAsync(Student student);
     Task<int> GetTotalCountAsync();
-    
-    // New: Fetch list of grades for a specific stage (Primary, Prep, etc.)
-    Task<IEnumerable<Grade>> GetGradesByStageAsync(DiaconateSchool.Domain.Enums.Stage stage);
+    Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
+    Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null);
+    Task<int> GetFilteredCountAsync(string? nameFilter = null);
+    Task<Student?> GetByIdWithIncludesAsync(Guid id);
+    Task<Student?> GetByUserIdAsync(Guid userId);
 }

@@ -47,8 +47,8 @@ const LoginScreen = () => {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)', marginBottom: '1rem' }}>church</span>
-          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.5rem' }}>نظام إدارة الشمامسة</h1>
-          <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>مدرسة سان مارك للألحان والطقوس</p>
+          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للشمامسة</h1>
+          <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة مارمرقس النزهة 2</p>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

@@ -9,4 +9,5 @@ public interface IUserRepository
     Task AddAsync(ApplicationUser user);
     Task<ApplicationUser?> GetByUserNameAsync(string userName);
     Task<ApplicationUser?> GetByIdAsync(Guid id);
+    Task UpdateAsync(ApplicationUser user);
 }

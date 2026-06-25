@@ -1,65 +1,76 @@
 using System;
-using System.Collections.Generic;
+using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Application.DTOs;
 
-public class ExamDto
+public class ExamListItemDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public int DurationMinutes { get; set; }
-    public int TotalPoints { get; set; }
-    public int PassingScore { get; set; }
-    public List<ExamQuestionDto> Questions { get; set; } = new();
+    public string GradeName { get; set; } = string.Empty;
+    public string StageName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public int ResultCount { get; set; }
 }
 
-public class ExamQuestionDto
+public class ExamDetailDto
 {
     public Guid Id { get; set; }
-    public string Text { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public int Points { get; set; }
-    public List<string> Options { get; set; } = new();
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public Guid GradeId { get; set; }
+    public string GradeName { get; set; } = string.Empty;
+    public Guid StageId { get; set; }
+    public string StageName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }
 
 public class CreateExamDto
 {
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public int DurationMinutes { get; set; }
-    public int TotalPoints { get; set; }
-    public int PassingScore { get; set; }
     public Guid GradeId { get; set; }
     public Guid StageId { get; set; }
 }
 
-public class SubmitExamDto
+public class UpdateExamDto
 {
-    public Dictionary<string, object> Answers { get; set; } = new();
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+}
+
+public class EnterExamResultDto
+{
+    public Guid StudentId { get; set; }
+    public string AcademicYear { get; set; } = string.Empty;
+    public ExamPeriod Period { get; set; }
+    public decimal Score { get; set; }
+    public decimal TotalScore { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class ExamResultDto
 {
     public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public int Score { get; set; }
-    public int TotalPoints { get; set; }
-    public double Percentage { get; set; }
-    public bool Passed { get; set; }
+    public Guid ExamId { get; set; }
+    public string ExamTitle { get; set; } = string.Empty;
+    public Guid StudentId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public string AcademicYear { get; set; } = string.Empty;
+    public string Period { get; set; } = string.Empty;
+    public decimal Score { get; set; }
+    public decimal TotalScore { get; set; }
+    public decimal Percentage { get; set; }
+    public string? Notes { get; set; }
     public string Status { get; set; } = string.Empty;
-    public List<ExamAnswerReviewDto> Answers { get; set; } = new();
+    public DateTime EnteredAt { get; set; }
+    public Guid? CertificateId { get; set; }
 }
 
-public class ExamAnswerReviewDto
+public class ApproveExamResultDto
 {
-    public Guid QuestionId { get; set; }
-    public string QuestionText { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public List<string> Options { get; set; } = new();
-    public string? UserAnswer { get; set; }
-    public int? CorrectAnswerIndex { get; set; }
-    public bool? IsCorrect { get; set; }
-    public int PointsAwarded { get; set; }
-    public int PointsPossible { get; set; }
+    public bool Approve { get; set; }
+    public string? Notes { get; set; }
 }

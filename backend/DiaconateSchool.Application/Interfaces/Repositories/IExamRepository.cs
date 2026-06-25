@@ -7,10 +7,18 @@ namespace DiaconateSchool.Application.Interfaces.Repositories;
 
 public interface IExamRepository
 {
+    Task<List<Exam>> GetAllAsync(Guid? gradeId = null, Guid? stageId = null);
     Task<Exam?> GetByIdAsync(Guid id);
-    Task<List<Exam>> GetByGradeAsync(Guid gradeId);
-    Task<List<Exam>> GetAllAsync();
     Task AddAsync(Exam exam);
-    void Update(Exam exam);
-    void Remove(Exam exam);
+    Task UpdateAsync(Exam exam);
+    Task<bool> DeleteAsync(Guid id);
+}
+
+public interface IExamResultRepository
+{
+    Task<List<ExamResult>> GetByExamAsync(Guid examId);
+    Task<List<ExamResult>> GetByStudentAsync(Guid studentId);
+    Task<ExamResult?> GetByIdAsync(Guid id);
+    Task AddAsync(ExamResult result);
+    Task UpdateAsync(ExamResult result);
 }

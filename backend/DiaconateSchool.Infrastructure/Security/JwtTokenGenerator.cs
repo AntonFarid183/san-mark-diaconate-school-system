@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.Services;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -29,17 +30,28 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("fullName", $"{user.FirstName} {user.MiddleName} {user.ThirdName} {user.LastName}")
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.Role, user.Role.ToString()),
+            new("fullName", $"{user.FirstName} {user.MiddleName} {user.ThirdName} {user.LastName}"),
+            new("firstName", user.FirstName)
         };
+
+        if (user.Role == Role.Student && user.Student != null)
+        {
+            claims.Add(new Claim("StudentId", user.Student.Id.ToString()));
+            claims.Add(new Claim("GradeId", user.Student.GradeId.ToString()));
+            claims.Add(new Claim("StudentCode", user.Student.StudentCode));
+            if (user.Student.Grade != null)
+                claims.Add(new Claim("StageId", user.Student.Grade.StageId.ToString()));
+        }
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(_expiryHours),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);

@@ -80,10 +80,16 @@ const StudentDetailScreen = () => {
               <p style={{ fontSize: '0.8rem' }}>رقم القيد: #{student.studentCode || '—'}</p>
             </div>
           </div>
-          <button onClick={() => navigate('/students')} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
-            العودة للقائمة
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => navigate(`/students/${id}/edit`)} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
+              تعديل
+            </button>
+            <button onClick={() => navigate('/students')} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+              العودة للقائمة
+            </button>
+          </div>
         </div>
       </div>
 

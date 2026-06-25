@@ -11,8 +11,10 @@ public interface IStudentRepository
     Task AddAsync(Student student);
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
+    Task<IEnumerable<Stage>> GetAllStagesAsync();
     Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null);
     Task<int> GetFilteredCountAsync(string? nameFilter = null);
     Task<Student?> GetByIdWithIncludesAsync(Guid id);
     Task<Student?> GetByUserIdAsync(Guid userId);
+    Task UpdateAsync(Student student);
 }

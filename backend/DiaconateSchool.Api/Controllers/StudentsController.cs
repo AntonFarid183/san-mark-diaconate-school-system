@@ -1,12 +1,13 @@
 using DiaconateSchool.Application.DTOs;
+using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Services;
+using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Api.Controllers;
 
@@ -16,16 +17,49 @@ public class StudentsController : ControllerBase
 {
     private readonly IStudentRegistrationService _registrationService;
     private readonly IStudentQueryService _queryService;
+    private readonly IPromotionService _promotionService;
 
     public StudentsController(
         IStudentRegistrationService registrationService,
-        IStudentQueryService queryService)
+        IStudentQueryService queryService,
+        IPromotionService promotionService)
     {
         _registrationService = registrationService;
         _queryService = queryService;
+        _promotionService = promotionService;
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    // ── Lookup endpoints ──────────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("stages")]
+    public async Task<IActionResult> GetStages()
+    {
+        var stages = await _registrationService.GetAllStagesAsync();
+        return Ok(stages.Select(s => new { s.Id, s.Name, s.DisplayOrder }));
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("grades/{stageId}")]
+    public async Task<IActionResult> GetGrades(string stageId)
+    {
+        if (!Guid.TryParse(stageId, out var parsedStageId))
+            return BadRequest(new { Message = "Invalid stage ID format." });
+
+        var grades = await _registrationService.GetGradesByStageAsync(parsedStageId);
+        var gradeList = grades.ToList();
+
+        if (!gradeList.Any())
+            return NotFound(new { Message = "No grades found for the specified stage." });
+
+        return Ok(gradeList.Select(g => new { g.Id, g.Name, g.Level }));
+    }
+
+    // ── Student list / detail ─────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     public async Task<IActionResult> GetStudents(
         [FromQuery] int page = 1,
@@ -40,7 +74,7 @@ public class StudentsController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetStudent(string id)
     {
@@ -54,28 +88,9 @@ public class StudentsController : ControllerBase
         return Ok(student);
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
-    [HttpGet("grades/{stageId}")]
-    public async Task<IActionResult> GetGrades(string stageId)
-    {
-        if (!Guid.TryParse(stageId, out var parsedStageId))
-            return BadRequest(new { Message = "Invalid stage ID format." });
+    // ── Registration ──────────────────────────────────────────────────
 
-        var grades = await _registrationService.GetGradesByStageAsync(parsedStageId);
-        var gradeList = grades.ToList();
-
-        if (!gradeList.Any())
-            return NotFound(new { Message = "No grades found for the specified stage." });
-
-        return Ok(gradeList.Select(g => new
-        {
-            g.Id,
-            g.Name,
-            g.Level
-        }));
-    }
-
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("register")]
     public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentDto dto)
     {
@@ -94,23 +109,113 @@ public class StudentsController : ControllerBase
         }
     }
 
+    // ── Edit / Admin actions ──────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateStudent(string id, [FromBody] UpdateStudentDto dto)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        var result = await _queryService.UpdateStudentAsync(parsedId, dto);
+        if (result == null)
+            return NotFound(new { Message = "Student not found." });
+
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/reset-password")]
+    public async Task<IActionResult> ResetPassword(string id, [FromBody] ResetStudentPasswordDto dto)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
+            return BadRequest(new { Message = "كلمة المرور يجب أن تكون 8 أحرف على الأقل." });
+
+        var success = await _queryService.ResetPasswordAsync(parsedId, dto.NewPassword);
+        if (!success)
+            return NotFound(new { Message = "Student not found." });
+
+        return Ok(new { Message = "تم إعادة تعيين كلمة المرور." });
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/deactivate")]
+    public async Task<IActionResult> Deactivate(string id)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        var success = await _queryService.SetActiveStatusAsync(parsedId, false);
+        return success ? Ok(new { Message = "تم إيقاف تفعيل الحساب." }) : NotFound(new { Message = "Student not found." });
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/activate")]
+    public async Task<IActionResult> Activate(string id)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        var success = await _queryService.SetActiveStatusAsync(parsedId, true);
+        return success ? Ok(new { Message = "تم تفعيل الحساب." }) : NotFound(new { Message = "Student not found." });
+    }
+
+    // ── Promotion ─────────────────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/promote")]
+    public async Task<IActionResult> Promote(string id, [FromBody] PromoteStudentDto dto)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        try
+        {
+            var result = await _promotionService.PromoteStudentAsync(parsedId, dto, GetUserId());
+            if (result == null)
+                return NotFound(new { Message = "Student not found." });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("{id}/grade-history")]
+    public async Task<IActionResult> GetGradeHistory(string id)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        var history = await _promotionService.GetHistoryAsync(parsedId);
+        return Ok(history);
+    }
+
+    // ── Student self-endpoints ────────────────────────────────────────
+
     [Authorize(Policy = "AllAuthenticated")]
     [HttpGet("me")]
     public async Task<IActionResult> GetMyProfile()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return Unauthorized();
-
         var role = User.FindFirstValue(ClaimTypes.Role);
         if (role != nameof(Role.Student))
             return BadRequest(new { Message = "This endpoint is for students only." });
 
-        var parsedUserId = Guid.Parse(userId);
-        var student = await _queryService.GetStudentByUserIdAsync(parsedUserId);
+        var student = await _queryService.GetStudentByUserIdAsync(GetUserId());
         if (student == null)
             return NotFound(new { Message = "Student profile not found." });
 
         return Ok(student);
     }
+}
+
+public class ResetStudentPasswordDto
+{
+    public string NewPassword { get; set; } = string.Empty;
 }

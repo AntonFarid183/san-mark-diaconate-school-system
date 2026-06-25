@@ -39,7 +39,7 @@ public class StudentRegistrationService : IStudentRegistrationService
             dto.FirstName, dto.SecondName, dto.ThirdName, dto.LastName, dto.DateOfBirth);
 
         if (exists)
-            throw new InvalidOperationException("A student with this name and date of birth is already registered.");
+            throw new InvalidOperationException("طالب بهذا الاسم وتاريخ الميلاد مسجل بالفعل.");
 
         int currentCount = await _studentRepo.GetTotalCountAsync();
         string userName = $"ST-{1000 + currentCount + 1}";
@@ -84,6 +84,7 @@ public class StudentRegistrationService : IStudentRegistrationService
             FatherOfConfession = dto.FatherOfConfession,
             FatherMobile = dto.FatherMobile,
             MotherMobile = dto.MotherMobile,
+            StudentMobile = dto.StudentMobile,
             WhatsAppNumber = dto.WhatsAppNumber,
             Landline = dto.Landline,
             Address = dto.Address,
@@ -111,6 +112,11 @@ public class StudentRegistrationService : IStudentRegistrationService
         return await _studentRepo.GetGradesByStageAsync(stageId);
     }
 
+    public async Task<IEnumerable<Stage>> GetAllStagesAsync()
+    {
+        return await _studentRepo.GetAllStagesAsync();
+    }
+
     private static string GenerateRandomPassword(int length)
     {
         const string upper = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
@@ -128,9 +134,7 @@ public class StudentRegistrationService : IStudentRegistrationService
 
         string all = upper + lower + digits + special;
         for (int i = 4; i < length; i++)
-        {
             password[i] = all[random.Next(all.Length)];
-        }
 
         return new string(password.OrderBy(_ => random.Next()).ToArray());
     }

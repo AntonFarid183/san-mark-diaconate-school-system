@@ -66,7 +66,7 @@ const ChangePasswordScreen = () => {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>lock_reset</span>
           <h2 style={{ color: 'var(--accent-gold)' }}>تغيير كلمة المرور</h2>
-          <p style={{ fontSize: '0.85rem' }}>قم بتأمين حسابك في مدرسة سان مارك</p>
+          <p style={{ fontSize: '0.85rem' }}>مدرسة بي ثيؤريموس للشمامسة — كنيسة مارمرقس النزهة 2</p>
         </div>
 
         <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

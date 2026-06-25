@@ -7,9 +7,15 @@ namespace DiaconateSchool.Application.Interfaces;
 
 public interface IExamService
 {
-    Task<ExamDto> GetExamAsync(Guid examId);
-    Task<List<ExamDto>> GetExamsForStudentAsync(Guid gradeId);
-    Task<ExamDto> CreateExamAsync(CreateExamDto dto);
-    Task<ExamResultDto> SubmitExamAsync(Guid examId, Guid studentId, SubmitExamDto dto);
-    Task<ExamResultDto> GetExamResultAsync(Guid examId, Guid studentId);
+    Task<List<ExamListItemDto>> GetAllExamsAsync(Guid? gradeId = null, Guid? stageId = null);
+    Task<List<ExamListItemDto>> GetExamsForStudentAsync(Guid gradeId);
+    Task<ExamDetailDto?> GetExamByIdAsync(Guid examId);
+    Task<ExamDetailDto> CreateExamAsync(CreateExamDto dto, Guid createdByUserId);
+    Task<ExamDetailDto?> UpdateExamAsync(Guid examId, UpdateExamDto dto);
+    Task<bool> DeleteExamAsync(Guid examId);
+
+    Task<ExamResultDto> EnterResultAsync(Guid examId, EnterExamResultDto dto, Guid enteredByUserId);
+    Task<List<ExamResultDto>> GetResultsByExamAsync(Guid examId);
+    Task<List<ExamResultDto>> GetResultsByStudentAsync(Guid studentId);
+    Task<ExamResultDto?> ApproveResultAsync(Guid resultId, ApproveExamResultDto dto, Guid approvedByUserId);
 }

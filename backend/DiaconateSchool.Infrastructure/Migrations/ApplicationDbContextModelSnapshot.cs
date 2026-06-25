@@ -49,6 +49,42 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.ToTable("AcademicYears");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("TargetStageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetStageId");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -113,6 +149,76 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .HasDatabaseName("IX_User_UniqueFullName");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Certificate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Classification")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ExamResultId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExamTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GradeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IssuedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("StageName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentFullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("TotalScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamResultId")
+                        .IsUnique();
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Certificates");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentAccess", b =>
@@ -203,6 +309,57 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.ToTable("ContentItems");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Curriculum", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PdfFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("PdfSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PdfUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StageId");
+
+                    b.ToTable("Curriculums");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
                 {
                     b.Property<Guid>("Id")
@@ -218,14 +375,8 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("GradeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("PassingScore")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("StageId")
                         .HasColumnType("uniqueidentifier");
@@ -233,9 +384,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalPoints")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -246,53 +394,44 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.ToTable("Exams");
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAnswer", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamResult", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("EssayAnswer")
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ExamAttemptId")
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedByUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
+                    b.Property<DateTime>("EnteredAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<int>("PointsAwarded")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("QuestionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SelectedOptionIndex")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExamAttemptId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("ExamAnswers");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("EnteredByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ExamId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Score")
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("Period")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<decimal>("Score")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -300,11 +439,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TotalPoints")
-                        .HasColumnType("int");
+                    b.Property<decimal>("TotalScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.HasKey("Id");
 
@@ -312,42 +449,7 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("ExamAttempts");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamQuestion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("CorrectAnswerIndex")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ExamId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExamId");
-
-                    b.ToTable("ExamQuestions");
+                    b.ToTable("ExamResults");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
@@ -464,7 +566,46 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.GradeHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FromGradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PromotedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PromotedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ToGradeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromGradeId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("ToGradeId");
+
+                    b.ToTable("GradeHistories");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLesson", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -479,65 +620,95 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("GradeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GradeId");
-
-                    b.ToTable("Hymns");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnSubmission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AudioUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Feedback")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("Grade")
+                    b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("HymnId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("LyricsImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("LyricsPdfFileName")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ReviewedByUserId")
+                    b.Property<string>("LyricsPdfUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LyricsType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StageId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("SubmittedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("VideoFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VideoType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("StageId");
 
-                    b.HasIndex("HymnId", "StudentId")
+                    b.ToTable("HymnLessons");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLessonProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FirstViewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HymnLessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LastPosition")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastViewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxReachedPosition")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalDuration")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("WatchedPercent")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HymnLessonId");
+
+                    b.HasIndex("StudentId", "HymnLessonId")
                         .IsUnique();
 
-                    b.ToTable("HymnSubmissions");
+                    b.ToTable("HymnLessonProgresses");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Lesson", b =>
@@ -587,26 +758,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.HasIndex("StageId");
 
                     b.ToTable("Lessons");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Servants");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Stage", b =>
@@ -712,6 +863,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("StudentMobile")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -773,6 +927,35 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.ToTable("StudentProgressSummaries");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Announcement", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "TargetStage")
+                        .WithMany()
+                        .HasForeignKey("TargetStageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("TargetStage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Certificate", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.ExamResult", "ExamResult")
+                        .WithOne("Certificate")
+                        .HasForeignKey("DiaconateSchool.Domain.Entities.Certificate", "ExamResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ExamResult");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.ContentAccess", b =>
                 {
                     b.HasOne("DiaconateSchool.Domain.Entities.ContentItem", "ContentItem")
@@ -803,6 +986,17 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Lesson");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Curriculum", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Stage");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
                 {
                     b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
@@ -822,29 +1016,10 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Stage");
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAnswer", b =>
-                {
-                    b.HasOne("DiaconateSchool.Domain.Entities.ExamAttempt", "ExamAttempt")
-                        .WithMany("Answers")
-                        .HasForeignKey("ExamAttemptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DiaconateSchool.Domain.Entities.ExamQuestion", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ExamAttempt");
-
-                    b.Navigation("Question");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamResult", b =>
                 {
                     b.HasOne("DiaconateSchool.Domain.Entities.Exam", "Exam")
-                        .WithMany("Attempts")
+                        .WithMany("Results")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -858,17 +1033,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Exam");
 
                     b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamQuestion", b =>
-                {
-                    b.HasOne("DiaconateSchool.Domain.Entities.Exam", "Exam")
-                        .WithMany("Questions")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exam");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
@@ -889,32 +1053,59 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Stage");
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.GradeHistory", b =>
                 {
-                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
+                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "FromGrade")
                         .WithMany()
-                        .HasForeignKey("GradeId")
+                        .HasForeignKey("FromGradeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Grade");
+                    b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "ToGrade")
+                        .WithMany()
+                        .HasForeignKey("ToGradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromGrade");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("ToGrade");
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnSubmission", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLesson", b =>
                 {
-                    b.HasOne("DiaconateSchool.Domain.Entities.Hymn", "Hymn")
-                        .WithMany("Submissions")
-                        .HasForeignKey("HymnId")
+                    b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Stage");
+                });
+
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLessonProgress", b =>
+                {
+                    b.HasOne("DiaconateSchool.Domain.Entities.HymnLesson", "HymnLesson")
+                        .WithMany()
+                        .HasForeignKey("HymnLessonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("DiaconateSchool.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Hymn");
+                    b.Navigation("HymnLesson");
 
                     b.Navigation("Student");
                 });
@@ -936,17 +1127,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Grade");
 
                     b.Navigation("Stage");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Servant", b =>
-                {
-                    b.HasOne("DiaconateSchool.Domain.Entities.ApplicationUser", "User")
-                        .WithOne()
-                        .HasForeignKey("DiaconateSchool.Domain.Entities.Servant", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Student", b =>
@@ -986,14 +1166,12 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Exam", b =>
                 {
-                    b.Navigation("Attempts");
-
-                    b.Navigation("Questions");
+                    b.Navigation("Results");
                 });
 
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamAttempt", b =>
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.ExamResult", b =>
                 {
-                    b.Navigation("Answers");
+                    b.Navigation("Certificate");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Grade", b =>
@@ -1001,11 +1179,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Navigation("Lessons");
 
                     b.Navigation("Students");
-                });
-
-            modelBuilder.Entity("DiaconateSchool.Domain.Entities.Hymn", b =>
-                {
-                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.Lesson", b =>

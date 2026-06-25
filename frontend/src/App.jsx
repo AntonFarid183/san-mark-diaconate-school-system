@@ -7,19 +7,28 @@ import RegisterStudentScreen from './pages/RegisterStudentScreen';
 import DashboardScreen from './pages/DashboardScreen';
 import StudentListScreen from './pages/StudentListScreen';
 import StudentDetailScreen from './pages/StudentDetailScreen';
+import EditStudentScreen from './pages/EditStudentScreen';
+import StudentPromotionScreen from './pages/StudentPromotionScreen';
 import LessonsScreen from './pages/LessonsScreen';
 import LessonDetailScreen from './pages/LessonDetailScreen';
 import ContentManagementScreen from './pages/ContentManagementScreen';
 import ProgressScreen from './pages/ProgressScreen';
-import HymnScreen from './pages/HymnScreen';
-import HymnReviewScreen from './pages/HymnReviewScreen';
-import ExamTakingScreen from './pages/ExamTakingScreen';
-import ExamResultsScreen from './pages/ExamResultsScreen';
+import CurriculumManagementScreen from './pages/CurriculumManagementScreen';
+import HymnLessonManagementScreen from './pages/HymnLessonManagementScreen';
+import StudentCurriculumScreen from './pages/StudentCurriculumScreen';
+import StudentHymnLessonsScreen from './pages/StudentHymnLessonsScreen';
+import HymnLessonDetailScreen from './pages/HymnLessonDetailScreen';
+import ExamScoreEntryScreen from './pages/ExamScoreEntryScreen';
+import MyExamResultsScreen from './pages/MyExamResultsScreen';
+import CertificateScreen from './pages/CertificateScreen';
+import MyCertificatesScreen from './pages/MyCertificatesScreen';
+import AnnouncementsScreen from './pages/AnnouncementsScreen';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, adminOnly }) => {
     const { user, loading } = useAuth();
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
+    if (adminOnly && user.role !== 'Admin') return <Navigate to="/dashboard" replace />;
     return children;
 };
 
@@ -36,18 +45,32 @@ function AppRoutes() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
             <Route path="/change-password" element={<ChangePasswordScreen />} />
-            <Route path="/register-student" element={<ProtectedRoute><RegisterStudentScreen /></ProtectedRoute>} />
-            <Route path="/students" element={<ProtectedRoute><StudentListScreen /></ProtectedRoute>} />
-            <Route path="/students/:id" element={<ProtectedRoute><StudentDetailScreen /></ProtectedRoute>} />
+
+            {/* Admin only */}
+            <Route path="/register-student" element={<ProtectedRoute adminOnly><RegisterStudentScreen /></ProtectedRoute>} />
+            <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
+            <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
+            <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
+            <Route path="/students/:id/promote" element={<ProtectedRoute adminOnly><StudentPromotionScreen /></ProtectedRoute>} />
+            <Route path="/content" element={<ProtectedRoute adminOnly><ContentManagementScreen /></ProtectedRoute>} />
+            <Route path="/curriculum-management" element={<ProtectedRoute adminOnly><CurriculumManagementScreen /></ProtectedRoute>} />
+            <Route path="/hymn-lessons-management" element={<ProtectedRoute adminOnly><HymnLessonManagementScreen /></ProtectedRoute>} />
+            <Route path="/exams" element={<ProtectedRoute adminOnly><ExamScoreEntryScreen /></ProtectedRoute>} />
+
+            {/* Shared */}
             <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsScreen /></ProtectedRoute>} />
             <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailScreen /></ProtectedRoute>} />
-            <Route path="/content" element={<ProtectedRoute><ContentManagementScreen /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><ProgressScreen /></ProtectedRoute>} />
-            <Route path="/hymns" element={<ProtectedRoute><HymnScreen /></ProtectedRoute>} />
-            <Route path="/hymns/review" element={<ProtectedRoute><HymnReviewScreen /></ProtectedRoute>} />
-            <Route path="/exams/:id" element={<ProtectedRoute><ExamTakingScreen /></ProtectedRoute>} />
-            <Route path="/exams/:id/results" element={<ProtectedRoute><ExamResultsScreen /></ProtectedRoute>} />
+            <Route path="/curriculum" element={<ProtectedRoute><StudentCurriculumScreen /></ProtectedRoute>} />
+            <Route path="/hymn-lessons" element={<ProtectedRoute><StudentHymnLessonsScreen /></ProtectedRoute>} />
+            <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
+            <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
+
+            {/* Student only */}
+            <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
+            <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
         </Routes>
     );
 }

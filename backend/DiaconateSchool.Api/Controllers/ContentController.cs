@@ -1,8 +1,10 @@
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
+using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Api.Controllers;
@@ -18,7 +20,9 @@ public class ContentController : ControllerBase
         _contentService = contentService;
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    // ── Lessons ───────────────────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("lessons")]
     public async Task<IActionResult> GetLessons(
         [FromQuery] Guid? stageId,
@@ -36,6 +40,18 @@ public class ContentController : ControllerBase
     }
 
     [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("my-lessons")]
+    public async Task<IActionResult> GetMyLessons([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var gradeIdClaim = User.FindFirst("GradeId")?.Value;
+        if (string.IsNullOrEmpty(gradeIdClaim))
+            return BadRequest(new { Message = "Grade not found in token." });
+
+        var result = await _contentService.GetLessonsAsync(null, Guid.Parse(gradeIdClaim), "Published", page, pageSize);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AllAuthenticated")]
     [HttpGet("lessons/{id}")]
     public async Task<IActionResult> GetLesson(string id)
     {
@@ -49,7 +65,7 @@ public class ContentController : ControllerBase
         return Ok(lesson);
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("lessons")]
     public async Task<IActionResult> CreateLesson([FromBody] CreateLessonDto dto)
     {
@@ -64,7 +80,7 @@ public class ContentController : ControllerBase
         }
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("lessons/{id}")]
     public async Task<IActionResult> UpdateLesson(string id, [FromBody] UpdateLessonDto dto)
     {
@@ -78,7 +94,7 @@ public class ContentController : ControllerBase
         return Ok(lesson);
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("lessons/{id}/publish")]
     public async Task<IActionResult> PublishLesson(string id)
     {
@@ -92,7 +108,7 @@ public class ContentController : ControllerBase
         return Ok(new { Message = "Lesson published successfully." });
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("lessons/{id}/archive")]
     public async Task<IActionResult> ArchiveLesson(string id)
     {
@@ -106,7 +122,7 @@ public class ContentController : ControllerBase
         return Ok(new { Message = "Lesson archived successfully." });
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("lessons/{id}")]
     public async Task<IActionResult> DeleteLesson(string id)
     {
@@ -120,7 +136,9 @@ public class ContentController : ControllerBase
         return Ok(new { Message = "Lesson deleted successfully." });
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    // ── Content items ─────────────────────────────────────────────────
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("lessons/{lessonId}/content")]
     public async Task<IActionResult> AddContentItem(string lessonId, [FromBody] CreateContentItemDto dto)
     {
@@ -138,7 +156,7 @@ public class ContentController : ControllerBase
         }
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("content/{id}")]
     public async Task<IActionResult> RemoveContentItem(string id)
     {
@@ -152,7 +170,7 @@ public class ContentController : ControllerBase
         return Ok(new { Message = "Content item removed successfully." });
     }
 
-    [Authorize(Policy = "ServantOrAdmin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("lessons/{lessonId}/reorder")]
     public async Task<IActionResult> ReorderContent(string lessonId, [FromBody] List<Guid> contentItemIds)
     {

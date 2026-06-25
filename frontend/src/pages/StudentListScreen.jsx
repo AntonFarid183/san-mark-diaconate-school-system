@@ -132,14 +132,8 @@ const StudentListScreen = () => {
                     <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>لا يوجد طلاب</td></tr>
                   ) : (
                     students.map((s, idx) => (
-                      <tr
-                        key={s.id}
-                        style={{
-                          borderBottom: '1px solid var(--glass-border)',
-                          transition: 'background 0.2s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      <tr key={s.id} className="table-row-hover"
+                        style={{ borderBottom: '1px solid var(--glass-border)' }}
                       >
                         <td style={{ padding: '1rem' }}>
                           <div style={{ fontWeight: 600 }}>{s.fullName}</div>

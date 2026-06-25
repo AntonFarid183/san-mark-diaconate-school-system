@@ -3,7 +3,6 @@ namespace DiaconateSchool.Domain.Enums;
 public enum Role
 {
     Admin = 1,
-    Servant = 2,
     Student = 3
 }
 
@@ -62,15 +61,50 @@ public enum SubmissionStatus
     Rejected = 3
 }
 
+public enum CurriculumStatus
+{
+    Draft = 0,
+    Published = 1,
+    Archived = 2
+}
+
+public enum HymnVideoType
+{
+    None = 0,
+    UploadedFile = 1,
+    YouTubeUrl = 2
+}
+
+public enum HymnLyricsType
+{
+    None = 0,
+    Pdf = 1,
+    Image = 2,
+    Both = 3
+}
+
 public enum QuestionType
 {
     MultipleChoice = 0,
     Essay = 1
 }
 
-public enum ExamAttemptStatus
+public enum ExamResultStatus
 {
-    InProgress = 0,
-    Submitted = 1,
-    Graded = 2
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2
+}
+
+public enum ExamPeriod
+{
+    Midterm = 0,
+    Final = 1,
+    Supplementary = 2
+}
+
+public enum CertificateStatus
+{
+    Active = 0,
+    Revoked = 1
 }

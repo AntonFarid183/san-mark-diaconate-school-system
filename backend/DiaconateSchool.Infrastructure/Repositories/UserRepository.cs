@@ -24,14 +24,20 @@ public class UserRepository : IUserRepository
     public async Task<ApplicationUser?> GetByUserNameAsync(string userName)
     {
         return await _context.Users
-            .Include(u => u.Student)
+            .Include(u => u.Student).ThenInclude(s => s!.Grade)
             .FirstOrDefaultAsync(u => u.UserName == userName);
     }
 
     public async Task<ApplicationUser?> GetByIdAsync(Guid id)
     {
         return await _context.Users
-            .Include(u => u.Student)
+            .Include(u => u.Student).ThenInclude(s => s!.Grade)
             .FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public Task UpdateAsync(ApplicationUser user)
+    {
+        _context.Users.Update(user);
+        return Task.CompletedTask;
     }
 }

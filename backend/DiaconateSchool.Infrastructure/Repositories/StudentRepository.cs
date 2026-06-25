@@ -46,6 +46,13 @@ public class StudentRepository : IStudentRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Stage>> GetAllStagesAsync()
+    {
+        return await _context.Stages
+            .OrderBy(s => s.DisplayOrder)
+            .ToListAsync();
+    }
+
     public async Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null)
     {
         var query = _context.Students
@@ -61,7 +68,8 @@ public class StudentRepository : IStudentRepository
                 s.User.FirstName.Contains(filter) ||
                 s.User.MiddleName.Contains(filter) ||
                 s.User.ThirdName.Contains(filter) ||
-                s.User.LastName.Contains(filter));
+                s.User.LastName.Contains(filter) ||
+                s.StudentCode.Contains(filter));
         }
 
         return await query
@@ -73,7 +81,7 @@ public class StudentRepository : IStudentRepository
 
     public async Task<int> GetFilteredCountAsync(string? nameFilter = null)
     {
-        var query = _context.Students.AsQueryable();
+        var query = _context.Students.Include(s => s.User).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
@@ -82,7 +90,8 @@ public class StudentRepository : IStudentRepository
                 s.User.FirstName.Contains(filter) ||
                 s.User.MiddleName.Contains(filter) ||
                 s.User.ThirdName.Contains(filter) ||
-                s.User.LastName.Contains(filter));
+                s.User.LastName.Contains(filter) ||
+                s.StudentCode.Contains(filter));
         }
 
         return await query.CountAsync();
@@ -104,5 +113,11 @@ public class StudentRepository : IStudentRepository
             .Include(s => s.Grade)
                 .ThenInclude(g => g.Stage)
             .FirstOrDefaultAsync(s => s.UserId == userId);
+    }
+
+    public Task UpdateAsync(Student student)
+    {
+        _context.Students.Update(student);
+        return Task.CompletedTask;
     }
 }

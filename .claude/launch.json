@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Backend API (ASP.NET Core)",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "backend/DiaconateSchool.Api"],
+      "port": 5016,
+      "autoPort": false
+    },
+    {
+      "name": "Frontend (Vite + React)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "frontend",
+      "port": 5173,
+      "autoPort": false
+    }
+  ]
+}

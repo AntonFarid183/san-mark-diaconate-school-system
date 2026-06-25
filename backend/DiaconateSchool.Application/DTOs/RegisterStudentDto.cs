@@ -21,6 +21,7 @@ public class RegisterStudentDto
 
     public required string FatherMobile { get; set; }
     public required string MotherMobile { get; set; }
+    public string? StudentMobile { get; set; }
     public required string WhatsAppNumber { get; set; }
     public string? Landline { get; set; }
 

@@ -15,59 +15,53 @@ public class ApplicationDbContext : DbContext
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Grade> Grades => Set<Grade>();
     public DbSet<Stage> Stages => Set<Stage>();
-    public DbSet<Servant> Servants => Set<Servant>();
     public DbSet<AcademicYear> AcademicYears => Set<AcademicYear>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<ContentItem> ContentItems => Set<ContentItem>();
     public DbSet<ContentAccess> ContentAccesses => Set<ContentAccess>();
     public DbSet<StudentProgressSummary> StudentProgressSummaries => Set<StudentProgressSummary>();
-    public DbSet<Hymn> Hymns => Set<Hymn>();
-    public DbSet<HymnSubmission> HymnSubmissions => Set<HymnSubmission>();
     public DbSet<Exam> Exams => Set<Exam>();
-    public DbSet<ExamQuestion> ExamQuestions => Set<ExamQuestion>();
-    public DbSet<ExamAttempt> ExamAttempts => Set<ExamAttempt>();
-    public DbSet<ExamAnswer> ExamAnswers => Set<ExamAnswer>();
+    public DbSet<ExamResult> ExamResults => Set<ExamResult>();
+    public DbSet<Certificate> Certificates => Set<Certificate>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<GradeHistory> GradeHistories => Set<GradeHistory>();
+    public DbSet<Curriculum> Curriculums => Set<Curriculum>();
+    public DbSet<HymnLesson> HymnLessons => Set<HymnLesson>();
+    public DbSet<HymnLessonProgress> HymnLessonProgresses => Set<HymnLessonProgress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // 1. One-to-One: User <-> Student
+        // User <-> Student
         modelBuilder.Entity<ApplicationUser>()
             .HasOne(u => u.Student)
             .WithOne(s => s.User)
             .HasForeignKey<Student>(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 2. One-to-One: User <-> Servant
-        modelBuilder.Entity<ApplicationUser>()
-            .HasOne<Servant>()
-            .WithOne(s => s.User)
-            .HasForeignKey<Servant>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // 3. One-to-Many: Stage -> Grades
+        // Stage -> Grades
         modelBuilder.Entity<Grade>()
             .HasOne(g => g.Stage)
             .WithMany(s => s.Grades)
             .HasForeignKey(g => g.StageId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 4. One-to-Many: Grade -> Students
+        // Grade -> Students
         modelBuilder.Entity<Student>()
             .HasOne(s => s.Grade)
             .WithMany(g => g.Students)
             .HasForeignKey(s => s.GradeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 5. Grade -> AcademicYear (optional)
+        // Grade -> AcademicYear
         modelBuilder.Entity<Grade>()
             .HasOne(g => g.AcademicYear)
             .WithMany()
             .HasForeignKey(g => g.AcademicYearId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // 6. Lesson -> Stage, Grade
+        // Lesson -> Stage, Grade
         modelBuilder.Entity<Lesson>()
             .HasOne(l => l.Stage)
             .WithMany()
@@ -80,14 +74,14 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(l => l.GradeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 7. ContentItem -> Lesson
+        // ContentItem -> Lesson
         modelBuilder.Entity<ContentItem>()
             .HasOne(ci => ci.Lesson)
             .WithMany(l => l.ContentItems)
             .HasForeignKey(ci => ci.LessonId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 8. ContentAccess -> Student, ContentItem
+        // ContentAccess -> Student, ContentItem
         modelBuilder.Entity<ContentAccess>()
             .HasOne(ca => ca.Student)
             .WithMany()
@@ -100,38 +94,14 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(ca => ca.ContentItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 9. StudentProgressSummary -> Student
+        // StudentProgressSummary -> Student
         modelBuilder.Entity<StudentProgressSummary>()
             .HasOne(sps => sps.Student)
             .WithMany()
             .HasForeignKey(sps => sps.StudentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 10. Hymn -> Grade
-        modelBuilder.Entity<Hymn>()
-            .HasOne(h => h.Grade)
-            .WithMany()
-            .HasForeignKey(h => h.GradeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // 11. HymnSubmission -> Hymn, Student
-        modelBuilder.Entity<HymnSubmission>()
-            .HasOne(hs => hs.Hymn)
-            .WithMany(h => h.Submissions)
-            .HasForeignKey(hs => hs.HymnId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<HymnSubmission>()
-            .HasOne(hs => hs.Student)
-            .WithMany()
-            .HasForeignKey(hs => hs.StudentId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<HymnSubmission>()
-            .HasIndex(hs => new { hs.HymnId, hs.StudentId })
-            .IsUnique();
-
-        // 12. Exam -> Stage, Grade
+        // Exam -> Stage, Grade
         modelBuilder.Entity<Exam>()
             .HasOne(e => e.Stage)
             .WithMany()
@@ -144,43 +114,108 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(e => e.GradeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 13. ExamQuestion -> Exam
-        modelBuilder.Entity<ExamQuestion>()
-            .HasOne(eq => eq.Exam)
-            .WithMany(e => e.Questions)
-            .HasForeignKey(eq => eq.ExamId)
+        // ExamResult -> Exam, Student
+        modelBuilder.Entity<ExamResult>()
+            .HasOne(er => er.Exam)
+            .WithMany(e => e.Results)
+            .HasForeignKey(er => er.ExamId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 14. ExamAttempt -> Exam, Student
-        modelBuilder.Entity<ExamAttempt>()
-            .HasOne(ea => ea.Exam)
-            .WithMany(e => e.Attempts)
-            .HasForeignKey(ea => ea.ExamId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<ExamAttempt>()
-            .HasOne(ea => ea.Student)
+        modelBuilder.Entity<ExamResult>()
+            .HasOne(er => er.Student)
             .WithMany()
-            .HasForeignKey(ea => ea.StudentId)
+            .HasForeignKey(er => er.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 15. ExamAnswer -> ExamAttempt, ExamQuestion
-        modelBuilder.Entity<ExamAnswer>()
-            .HasOne(ea => ea.ExamAttempt)
-            .WithMany(a => a.Answers)
-            .HasForeignKey(ea => ea.ExamAttemptId)
+        modelBuilder.Entity<ExamResult>()
+            .Property(er => er.Score).HasPrecision(5, 2);
+        modelBuilder.Entity<ExamResult>()
+            .Property(er => er.TotalScore).HasPrecision(5, 2);
+        modelBuilder.Entity<ExamResult>()
+            .Property(er => er.Percentage).HasPrecision(5, 2);
+
+        // Certificate -> ExamResult, Student
+        modelBuilder.Entity<Certificate>()
+            .HasOne(c => c.ExamResult)
+            .WithOne(er => er.Certificate)
+            .HasForeignKey<Certificate>(c => c.ExamResultId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<ExamAnswer>()
-            .HasOne(ea => ea.Question)
+        modelBuilder.Entity<Certificate>()
+            .HasOne(c => c.Student)
             .WithMany()
-            .HasForeignKey(ea => ea.QuestionId)
+            .HasForeignKey(c => c.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 16. Unique Indexes
+        modelBuilder.Entity<Certificate>()
+            .Property(c => c.Score).HasPrecision(5, 2);
+        modelBuilder.Entity<Certificate>()
+            .Property(c => c.TotalScore).HasPrecision(5, 2);
+        modelBuilder.Entity<Certificate>()
+            .Property(c => c.Percentage).HasPrecision(5, 2);
+
+        // Announcement -> Stage (optional)
+        modelBuilder.Entity<Announcement>()
+            .HasOne(a => a.TargetStage)
+            .WithMany()
+            .HasForeignKey(a => a.TargetStageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // GradeHistory -> Student, FromGrade, ToGrade
+        modelBuilder.Entity<GradeHistory>()
+            .HasOne(gh => gh.Student)
+            .WithMany()
+            .HasForeignKey(gh => gh.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GradeHistory>()
+            .HasOne(gh => gh.FromGrade)
+            .WithMany()
+            .HasForeignKey(gh => gh.FromGradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GradeHistory>()
+            .HasOne(gh => gh.ToGrade)
+            .WithMany()
+            .HasForeignKey(gh => gh.ToGradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Curriculum -> Stage
+        modelBuilder.Entity<Curriculum>()
+            .HasOne(c => c.Stage)
+            .WithMany()
+            .HasForeignKey(c => c.StageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // HymnLesson -> Stage
+        modelBuilder.Entity<HymnLesson>()
+            .HasOne(hl => hl.Stage)
+            .WithMany()
+            .HasForeignKey(hl => hl.StageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // HymnLessonProgress -> Student, HymnLesson
+        modelBuilder.Entity<HymnLessonProgress>()
+            .HasOne(p => p.Student)
+            .WithMany()
+            .HasForeignKey(p => p.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HymnLessonProgress>()
+            .HasOne(p => p.HymnLesson)
+            .WithMany()
+            .HasForeignKey(p => p.HymnLessonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HymnLessonProgress>()
+            .HasIndex(p => new { p.StudentId, p.HymnLessonId }).IsUnique();
+
+        modelBuilder.Entity<HymnLessonProgress>()
+            .Property(p => p.WatchedPercent).HasPrecision(5, 1);
+
+        // Unique indexes
         modelBuilder.Entity<ApplicationUser>()
-            .HasIndex(u => u.UserName)
-            .IsUnique();
+            .HasIndex(u => u.UserName).IsUnique();
 
         modelBuilder.Entity<ApplicationUser>()
             .HasIndex(u => new { u.FirstName, u.MiddleName, u.ThirdName, u.LastName })
@@ -188,18 +223,14 @@ public class ApplicationDbContext : DbContext
             .HasDatabaseName("IX_User_UniqueFullName");
 
         modelBuilder.Entity<Student>()
-            .HasIndex(s => s.StudentCode)
-            .IsUnique();
+            .HasIndex(s => s.StudentCode).IsUnique();
 
         modelBuilder.Entity<ContentAccess>()
-            .HasIndex(ca => new { ca.StudentId, ca.ContentItemId })
-            .IsUnique();
+            .HasIndex(ca => new { ca.StudentId, ca.ContentItemId }).IsUnique();
 
         modelBuilder.Entity<StudentProgressSummary>()
-            .HasIndex(sps => sps.StudentId)
-            .IsUnique();
+            .HasIndex(sps => sps.StudentId).IsUnique();
 
-        // 11. Seed Data
         SeedStagesAndGrades(modelBuilder);
     }
 
@@ -219,11 +250,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Stage>().HasData(stages);
 
         var grades = new List<Grade>();
-        int gradeCounter = 0;
 
         for (int i = 1; i <= 6; i++)
-        {
-            gradeCounter++;
             grades.Add(new Grade
             {
                 Id = Guid.Parse($"00000000-0000-0000-0001-{i:D12}"),
@@ -231,11 +259,8 @@ public class ApplicationDbContext : DbContext
                 Level = i,
                 StageId = primaryId
             });
-        }
 
         for (int i = 1; i <= 3; i++)
-        {
-            gradeCounter++;
             grades.Add(new Grade
             {
                 Id = Guid.Parse($"00000000-0000-0000-0002-{i:D12}"),
@@ -243,11 +268,8 @@ public class ApplicationDbContext : DbContext
                 Level = i,
                 StageId = prepId
             });
-        }
 
         for (int i = 1; i <= 3; i++)
-        {
-            gradeCounter++;
             grades.Add(new Grade
             {
                 Id = Guid.Parse($"00000000-0000-0000-0003-{i:D12}"),
@@ -255,7 +277,6 @@ public class ApplicationDbContext : DbContext
                 Level = i,
                 StageId = secondaryId
             });
-        }
 
         modelBuilder.Entity<Grade>().HasData(grades);
     }

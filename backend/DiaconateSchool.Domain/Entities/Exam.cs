@@ -9,9 +9,6 @@ public class Exam
     public Guid Id { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
-    public int DurationMinutes { get; set; }
-    public int TotalPoints { get; set; }
-    public int PassingScore { get; set; }
     public Guid GradeId { get; set; }
     public Grade Grade { get; set; } = null!;
     public Guid StageId { get; set; }
@@ -19,6 +16,5 @@ public class Exam
     public Guid CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<ExamQuestion> Questions { get; set; } = new List<ExamQuestion>();
-    public ICollection<ExamAttempt> Attempts { get; set; } = new List<ExamAttempt>();
+    public ICollection<ExamResult> Results { get; set; } = new List<ExamResult>();
 }

@@ -1,11 +1,11 @@
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
+using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Api.Controllers;
 
@@ -25,8 +25,7 @@ public class ProgressController : ControllerBase
     public async Task<IActionResult> RecordHeartbeat([FromBody] ProgressHeartbeatDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         try
         {
@@ -44,8 +43,7 @@ public class ProgressController : ControllerBase
     public async Task<IActionResult> GetDashboard()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         var dashboard = await _progressService.GetStudentDashboardAsync(Guid.Parse(userId));
         if (dashboard == null)
@@ -59,8 +57,7 @@ public class ProgressController : ControllerBase
     public async Task<IActionResult> GetLessonProgress()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         var progress = await _progressService.GetLessonProgressAsync(Guid.Parse(userId));
         return Ok(progress);

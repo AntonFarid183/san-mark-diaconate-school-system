@@ -41,7 +41,7 @@ public class StudentsController : ControllerBase
         return Ok(stages.Select(s => new { s.Id, s.Name, s.DisplayOrder }));
     }
 
-    [Authorize(Policy = "AdminOnly")]
+    [AllowAnonymous]
     [HttpGet("grades/{stageId}")]
     public async Task<IActionResult> GetGrades(string stageId)
     {
@@ -60,18 +60,36 @@ public class StudentsController : ControllerBase
     // ── Student list / detail ─────────────────────────────────────────
 
     [Authorize(Policy = "AdminOnly")]
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPendingStudents()
+    {
+        var result = await _queryService.GetPendingStudentsAsync();
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     public async Task<IActionResult> GetStudents(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? name = null)
+        [FromQuery] string? name = null,
+        [FromQuery] Guid? gradeId = null,
+        [FromQuery] Guid? stageId = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
-        if (pageSize > 50) pageSize = 50;
+        if (pageSize > 200) pageSize = 200;
 
-        var result = await _queryService.GetStudentsAsync(page, pageSize, name);
+        var result = await _queryService.GetStudentsAsync(page, pageSize, name, gradeId, stageId);
         return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("grades")]
+    public async Task<IActionResult> GetAllGrades()
+    {
+        var grades = await _queryService.GetAllGradesAsync();
+        return Ok(grades);
     }
 
     [Authorize(Policy = "AdminOnly")]
@@ -90,7 +108,7 @@ public class StudentsController : ControllerBase
 
     // ── Registration ──────────────────────────────────────────────────
 
-    [Authorize(Policy = "AdminOnly")]
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentDto dto)
     {
@@ -155,12 +173,12 @@ public class StudentsController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{id}/activate")]
-    public async Task<IActionResult> Activate(string id)
+    public async Task<IActionResult> Activate(string id, [FromBody] ActivateStudentDto? dto = null)
     {
         if (!Guid.TryParse(id, out var parsedId))
             return BadRequest(new { Message = "Invalid student ID format." });
 
-        var success = await _queryService.SetActiveStatusAsync(parsedId, true);
+        var success = await _queryService.SetActiveStatusAsync(parsedId, true, dto?.WithFees ?? false);
         return success ? Ok(new { Message = "تم تفعيل الحساب." }) : NotFound(new { Message = "Student not found." });
     }
 
@@ -213,9 +231,26 @@ public class StudentsController : ControllerBase
 
         return Ok(student);
     }
+
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpPatch("me/picture")]
+    public async Task<IActionResult> UpdateMyPicture([FromBody] UpdatePictureDto dto)
+    {
+        var student = await _queryService.GetStudentByUserIdAsync(GetUserId());
+        if (student == null)
+            return NotFound(new { Message = "Student profile not found." });
+
+        var updated = await _queryService.UpdateStudentAsync(student.Id, new UpdateStudentDto { ProfilePictureUrl = dto.Url });
+        return Ok(updated);
+    }
 }
 
 public class ResetStudentPasswordDto
 {
     public string NewPassword { get; set; } = string.Empty;
+}
+
+public class UpdatePictureDto
+{
+    public string Url { get; set; } = string.Empty;
 }

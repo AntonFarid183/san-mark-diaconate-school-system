@@ -14,6 +14,9 @@ public class Curriculum
     public Guid StageId { get; set; }
     public Stage Stage { get; set; } = null!;
 
+    public Guid? GradeId { get; set; }
+    public Grade? Grade { get; set; }
+
     public string? PdfUrl { get; set; }
     public string? PdfFileName { get; set; }
     public long? PdfSizeBytes { get; set; }

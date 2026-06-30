@@ -34,9 +34,6 @@ public class AuthController : ControllerBase
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
-        if (dto.NewPassword.Length < 8)
-            return BadRequest(new { Message = "كلمة المرور يجب أن تكون 8 أحرف على الأقل." });
-
         bool success = await _authService.ChangePasswordAsync(dto);
         if (!success)
             return BadRequest(new { Message = "بيانات الدخول غير صحيحة." });

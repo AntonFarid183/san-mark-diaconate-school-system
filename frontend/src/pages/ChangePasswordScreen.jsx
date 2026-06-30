@@ -1,208 +1,101 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
+import Layout from '../Layout';
 
 const ChangePasswordScreen = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const userName = location.state?.userName;
+  const { user } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  if (!userName) {
-    navigate('/login');
-    return null;
-  }
-
-  const passwordStrength = (pw) => {
-    const checks = [];
-    if (pw.length >= 8) checks.push(true);
-    if (/[@#$%!^&*]/.test(pw)) checks.push(true);
-    return checks;
-  };
-
-  const strength = passwordStrength(newPassword);
-
-  const handleChangePassword = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (newPassword !== confirmPassword) {
+    if (newPassword.length < 6)
+      return setError('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.');
+
+    if (newPassword !== confirmPassword)
       return setError('كلمة المرور الجديدة غير متطابقة.');
-    }
 
     setIsLoading(true);
     try {
       await apiClient.post('/auth/change-password', {
-        userName,
+        userName: user.userName,
         currentPassword,
-        newPassword
+        newPassword,
       });
-      alert('تم تغيير كلمة المرور بنجاح! يرجى تسجيل الدخول مجدداً.');
-      navigate('/login');
+      setSuccess(true);
     } catch (err) {
-      if (err.response && err.response.data) {
-        const errorMsg = err.response.data.message || err.response.data.Message;
-        setError(errorMsg || 'كلمة المرور الحالية غير صحيحة.');
-      } else {
-        setError('حدث خطأ في الاتصال بالخادم. تأكد من أن الـ Backend يعمل.');
-      }
+      const msg = err.response?.data?.message || err.response?.data?.Message;
+      setError(msg || 'كلمة المرور الحالية غير صحيحة.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="auth-page">
-      <div className="glass-card" style={{ maxWidth: '450px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>lock_reset</span>
-          <h2 style={{ color: 'var(--accent-gold)' }}>تغيير كلمة المرور</h2>
-          <p style={{ fontSize: '0.85rem' }}>مدرسة بي ثيؤريموس للشمامسة — كنيسة مارمرقس النزهة 2</p>
+  if (success) {
+    return (
+      <Layout title="تغيير كلمة المرور">
+        <div style={{ maxWidth: '420px', margin: '3rem auto', textAlign: 'center' }} className="glass-card">
+          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', display: 'block', marginBottom: '1rem' }}>check_circle</span>
+          <h2 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التغيير بنجاح</h2>
+          <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>كلمة مرورك الجديدة مفعّلة الآن.</p>
+          <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 2rem' }}>
+            العودة للرئيسية
+          </button>
         </div>
+      </Layout>
+    );
+  }
 
-        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {error && <div className="error-box">{error}</div>}
+  return (
+    <Layout title="تغيير كلمة المرور">
+      <div style={{ maxWidth: '420px', margin: '0 auto' }}>
+        <div className="glass-card">
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)', display: 'block', marginBottom: '0.5rem' }}>lock_reset</span>
+            <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.1rem' }}>تغيير كلمة المرور</h2>
+          </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>اسم المستخدم</label>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
-              }}>person</span>
-              <input type="text" className="premium-input" value={userName} disabled style={{ paddingRight: '40px', opacity: 0.7 }} />
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {error && <div className="error-box">{error}</div>}
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>كلمة المرور الحالية</label>
+              <input type="password" className="premium-input" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
             </div>
-          </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>كلمة المرور المؤقتة</label>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
-              }}>key</span>
-              <input
-                type={showCurrent ? 'text' : 'password'}
-                className="premium-input"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                style={{ paddingRight: '40px', paddingLeft: '40px' }}
-              />
-              <span
-                className="material-symbols-outlined"
-                onClick={() => setShowCurrent(!showCurrent)}
-                style={{
-                  position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer',
-                }}
-              >{showCurrent ? 'visibility_off' : 'visibility'}</span>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>كلمة المرور الجديدة</label>
+              <input type="password" className="premium-input" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} />
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>6 أحرف أو أرقام على الأقل</p>
             </div>
-          </div>
 
-          <div style={{
-            padding: '0.75rem 1rem',
-            background: 'rgba(251, 191, 36, 0.05)',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(251, 191, 36, 0.15)',
-            fontSize: '0.85rem',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', verticalAlign: 'middle', marginLeft: '0.5rem', color: 'var(--accent-gold)' }}>update</span>
-            تحديث الأمان
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>كلمة المرور الجديدة</label>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
-              }}>lock_open</span>
-              <input
-                type={showNew ? 'text' : 'password'}
-                className="premium-input"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                style={{ paddingRight: '40px', paddingLeft: '40px' }}
-              />
-              <span
-                className="material-symbols-outlined"
-                onClick={() => setShowNew(!showNew)}
-                style={{
-                  position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer',
-                }}
-              >{showNew ? 'visibility_off' : 'visibility'}</span>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>تأكيد كلمة المرور</label>
+              <input type="password" className="premium-input" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={6} />
             </div>
-            {newPassword && (
-              <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: strength[0] ? 'var(--success)' : 'var(--text-muted)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{strength[0] ? 'check_circle' : 'circle'}</span>
-                  على الأقل 8 أحرف
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: strength[1] ? 'var(--success)' : 'var(--text-muted)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{strength[1] ? 'check_circle' : 'circle'}</span>
-                  يجب أن تحتوي على رمز خاص (@#$%)
-                </div>
-              </div>
-            )}
-          </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>تأكيد كلمة المرور الجديدة</label>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: '20px', pointerEvents: 'none',
-              }}>verified_user</span>
-              <input
-                type={showConfirm ? 'text' : 'password'}
-                className="premium-input"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                style={{ paddingRight: '40px', paddingLeft: '40px' }}
-              />
-              <span
-                className="material-symbols-outlined"
-                onClick={() => setShowConfirm(!showConfirm)}
-                style={{
-                  position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer',
-                }}
-              >{showConfirm ? 'visibility_off' : 'visibility'}</span>
-            </div>
-          </div>
+            <button type="submit" className="btn-primary" disabled={isLoading}>
+              {isLoading ? 'جاري الحفظ...' : 'حفظ كلمة المرور'}
+            </button>
 
-          <button type="submit" className="btn-primary" disabled={isLoading}>
-            {isLoading ? 'جاري الحفظ...' : 'تغيير كلمة المرور'}
-          </button>
-        </form>
-
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <button
-            onClick={() => navigate('/login')}
-            className="btn-secondary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
-            العودة إلى صفحة الدخول
-          </button>
+            <button type="button" onClick={() => navigate(-1)} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+              رجوع
+            </button>
+          </form>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

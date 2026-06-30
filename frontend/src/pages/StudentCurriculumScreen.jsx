@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import { BACKEND_URL } from '../config';
 
 export default function StudentCurriculumScreen() {
   const [items, setItems] = useState([]);
@@ -19,7 +20,7 @@ export default function StudentCurriculumScreen() {
 
   const downloadFile = async (url, fileName) => {
     try {
-      const res = await fetch(`http://localhost:5016${url}`);
+      const res = await fetch(`${BACKEND_URL}${url}`);
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -93,7 +94,7 @@ export default function StudentCurriculumScreen() {
             </div>
           </div>
           <iframe
-            src={`http://localhost:5016${viewing.pdfUrl}`}
+            src={`${BACKEND_URL}${viewing.pdfUrl}`}
             style={{ flex: 1, border: 'none', width: '100%' }}
             title={viewing.title}
           />

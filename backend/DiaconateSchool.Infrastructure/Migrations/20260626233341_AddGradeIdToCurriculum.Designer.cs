@@ -4,6 +4,7 @@ using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DiaconateSchool.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626233341_AddGradeIdToCurriculum")]
+    partial class AddGradeIdToCurriculum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -628,9 +631,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("GradeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("LyricsImageUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -666,8 +666,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GradeId");
 
                     b.HasIndex("StageId");
 
@@ -790,12 +788,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            DisplayOrder = 0,
-                            Name = "طفولة"
-                        },
-                        new
-                        {
                             Id = new Guid("00000000-0000-0000-0001-000000000001"),
                             DisplayOrder = 1,
                             Name = "ابتدائي"
@@ -811,24 +803,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                             Id = new Guid("00000000-0000-0000-0003-000000000001"),
                             DisplayOrder = 3,
                             Name = "ثانوي"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0004-000000000001"),
-                            DisplayOrder = 4,
-                            Name = "جامعة"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0005-000000000001"),
-                            DisplayOrder = 5,
-                            Name = "خريجون"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0006-000000000001"),
-                            DisplayOrder = 6,
-                            Name = "كبار"
                         });
                 });
 
@@ -1122,18 +1096,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLesson", b =>
                 {
-                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
-                        .WithMany()
-                        .HasForeignKey("GradeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
                         .WithMany()
                         .HasForeignKey("StageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Grade");
 
                     b.Navigation("Stage");
                 });

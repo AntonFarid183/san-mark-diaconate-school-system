@@ -17,6 +17,7 @@ const StudentDetailScreen = () => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activating, setActivating] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -51,6 +52,19 @@ const StudentDetailScreen = () => {
     </Layout>
   );
 
+  const handleActivate = async (withFees) => {
+    setActivating(true);
+    try {
+      await apiClient.post(`/students/${id}/activate`, { withFees });
+      const response = await apiClient.get(`/students/${id}`);
+      setStudent(response.data);
+    } catch {
+      alert('حدث خطأ أثناء تفعيل الحساب');
+    } finally {
+      setActivating(false);
+    }
+  };
+
   if (!student) return null;
 
   const infoFields = [
@@ -70,6 +84,32 @@ const StudentDetailScreen = () => {
 
   return (
     <Layout title="ملف الطالب">
+
+      {/* Pending activation banner */}
+      {!student.isActive && (
+        <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 'var(--radius-md)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+          <span className="material-symbols-outlined" style={{ color: 'var(--accent-gold)', fontSize: '28px', flexShrink: 0 }}>pending_actions</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: 'var(--accent-gold)', marginBottom: '0.3rem' }}>الحساب قيد المراجعة — في انتظار تأكيد الإدارة</div>
+            <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              سجّل هذا العضو بنفسه عبر نموذج التسجيل الذاتي. يرجى تأكيد وضعه قبل تفعيل الحساب.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
+            <button disabled={activating} onClick={() => handleActivate(true)}
+              style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>payments</span>
+              تم السداد — تفعيل
+            </button>
+            <button disabled={activating} onClick={() => handleActivate(false)}
+              style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent-gold)', background: 'transparent', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>volunteer_activism</span>
+              إعفاء — تفعيل
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Student name header */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

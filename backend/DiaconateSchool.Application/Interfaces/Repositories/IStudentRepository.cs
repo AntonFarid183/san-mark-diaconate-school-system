@@ -12,9 +12,11 @@ public interface IStudentRepository
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
     Task<IEnumerable<Stage>> GetAllStagesAsync();
-    Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null);
-    Task<int> GetFilteredCountAsync(string? nameFilter = null);
+    Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null);
+    Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null);
+    Task<List<Grade>> GetAllGradesAsync();
     Task<Student?> GetByIdWithIncludesAsync(Guid id);
     Task<Student?> GetByUserIdAsync(Guid userId);
     Task UpdateAsync(Student student);
+    Task<List<Student>> GetPendingAsync();
 }

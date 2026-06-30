@@ -4,6 +4,11 @@ using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Application.DTOs;
 
+public class ActivateStudentDto
+{
+    public bool WithFees { get; set; } = false;
+}
+
 public class StudentListItemDto
 {
     public Guid Id { get; set; }

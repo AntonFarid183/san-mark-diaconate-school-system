@@ -24,12 +24,9 @@ const LoginScreen = () => {
       navigate('/dashboard');
     } catch (err) {
       if (err.response && err.response.data) {
-        const { mustChangePassword, message, MustChangePassword, Message } = err.response.data;
-        const isPasswordChangeRequired = mustChangePassword || MustChangePassword;
-        const errorMsg = message || Message;
-
-        if (isPasswordChangeRequired) {
-          navigate('/change-password', { state: { userName } });
+        const errorMsg = err.response.data.message || err.response.data.Message;
+        if (errorMsg === 'ACCOUNT_PENDING') {
+          setError('ACCOUNT_PENDING');
         } else {
           setError(errorMsg || 'بيانات الدخول غير صحيحة.');
         }
@@ -47,12 +44,28 @@ const LoginScreen = () => {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)', marginBottom: '1rem' }}>church</span>
-          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للشمامسة</h1>
+          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
           <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة مارمرقس النزهة 2</p>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {error && <div className="error-box">{error}</div>}
+          {error && error === 'ACCOUNT_PENDING' ? (
+            <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 'var(--radius-sm)', padding: '1rem', lineHeight: 1.7 }}>
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+                <span className="material-symbols-outlined" style={{ color: 'var(--accent-gold)', fontSize: '22px', flexShrink: 0, marginTop: '2px' }}>info</span>
+                <div>
+                  <div style={{ fontWeight: 700, color: 'var(--accent-gold)', marginBottom: '0.4rem', fontSize: '0.95rem' }}>الحساب قيد المراجعة</div>
+                  <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+                    برجاء التوجه إلى سكرتارية المدرسة لتأكيد سداد مصاريف الالتحاق، أو إبلاغ الإدارة بوضعكم المادي لاتخاذ الإجراء المناسب.
+                    <br /><br />
+                    للتواصل مع إدارة المدرسة يُرجى الحضور شخصياً أو التواصل عبر المسؤولين في الكنيسة.
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="error-box">{error}</div>
+          ) : null}
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
@@ -118,10 +131,11 @@ const LoginScreen = () => {
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
-          <p style={{ fontSize: '0.85rem' }}>
-            ليس لديك حساب؟
-            <span style={{ color: 'var(--accent-gold)', marginRight: '0.25rem' }}>تواصل مع إدارة المدرسة</span>
-          </p>
+          <p style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}>ليس لديك حساب؟</p>
+          <button onClick={() => navigate('/self-register')} className="btn-secondary" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
+            تسجيل عضو جديد
+          </button>
         </div>
 
         {/* Footer icons */}

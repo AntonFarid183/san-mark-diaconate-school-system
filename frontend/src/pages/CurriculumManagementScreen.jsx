@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import { BACKEND_URL } from '../config';
 
 const STATUS_MAP = {
   0: { label: 'تحت الإنشاء', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.08)' },
@@ -10,9 +11,17 @@ const STATUS_MAP = {
 
 const CURRENT_YEAR = `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`;
 
+// Stages that have sub-grades in the DB
+const STAGES_WITH_GRADES = new Set([
+  '00000000-0000-0000-0001-000000000001', // ابتدائي
+  '00000000-0000-0000-0002-000000000001', // إعدادي
+  '00000000-0000-0000-0003-000000000001', // ثانوي
+]);
+
 export default function CurriculumManagementScreen() {
   const [items, setItems]             = useState([]);
   const [stages, setStages]           = useState([]);
+  const [allGrades, setAllGrades]     = useState([]);
   const [loading, setLoading]         = useState(true);
   const [filterStage, setFilterStage] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -21,7 +30,7 @@ export default function CurriculumManagementScreen() {
 
   const [showForm, setShowForm]       = useState(false);
   const [editing, setEditing]         = useState(null);
-  const [form, setForm]               = useState({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: '', displayOrder: 0 });
+  const [form, setForm]               = useState({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: '', gradeId: '' });
   const [pendingFile, setPendingFile] = useState(null);
 
   const [uploadTarget, setUploadTarget] = useState(null);
@@ -32,11 +41,15 @@ export default function CurriculumManagementScreen() {
   const modalFileRef  = useRef();
   const replaceRef    = useRef();
 
-  useEffect(() => { fetchStages(); fetchAll(); }, []);
+  useEffect(() => { fetchStages(); fetchAllGrades(); fetchAll(); }, []);
   useEffect(() => { fetchAll(); }, [filterStage, filterStatus, filterYear]);
 
   const fetchStages = async () => {
-    try { const r = await apiClient.get('/students/stages'); setStages(r.data); } catch {}
+    try { const r = await apiClient.get('/students/stages'); setStages(r.data); } catch (err) { console.error('Failed to load stages', err); }
+  };
+
+  const fetchAllGrades = async () => {
+    try { const r = await apiClient.get('/students/grades'); setAllGrades(r.data); } catch (err) { console.error('Failed to load grades', err); }
   };
 
   const fetchAll = async () => {
@@ -56,26 +69,45 @@ export default function CurriculumManagementScreen() {
     setTimeout(() => setMsg(null), 4000);
   };
 
+  // Grades filtered by the currently selected stage in the form
+  const gradesForSelectedStage = allGrades.filter(g => g.stageId === form.stageId);
+  const selectedStageHasGrades = STAGES_WITH_GRADES.has(form.stageId);
+
   // ── form ──────────────────────────────────────────────────────────────────
   const openCreate = () => {
     setEditing(null); setPendingFile(null);
-    setForm({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: stages[0]?.id || '', displayOrder: 0 });
+    setForm({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: stages[0]?.id || '', gradeId: '' });
     setShowForm(true);
   };
   const openEdit = (item) => {
     setEditing(item); setPendingFile(null);
-    setForm({ title: item.title, description: item.description || '', academicYear: item.academicYear, stageId: item.stageId, displayOrder: item.displayOrder });
+    setForm({ title: item.title, description: item.description || '', academicYear: item.academicYear, stageId: item.stageId, gradeId: item.gradeId || '' });
     setShowForm(true);
+  };
+
+  const handleStageChange = (e) => {
+    const newStageId = e.target.value;
+    setForm(f => ({ ...f, stageId: newStageId, gradeId: '' }));
   };
 
   const submit = async () => {
     if (!form.title.trim() || !form.stageId || !form.academicYear.trim()) {
       flash('error', 'العنوان والمرحلة والعام الدراسي مطلوبة.'); return;
     }
+    if (selectedStageHasGrades && !form.gradeId) {
+      flash('error', 'يرجى اختيار السنة الدراسية لهذه المرحلة.'); return;
+    }
     try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        academicYear: form.academicYear,
+        stageId: form.stageId,
+        gradeId: selectedStageHasGrades && form.gradeId ? form.gradeId : null,
+      };
       let savedId = editing?.id;
-      if (editing) { await apiClient.put(`/curriculum/${editing.id}`, form); }
-      else { const r = await apiClient.post('/curriculum', form); savedId = r.data.id; }
+      if (editing) { await apiClient.put(`/curriculum/${editing.id}`, payload); }
+      else { const r = await apiClient.post('/curriculum', payload); savedId = r.data.id; }
       if (pendingFile && savedId) {
         const fd = new FormData(); fd.append('file', pendingFile);
         await apiClient.post(`/curriculum/${savedId}/upload-pdf`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -196,7 +228,7 @@ export default function CurriculumManagementScreen() {
                       )}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                      <span>{item.stageName}</span>
+                      <span>{item.stageName}{item.gradeName ? ` — ${item.gradeName}` : ''}</span>
                       <span>{item.academicYear}</span>
                       {fmt(item.pdfSizeBytes) && <span>{fmt(item.pdfSizeBytes)}</span>}
                     </div>
@@ -208,7 +240,7 @@ export default function CurriculumManagementScreen() {
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload_file</span>
                     </button>
                     {item.pdfUrl && (
-                      <a href={`http://localhost:5016${item.pdfUrl}`} target="_blank" rel="noopener noreferrer"
+                      <a href={`${BACKEND_URL}${item.pdfUrl}`} target="_blank" rel="noopener noreferrer"
                         className="btn-icon info" style={{ textDecoration: 'none' }} title="معاينة PDF">
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>visibility</span>
                       </a>
@@ -258,7 +290,7 @@ export default function CurriculumManagementScreen() {
                   </div>
                 </div>
                 {uploadTarget.pdfUrl && (
-                  <a href={`http://localhost:5016${uploadTarget.pdfUrl}`} target="_blank" rel="noopener noreferrer"
+                  <a href={`${BACKEND_URL}${uploadTarget.pdfUrl}`} target="_blank" rel="noopener noreferrer"
                     style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#60a5fa', textDecoration: 'none' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>open_in_new</span>
                     معاينة
@@ -294,10 +326,11 @@ export default function CurriculumManagementScreen() {
                 <label style={lbl}>الوصف</label>
                 <textarea className="premium-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} style={{ resize: 'vertical' }} placeholder="وصف اختياري..." />
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={lbl}>المرحلة الدراسية *</label>
-                  <select className="premium-input" value={form.stageId} onChange={e => setForm({ ...form, stageId: e.target.value })}>
+                  <select className="premium-input" value={form.stageId} onChange={handleStageChange}>
                     <option value="">اختر المرحلة</option>
                     {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
@@ -307,10 +340,25 @@ export default function CurriculumManagementScreen() {
                   <input className="premium-input" value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })} placeholder="2024/2025" />
                 </div>
               </div>
-              <div>
-                <label style={lbl}>ترتيب العرض</label>
-                <input className="premium-input" type="number" min="0" value={form.displayOrder} onChange={e => setForm({ ...form, displayOrder: parseInt(e.target.value) || 0 })} />
-              </div>
+
+              {/* Grade picker — only appears when stage has sub-grades */}
+              {selectedStageHasGrades && (
+                <div>
+                  <label style={lbl}>السنة الدراسية *</label>
+                  <select
+                    className="premium-input"
+                    value={form.gradeId}
+                    onChange={e => setForm({ ...form, gradeId: e.target.value })}
+                    style={{ borderColor: !form.gradeId ? 'rgba(251,191,36,0.6)' : undefined }}
+                  >
+                    <option value="">— اختر السنة الدراسية —</option>
+                    {gradesForSelectedStage.map(g => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label style={lbl}>ملف PDF {editing?.pdfUrl ? '(استبدال الحالي)' : '(اختياري)'}</label>
                 <button type="button" onClick={() => modalFileRef.current.click()}

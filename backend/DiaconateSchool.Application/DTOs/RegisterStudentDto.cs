@@ -29,4 +29,5 @@ public class RegisterStudentDto
     public string? Landmark { get; set; }
 
     public bool HasPaidFees { get; set; }
+    public bool SelfRegistered { get; set; } = false;
 }

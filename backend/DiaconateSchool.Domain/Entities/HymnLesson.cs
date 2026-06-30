@@ -13,6 +13,9 @@ public class HymnLesson
     public Guid StageId { get; set; }
     public Stage Stage { get; set; } = null!;
 
+    public Guid? GradeId { get; set; }
+    public Grade? Grade { get; set; }
+
     // Video
     public HymnVideoType VideoType { get; set; } = HymnVideoType.None;
     public string? VideoUrl { get; set; }

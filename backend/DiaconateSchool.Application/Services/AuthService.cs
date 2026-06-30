@@ -40,14 +40,8 @@ public class AuthService : IAuthService
         if (!_passwordHasher.VerifyPassword(dto.Password, user.PasswordHash))
             return new AuthResultDto { ErrorMessage = "Invalid credentials." };
 
-        if (user.MustChangePassword)
-        {
-            return new AuthResultDto
-            {
-                MustChangePassword = true,
-                ErrorMessage = "You must change your password before accessing the system."
-            };
-        }
+        if (!user.IsActive)
+            return new AuthResultDto { ErrorMessage = "ACCOUNT_PENDING" };
 
         string token = _jwtGenerator.GenerateToken(user);
 

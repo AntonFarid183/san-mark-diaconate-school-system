@@ -194,6 +194,13 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(hl => hl.StageId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // HymnLesson -> Grade (optional)
+        modelBuilder.Entity<HymnLesson>()
+            .HasOne(hl => hl.Grade)
+            .WithMany()
+            .HasForeignKey(hl => hl.GradeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // HymnLessonProgress -> Student, HymnLesson
         modelBuilder.Entity<HymnLessonProgress>()
             .HasOne(p => p.Student)
@@ -236,15 +243,23 @@ public class ApplicationDbContext : DbContext
 
     private void SeedStagesAndGrades(ModelBuilder modelBuilder)
     {
-        var primaryId = Guid.Parse("00000000-0000-0000-0001-000000000001");
-        var prepId = Guid.Parse("00000000-0000-0000-0002-000000000001");
-        var secondaryId = Guid.Parse("00000000-0000-0000-0003-000000000001");
+        var childhoodId  = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var primaryId    = Guid.Parse("00000000-0000-0000-0001-000000000001");
+        var prepId       = Guid.Parse("00000000-0000-0000-0002-000000000001");
+        var secondaryId  = Guid.Parse("00000000-0000-0000-0003-000000000001");
+        var universityId = Guid.Parse("00000000-0000-0000-0004-000000000001");
+        var graduatesId  = Guid.Parse("00000000-0000-0000-0005-000000000001");
+        var seniorsId    = Guid.Parse("00000000-0000-0000-0006-000000000001");
 
         var stages = new List<Stage>
         {
-            new() { Id = primaryId, Name = "ابتدائي", DisplayOrder = 1 },
-            new() { Id = prepId, Name = "إعدادي", DisplayOrder = 2 },
-            new() { Id = secondaryId, Name = "ثانوي", DisplayOrder = 3 }
+            new() { Id = childhoodId,  Name = "طفولة",   DisplayOrder = 0 },
+            new() { Id = primaryId,    Name = "ابتدائي", DisplayOrder = 1 },
+            new() { Id = prepId,       Name = "إعدادي",  DisplayOrder = 2 },
+            new() { Id = secondaryId,  Name = "ثانوي",   DisplayOrder = 3 },
+            new() { Id = universityId, Name = "جامعة",   DisplayOrder = 4 },
+            new() { Id = graduatesId,  Name = "خريجون",  DisplayOrder = 5 },
+            new() { Id = seniorsId,    Name = "كبار",    DisplayOrder = 6 },
         };
 
         modelBuilder.Entity<Stage>().HasData(stages);

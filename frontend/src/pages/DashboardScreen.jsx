@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import { BACKEND_URL } from '../config';
 
 // ─── Student Dashboard ───────────────────────────────────────────────────────
 
@@ -39,10 +40,19 @@ const StudentDashboard = () => {
   return (
     <>
       {/* Student header */}
-      <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="glass-card card-hover" style={{ padding: '1.5rem', marginBottom: '1.5rem', cursor: 'pointer' }} onClick={() => navigate('/profile')}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)' }}>account_circle</span>
-          <div>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {profile?.profilePictureUrl ? (
+              <img src={profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `${BACKEND_URL}${profile.profilePictureUrl}`} alt="" style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }} />
+            ) : (
+              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)' }}>account_circle</span>
+            )}
+            {!profile?.profilePictureUrl && (
+              <span style={{ position: 'absolute', top: 0, left: 0, width: '14px', height: '14px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-primary)' }} />
+            )}
+          </div>
+          <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.3rem' }}>{profile?.fullName || progress?.studentName}</h1>
               {progress?.studentCode && (
@@ -52,7 +62,14 @@ const StudentDashboard = () => {
               )}
             </div>
             <p style={{ fontSize: '0.85rem' }}>{progress?.stageName} — {progress?.gradeName}</p>
+            {!profile?.profilePictureUrl && (
+              <p style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>error</span>
+                يجب رفع صورة شخصية — اضغط هنا
+              </p>
+            )}
           </div>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--text-muted)' }}>arrow_back</span>
         </div>
       </div>
 
@@ -146,8 +163,7 @@ const StudentDashboard = () => {
           { path: '/curriculum', icon: 'import_contacts', label: 'المناهج' },
           { path: '/hymn-lessons', icon: 'music_note', label: 'دروس الألحان' },
           { path: '/my-results', icon: 'assignment', label: 'نتائجي' },
-          { path: '/my-certificates', icon: 'workspace_premium', label: 'شهاداتي' },
-          { path: '/announcements', icon: 'campaign', label: 'الإعلانات' },
+          { path: '/profile', icon: 'manage_accounts', label: 'الملف الشخصي' },
         ].map(({ path, icon, label, primary }) => (
           <button key={path}
             className={primary ? 'btn-primary' : 'btn-secondary'}
@@ -167,11 +183,18 @@ const StudentDashboard = () => {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [pendingCount, setPendingCount] = useState(null);
+
+  useEffect(() => {
+    apiClient.get('/students/pending')
+      .then(r => setPendingCount(r.data.length))
+      .catch(() => setPendingCount(0));
+  }, []);
 
   const quickActions = [
-    { icon: 'person_add',          title: 'تسجيل طالب جديد',     desc: 'إضافة بيانات شماس جديد للمدرسة',        path: '/register-student',        btnLabel: 'إضافة طالب' },
-    { icon: 'group',               title: 'شؤون الطلاب',          desc: 'استعرض وأدر كافة الطلاب المسجلين',       path: '/students',                btnLabel: 'عرض الطلاب' },
-    { icon: 'import_contacts',     title: 'المناهج الدراسية',     desc: 'أنشئ مناهج ارفع ملفات PDF للمراحل',      path: '/curriculum-management',   btnLabel: 'إدارة المناهج' },
+    { icon: 'person_add',          title: 'تسجيل طالب جديد',     desc: 'إضافة بيانات عضو جديد للمدرسة',          path: '/register-student',        btnLabel: 'إضافة طالب' },
+    { icon: 'group',               title: 'شؤون الأعضاء',         desc: 'استعرض وأدر كافة الأعضاء المسجلين',      path: '/students',                btnLabel: 'عرض الأعضاء' },
+    { icon: 'import_contacts',     title: 'المناهج الدراسية',     desc: 'أنشئ مناهج وارفع ملفات PDF للمراحل',     path: '/curriculum-management',   btnLabel: 'إدارة المناهج' },
     { icon: 'music_note',          title: 'دروس الألحان',          desc: 'أضف دروس فيديو وكلمات الألحان',          path: '/hymn-lessons-management', btnLabel: 'إدارة الألحان' },
     { icon: 'assignment',          title: 'الامتحانات والدرجات',   desc: 'أدخل درجات الامتحانات واعتمدها',          path: '/exams',                   btnLabel: 'الامتحانات' },
     { icon: 'campaign',            title: 'الإعلانات',             desc: 'انشر وأدر إعلانات المدرسة',              path: '/announcements',           btnLabel: 'الإعلانات' },
@@ -183,15 +206,57 @@ const AdminDashboard = () => {
         أهلاً بك يا {user?.fullName || user?.userName}، إليك الإجراءات المتاحة في النظام
       </p>
 
+      {/* Pending approvals alert card */}
+      {pendingCount > 0 && (
+        <div onClick={() => navigate('/pending-approvals')}
+          style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.45)' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>pending_actions</span>
+            <span style={{ position: 'absolute', top: '-6px', left: '-6px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {pendingCount}
+            </span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: 'var(--accent-gold)', fontSize: '0.97rem' }}>
+              {pendingCount === 1 ? 'يوجد طلب تسجيل واحد بانتظار الموافقة' : `يوجد ${pendingCount} طلبات تسجيل بانتظار الموافقة`}
+            </div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+              أعضاء سجّلوا أنفسهم — يحتاجون تأكيداً على سداد المصاريف أو الإعفاء قبل تفعيل حساباتهم
+            </div>
+          </div>
+          <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--accent-gold)', flexShrink: 0 }}>arrow_back</span>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+        {/* Pending approvals card */}
+        <div className="glass-card card-hover" style={{ padding: '1.25rem' }} onClick={() => navigate('/pending-approvals')}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>how_to_reg</span>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', marginBottom: '0.25rem' }}>الموافقة على طلبات التسجيل</h3>
+              <p style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+                {pendingCount === null ? 'جاري التحميل...' : pendingCount > 0 ? `${pendingCount} طلب بانتظار مراجعتك` : 'لا توجد طلبات معلّقة حالياً'}
+              </p>
+              <button onClick={() => navigate('/pending-approvals')} className="btn-primary"
+                style={{ width: 'auto', padding: '0.4rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                مراجعة الطلبات
+              </button>
+            </div>
+          </div>
+        </div>
+
         {quickActions.map((action, i) => (
-          <div key={i} className="glass-card" style={{ padding: '1.25rem' }}>
+          <div key={i} className="glass-card card-hover" style={{ padding: '1.25rem' }} onClick={() => navigate(action.path)}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>{action.icon}</span>
               <div style={{ flex: 1 }}>
                 <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', marginBottom: '0.25rem' }}>{action.title}</h3>
                 <p style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>{action.desc}</p>
-                <button onClick={() => navigate(action.path)} className="btn-primary"
+                <button onClick={e => { e.stopPropagation(); navigate(action.path); }} className="btn-primary"
                   style={{ width: 'auto', padding: '0.4rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
                   {action.btnLabel}

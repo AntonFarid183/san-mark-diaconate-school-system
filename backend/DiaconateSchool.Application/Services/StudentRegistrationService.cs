@@ -50,7 +50,7 @@ public class StudentRegistrationService : IStudentRegistrationService
             userName = $"ST-{1000 + currentCount + 1}";
         }
 
-        string temporaryPassword = GenerateRandomPassword(12);
+        string temporaryPassword = GenerateRandomPassword();
         string hashedPassword = _hasher.HashPassword(temporaryPassword);
 
         var userId = Guid.NewGuid();
@@ -64,7 +64,8 @@ public class StudentRegistrationService : IStudentRegistrationService
             UserName = userName,
             PasswordHash = hashedPassword,
             Role = Role.Student,
-            MustChangePassword = true,
+            MustChangePassword = false,
+            IsActive = !dto.SelfRegistered,
             FirstName = dto.FirstName,
             MiddleName = dto.SecondName,
             ThirdName = dto.ThirdName,
@@ -75,7 +76,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         {
             Id = studentId,
             StudentCode = studentCode,
-            Status = StudentStatus.Active,
+            Status = dto.SelfRegistered ? StudentStatus.Suspended : StudentStatus.Active,
             Gender = dto.Gender,
             DateOfBirth = dto.DateOfBirth,
             GradeId = dto.GradeId,
@@ -117,25 +118,8 @@ public class StudentRegistrationService : IStudentRegistrationService
         return await _studentRepo.GetAllStagesAsync();
     }
 
-    private static string GenerateRandomPassword(int length)
+    private static string GenerateRandomPassword()
     {
-        const string upper = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
-        const string lower = "abcdefghijkmnopqrstuvwxyz";
-        const string digits = "23456789";
-        const string special = "!@#$%&?";
-
-        var random = new Random();
-        var password = new char[length];
-
-        password[0] = upper[random.Next(upper.Length)];
-        password[1] = lower[random.Next(lower.Length)];
-        password[2] = digits[random.Next(digits.Length)];
-        password[3] = special[random.Next(special.Length)];
-
-        string all = upper + lower + digits + special;
-        for (int i = 4; i < length; i++)
-            password[i] = all[random.Next(all.Length)];
-
-        return new string(password.OrderBy(_ => random.Next()).ToArray());
+        return Random.Shared.Next(100000, 999999).ToString();
     }
 }

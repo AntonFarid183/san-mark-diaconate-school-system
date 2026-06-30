@@ -13,7 +13,7 @@ const ProgressScreen = () => {
         const res = await apiClient.get('/progress/dashboard');
         setProgressData(res.data);
         if (res.data.stages?.length > 0) setExpandedStage(res.data.stages[0].stageId);
-      } catch {} finally { setLoading(false); }
+      } catch (err) { console.error('Failed to load progress', err); } finally { setLoading(false); }
     };
     fetch();
   }, []);

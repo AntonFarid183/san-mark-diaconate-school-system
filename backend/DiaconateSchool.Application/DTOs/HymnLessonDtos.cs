@@ -9,7 +9,8 @@ public class HymnLessonDto
     public string? Description { get; set; }
     public Guid StageId { get; set; }
     public string StageName { get; set; } = string.Empty;
-    public int DisplayOrder { get; set; }
+    public Guid? GradeId { get; set; }
+    public string? GradeName { get; set; }
     public LessonStatus Status { get; set; }
     public string StatusLabel { get; set; } = string.Empty;
 
@@ -31,7 +32,7 @@ public class CreateHymnLessonDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Guid StageId { get; set; }
-    public int DisplayOrder { get; set; } = 0;
+    public Guid? GradeId { get; set; }
     public string? YouTubeUrl { get; set; }
 }
 
@@ -40,6 +41,6 @@ public class UpdateHymnLessonDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Guid StageId { get; set; }
-    public int DisplayOrder { get; set; }
+    public Guid? GradeId { get; set; }
     public string? YouTubeUrl { get; set; }
 }

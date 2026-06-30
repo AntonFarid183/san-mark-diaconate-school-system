@@ -43,7 +43,7 @@ public class HymnLessonService : IHymnLessonService
             Title = dto.Title.Trim(),
             Description = dto.Description?.Trim(),
             StageId = dto.StageId,
-            DisplayOrder = dto.DisplayOrder,
+            GradeId = dto.GradeId,
             Status = LessonStatus.Draft,
             CreatedByUserId = createdByUserId
         };
@@ -67,12 +67,14 @@ public class HymnLessonService : IHymnLessonService
 
         h.Title = dto.Title.Trim();
         h.Description = dto.Description?.Trim();
-        h.DisplayOrder = dto.DisplayOrder;
         h.UpdatedAt = DateTime.UtcNow;
 
         // Stage can only change in Draft
         if (h.Status == LessonStatus.Draft)
+        {
             h.StageId = dto.StageId;
+            h.GradeId = dto.GradeId;
+        }
 
         // YouTube URL
         if (!string.IsNullOrWhiteSpace(dto.YouTubeUrl))
@@ -194,7 +196,8 @@ public class HymnLessonService : IHymnLessonService
         Description = h.Description,
         StageId = h.StageId,
         StageName = h.Stage?.Name ?? string.Empty,
-        DisplayOrder = h.DisplayOrder,
+        GradeId = h.GradeId,
+        GradeName = h.Grade?.Name,
         Status = h.Status,
         StatusLabel = h.Status switch
         {

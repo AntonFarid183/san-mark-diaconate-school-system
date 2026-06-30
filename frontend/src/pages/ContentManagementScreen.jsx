@@ -22,7 +22,7 @@ const ContentManagementScreen = () => {
         ]);
         setLessons(ls.data.lessons || []);
         setStages(sg.data || []);
-      } catch {} finally { setLoading(false); }
+      } catch (err) { console.error('Failed to load lessons', err); } finally { setLoading(false); }
     };
     fetch();
   }, []);
@@ -43,7 +43,7 @@ const ContentManagementScreen = () => {
       setShowCreate(false); setEditLesson(null); setForm({ title: '', description: '', lessonNumber: 1, weekNumber: 1, stageId: '', gradeId: '' });
       const ls = await apiClient.get('/content/lessons?pageSize=100');
       setLessons(ls.data.lessons || []);
-    } catch {}
+    } catch (err) { console.error('Failed to save lesson', err); }
   };
 
   const handleUpload = async () => {
@@ -58,7 +58,7 @@ const ContentManagementScreen = () => {
       setShowUpload(null); setUploadForm({ title: '', type: 'Pdf', file: null, fileUrl: '' });
       const ls = await apiClient.get('/content/lessons?pageSize=100');
       setLessons(ls.data.lessons || []);
-    } catch {}
+    } catch (err) { console.error('Failed to upload content', err); }
   };
 
   const handlePublish = async (id, publish) => {
@@ -66,7 +66,7 @@ const ContentManagementScreen = () => {
       await apiClient.put(`/content/lessons/${id}/${publish ? 'publish' : 'archive'}`);
       const ls = await apiClient.get('/content/lessons?pageSize=100');
       setLessons(ls.data.lessons || []);
-    } catch {}
+    } catch (err) { console.error('Failed to publish/archive lesson', err); }
   };
 
   const handleReorder = async (id, direction) => {
@@ -79,7 +79,7 @@ const ContentManagementScreen = () => {
     try {
       await apiClient.put('/content/lessons/reorder', { lessonIds: newLessons.map(l => l.id) });
       setLessons(newLessons);
-    } catch {}
+    } catch (err) { console.error('Failed to reorder lessons', err); }
   };
 
   const openEdit = (lesson) => {

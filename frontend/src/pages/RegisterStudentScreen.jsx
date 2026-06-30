@@ -2,21 +2,46 @@ import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 
-const RegisterStudentScreen = () => {
-  const STAGE_IDS = {
-    primary: '00000000-0000-0000-0001-000000000001',
-    preparatory: '00000000-0000-0000-0002-000000000001',
-    secondary: '00000000-0000-0000-0003-000000000001'
-  };
+const STAGE_IDS = {
+  childhood:   '00000000-0000-0000-0000-000000000001',
+  primary:     '00000000-0000-0000-0001-000000000001',
+  preparatory: '00000000-0000-0000-0002-000000000001',
+  secondary:   '00000000-0000-0000-0003-000000000001',
+  university:  '00000000-0000-0000-0004-000000000001',
+  graduates:   '00000000-0000-0000-0005-000000000001',
+  adults:      '00000000-0000-0000-0006-000000000001',
+};
 
+const STAGES = [
+  {
+    id: STAGE_IDS.childhood, label: 'طفولة', sublabel: '(KG1 و KG2)',
+    hasGrade: true, fetchGrades: false,
+    localGrades: [{ id: '00000000-0000-0000-0000-000000000011', name: 'KG1' }, { id: '00000000-0000-0000-0000-000000000012', name: 'KG2' }],
+  },
+  { id: STAGE_IDS.primary,     label: 'ابتدائي',      hasGrade: true,  fetchGrades: true },
+  { id: STAGE_IDS.preparatory, label: 'إعدادي',       hasGrade: true,  fetchGrades: true },
+  { id: STAGE_IDS.secondary,   label: 'ثانوي',        hasGrade: true,  fetchGrades: true },
+  {
+    id: STAGE_IDS.university, label: 'جامعة', sublabel: '/ معهد',
+    hasGrade: true, fetchGrades: false, hasCollege: true,
+    localGrades: Array.from({ length: 7 }, (_, i) => ({ id: `00000000-0000-0000-0004-00000000001${i + 1}`, name: `السنة ${i + 1}` })),
+  },
+  { id: STAGE_IDS.graduates, label: 'خريجون', hasGrade: true, fetchGrades: false, hidePicker: true,
+    localGrades: [{ id: '00000000-0000-0000-0005-000000000011', name: 'خريجون' }] },
+  { id: STAGE_IDS.adults,    label: 'كبار',    hasGrade: true, fetchGrades: false, hidePicker: true,
+    localGrades: [{ id: '00000000-0000-0000-0006-000000000011', name: 'كبار' }] },
+];
+
+const RegisterStudentScreen = () => {
   const [formData, setFormData] = useState({
-    firstName: '', secondName: '', thirdName: '', lastName: '',
+    fullName: '',
     gender: 1, dateOfBirth: '',
     stage: STAGE_IDS.primary,
     gradeId: '',
+    college: '',
     isDeacon: false, deaconRank: null, fatherOfConfession: '',
-    fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
-    address: '', landmark: '', hasPaidFees: false
+    studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
+    address: '', landmark: '', hasPaidFees: false,
   });
 
   const [grades, setGrades] = useState([]);
@@ -27,37 +52,46 @@ const RegisterStudentScreen = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const formSections = [
-    { key: 'basic', icon: 'person', title: 'البيانات الأساسية' },
-    { key: 'church', icon: 'church', title: 'البيانات الكنسية' },
+    { key: 'basic',   icon: 'person',        title: 'البيانات الأساسية' },
+    { key: 'church',  icon: 'church',        title: 'البيانات الكنسية' },
     { key: 'contact', icon: 'contact_phone', title: 'بيانات التواصل والعنوان' },
   ];
 
+  const currentStage = STAGES.find(s => s.id === formData.stage) || STAGES[1];
+
   useEffect(() => {
+    setFormData(prev => ({ ...prev, gradeId: '', college: '' }));
+    setGrades([]);
+
+    if (!currentStage.hasGrade) return;
+
+    if (!currentStage.fetchGrades) {
+      setGrades(currentStage.localGrades);
+      setFormData(prev => ({ ...prev, gradeId: currentStage.localGrades[0]?.id || '' }));
+      return;
+    }
+
     const fetchGrades = async () => {
       setIsGradesLoading(true);
       try {
         const response = await apiClient.get(`/students/grades/${formData.stage}`);
         setGrades(response.data);
-        if (response.data.length > 0) {
+        if (response.data.length > 0)
           setFormData(prev => ({ ...prev, gradeId: response.data[0].id }));
-        }
-      } catch (err) {
-        console.error("Failed to fetch grades", err);
+      } catch {
         setGrades([]);
-        setError("لم يتم العثور على سنوات دراسية لهذه المرحلة في قاعدة البيانات.");
+        setError('لم يتم العثور على سنوات دراسية لهذه المرحلة في قاعدة البيانات.');
       } finally {
         setIsGradesLoading(false);
       }
     };
     fetchGrades();
-  }, [formData.stage]);
+  }, [formData.stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let parsedValue = type === 'checkbox' ? checked : value;
-    if (name === 'gender' || name === 'deaconRank') {
-      parsedValue = value ? parseInt(value) : null;
-    }
+    if (name === 'gender' || name === 'deaconRank') parsedValue = value ? parseInt(value) : null;
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
   };
 
@@ -65,24 +99,23 @@ const RegisterStudentScreen = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
     try {
-      const response = await apiClient.post('/students/register', formData);
-      setCredentials({
-        userName: response.data.userName,
-        temporaryPassword: response.data.temporaryPassword
-      });
+      const parts = formData.fullName.trim().split(/\s+/);
+      const payload = {
+        ...formData,
+        firstName:  parts[0] || '',
+        secondName: parts[1] || '',
+        thirdName:  parts[2] || '',
+        lastName:   parts[3] || '',
+        gradeId: currentStage.hasGrade ? formData.gradeId : null,
+      };
+      const response = await apiClient.post('/students/register', payload);
+      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
     } catch (err) {
-      console.error("API Error Response:", err.response?.data || err);
       let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
-      if (err.response?.data?.Message) {
-        errorMsg = err.response.data.Message;
-      } else if (err.response?.data?.errors) {
-        const firstError = Object.values(err.response.data.errors)[0];
-        errorMsg = `خطأ في البيانات: ${firstError}`;
-      } else if (!err.response) {
-        errorMsg = 'لا يمكن الاتصال بالخادم. يرجى التأكد من تشغيل الـ Backend.';
-      }
+      if (err.response?.data?.Message) errorMsg = err.response.data.Message;
+      else if (err.response?.data?.errors) errorMsg = `خطأ في البيانات: ${Object.values(err.response.data.errors)[0]}`;
+      else if (!err.response) errorMsg = 'لا يمكن الاتصال بالخادم. يرجى التأكد من تشغيل الـ Backend.';
       setError(errorMsg);
     } finally {
       setIsLoading(false);
@@ -97,14 +130,7 @@ const RegisterStudentScreen = () => {
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
           <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
           <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
-
-          <div style={{
-            padding: '20px',
-            background: 'rgba(255,255,255,0.05)',
-            marginTop: '20px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--accent-gold)',
-          }}>
+          <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
             <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
               اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
             </h2>
@@ -112,7 +138,6 @@ const RegisterStudentScreen = () => {
               كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
             </h2>
           </div>
-
           <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px', width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
             تسجيل طالب آخر
@@ -126,35 +151,21 @@ const RegisterStudentScreen = () => {
   return (
     <Layout title="تسجيل طالب جديد">
       <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        أدخل بيانات الطالب الجديد بدقة لضمان دمج البيانات في نظام مدرسة الشمامسة والسجلات الأكاديمية.
+        أدخل بيانات الطالب الجديد بدقة لضمان دمج البيانات في نظام المدرسة والسجلات الأكاديمية.
       </p>
 
       {/* Stepper */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
         {formSections.map((section, i) => (
-          <div
-            key={section.key}
-            onClick={() => setCurrentStep(i)}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              background: i === currentStep ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
-              border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--glass-border)',
-              cursor: 'pointer',
-              textAlign: 'center',
-              transition: 'all 0.2s',
-            }}
-          >
-            <span className="material-symbols-outlined" style={{
-              fontSize: '20px',
-              display: 'block',
-              marginBottom: '0.25rem',
-              color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-muted)',
-            }}>
+          <div key={section.key} onClick={() => setCurrentStep(i)} style={{
+            flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
+            background: i === currentStep ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.55)',
+            border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.3)',
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px', display: 'block', marginBottom: '0.25rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
               {i < currentStep ? 'check_circle' : section.icon}
             </span>
-            <div style={{ fontSize: '0.75rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-muted)' }}>
+            <div style={{ fontSize: '0.75rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
               {section.title}
             </div>
           </div>
@@ -173,13 +184,9 @@ const RegisterStudentScreen = () => {
                 <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>البيانات الأساسية</h2>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div><label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الاسم الرباعي</label></div>
-                <div></div>
-                <div><input type="text" name="firstName" className="premium-input" placeholder="الاسم الأول" required onChange={handleChange} value={formData.firstName} /></div>
-                <div><input type="text" name="secondName" className="premium-input" placeholder="الاسم الثاني" required onChange={handleChange} value={formData.secondName} /></div>
-                <div><input type="text" name="thirdName" className="premium-input" placeholder="الاسم الثالث" required onChange={handleChange} value={formData.thirdName} /></div>
-                <div><input type="text" name="lastName" className="premium-input" placeholder="الاسم الأخير" required onChange={handleChange} value={formData.lastName} /></div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الاسم الرباعي</label>
+                <input type="text" name="fullName" className="premium-input" placeholder="مثال: مارك أنطون جرجس يوسف" required onChange={handleChange} value={formData.fullName} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
@@ -191,41 +198,59 @@ const RegisterStudentScreen = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>النوع</label>
                   <div style={{ display: 'flex', gap: '1.5rem', padding: '0.75rem 0' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem' }}>
-                      <input type="radio" name="gender" value={1} checked={formData.gender === 1} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} />
-                      ذكر
+                      <input type="radio" name="gender" value={1} checked={formData.gender === 1} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} /> ذكر
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem' }}>
-                      <input type="radio" name="gender" value={2} checked={formData.gender === 2} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} />
-                      أنثى
+                      <input type="radio" name="gender" value={2} checked={formData.gender === 2} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)' }} /> أنثى
                     </label>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>المرحلة الدراسية</label>
-                  <select name="stage" className="premium-input" value={formData.stage} onChange={handleChange}>
-                    <option value={STAGE_IDS.primary}>ابتدائي</option>
-                    <option value={STAGE_IDS.preparatory}>إعدادي</option>
-                    <option value={STAGE_IDS.secondary}>ثانوي</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>السنة الدراسية (الترم)</label>
-                  <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
-                    {isGradesLoading ? (
-                      <option>جاري التحميل...</option>
-                    ) : grades.length > 0 ? (
-                      grades.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))
-                    ) : (
-                      <option value="">لا يوجد بيانات</option>
-                    )}
-                  </select>
+              {/* Stage selector */}
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>المرحلة الدراسية</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {STAGES.map(s => (
+                    <button key={s.id} type="button" onClick={() => setFormData(prev => ({ ...prev, stage: s.id }))}
+                      style={{
+                        padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', transition: 'all 0.2s',
+                        background: formData.stage === s.id ? 'rgba(251,191,36,0.12)' : 'rgba(15,23,42,0.5)',
+                        border: formData.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.25)',
+                        color: formData.stage === s.id ? 'var(--accent-gold)' : 'var(--text-secondary)',
+                        fontWeight: formData.stage === s.id ? 700 : 400,
+                      }}>
+                      {s.label}{s.sublabel && <span style={{ marginRight: '0.25rem' }}>{s.sublabel}</span>}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Grade / year — shown only for stages that have grades */}
+              {currentStage.hasGrade && !currentStage.hidePicker && (
+                <div style={{ display: 'grid', gridTemplateColumns: currentStage.hasCollege ? '1fr 1fr' : '1fr', gap: '1rem', marginTop: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+                      {formData.stage === STAGE_IDS.university ? 'السنة الدراسية' : 'السنة الدراسية (الترم)'}
+                    </label>
+                    <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
+                      {isGradesLoading ? (
+                        <option>جاري التحميل...</option>
+                      ) : grades.length > 0 ? (
+                        grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
+                      ) : (
+                        <option value="">لا يوجد بيانات</option>
+                      )}
+                    </select>
+                  </div>
+                  {currentStage.hasCollege && (
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الكلية أو المعهد</label>
+                      <input type="text" name="college" className="premium-input" placeholder="مثال: كلية الهندسة، معهد الفنون..." onChange={handleChange} value={formData.college} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -236,7 +261,6 @@ const RegisterStudentScreen = () => {
                 <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>church</span>
                 <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>البيانات الكنسية</h2>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>أب الاعتراف</label>
@@ -269,49 +293,44 @@ const RegisterStudentScreen = () => {
                 <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>contact_phone</span>
                 <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>بيانات التواصل والعنوان</h2>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>رقم الموبايل</label>
-                  <input type="tel" name="fatherMobile" className="premium-input" required onChange={handleChange} value={formData.fatherMobile} />
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>موبايل الطالب / العضو</label>
+                  <input type="tel" name="studentMobile" className="premium-input" placeholder="اختياري" onChange={handleChange} value={formData.studentMobile} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>موبايل الأب</label>
+                  <input type="tel" name="fatherMobile" className="premium-input" placeholder="اختياري" onChange={handleChange} value={formData.fatherMobile} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>موبايل الأم</label>
-                  <input type="tel" name="motherMobile" className="premium-input" required onChange={handleChange} value={formData.motherMobile} />
+                  <input type="tel" name="motherMobile" className="premium-input" placeholder="اختياري" onChange={handleChange} value={formData.motherMobile} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>رقم الواتساب</label>
                   <div style={{ position: 'relative' }}>
-                    <span className="material-symbols-outlined" style={{
-                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                      color: 'var(--text-muted)', fontSize: '18px', pointerEvents: 'none',
-                    }}>chat</span>
-                    <input type="tel" name="whatsAppNumber" className="premium-input" required onChange={handleChange} value={formData.whatsAppNumber} style={{ paddingRight: '40px' }} />
+                    <span className="material-symbols-outlined" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '18px', pointerEvents: 'none' }}>chat</span>
+                    <input type="tel" name="whatsAppNumber" className="premium-input" placeholder="اختياري" onChange={handleChange} value={formData.whatsAppNumber} style={{ paddingRight: '40px' }} />
                   </div>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>التليفون الأرضي</label>
-                  <input type="tel" name="landline" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landline} />
+                  <input type="tel" name="landline" className="premium-input" placeholder="اختياري" onChange={handleChange} value={formData.landline} />
                 </div>
               </div>
-
               <div style={{ marginTop: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>العنوان بالتفصيل</label>
                 <input type="text" name="address" className="premium-input" required onChange={handleChange} value={formData.address} />
               </div>
-
               <div style={{ marginTop: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>أقرب علامة مميزة</label>
                 <input type="text" name="landmark" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landmark} />
               </div>
-
               <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
                 <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>تم سداد المصاريف الإدارية للترم الحالي</label>
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>
-                تأكد من استلام الوصل قبل التحديد
-              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>تأكد من استلام الوصل قبل التحديد</p>
             </div>
           )}
 
@@ -340,7 +359,7 @@ const RegisterStudentScreen = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', padding: '0.75rem', background: 'rgba(251, 191, 36, 0.05)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', padding: '0.75rem', background: 'rgba(251,191,36,0.05)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>info</span>
             بمجرد الحفظ، سيتم إنشاء ملف أكاديمي للطالب فوراً.
           </div>

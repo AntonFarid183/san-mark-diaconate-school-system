@@ -4,6 +4,7 @@ using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Application.Interfaces.Services;
 using DiaconateSchool.Domain.Enums;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,10 +29,10 @@ public class StudentQueryService : IStudentQueryService
         _uow = uow;
     }
 
-    public async Task<StudentListResponseDto> GetStudentsAsync(int page, int pageSize, string? nameFilter = null)
+    public async Task<StudentListResponseDto> GetStudentsAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
     {
-        var students = await _studentRepo.GetAllAsync(page, pageSize, nameFilter);
-        var totalCount = await _studentRepo.GetFilteredCountAsync(nameFilter);
+        var students = await _studentRepo.GetAllAsync(page, pageSize, nameFilter, gradeId, stageId);
+        var totalCount = await _studentRepo.GetFilteredCountAsync(nameFilter, gradeId, stageId);
 
         return new StudentListResponseDto
         {
@@ -107,7 +108,6 @@ public class StudentQueryService : IStudentQueryService
         if (student == null) return false;
 
         student.User.PasswordHash = _hasher.HashPassword(newPassword);
-        student.User.MustChangePassword = true;
         student.User.UpdatedAt = DateTime.UtcNow;
 
         await _userRepo.UpdateAsync(student.User);
@@ -115,15 +115,29 @@ public class StudentQueryService : IStudentQueryService
         return true;
     }
 
-    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive)
+    public async Task<IEnumerable<object>> GetAllGradesAsync()
+    {
+        var grades = await _studentRepo.GetAllGradesAsync();
+        return grades.Select(g => new { g.Id, g.Name, StageId = g.StageId, StageName = g.Stage.Name });
+    }
+
+    public async Task<IEnumerable<StudentDetailDto>> GetPendingStudentsAsync()
+    {
+        var students = await _studentRepo.GetPendingAsync();
+        return students.Select(MapToDetailDto);
+    }
+
+    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
 
         student.User.IsActive = isActive;
         student.Status = isActive ? StudentStatus.Active : StudentStatus.Suspended;
+        if (isActive && withFees) student.FeesPaid = true;
         student.User.UpdatedAt = DateTime.UtcNow;
 
+        await _studentRepo.UpdateAsync(student);
         await _userRepo.UpdateAsync(student.User);
         await _uow.SaveChangesAsync();
         return true;

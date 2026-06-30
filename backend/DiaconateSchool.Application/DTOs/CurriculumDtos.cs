@@ -10,12 +10,13 @@ public class CurriculumDto
     public string AcademicYear { get; set; } = string.Empty;
     public Guid StageId { get; set; }
     public string StageName { get; set; } = string.Empty;
+    public Guid? GradeId { get; set; }
+    public string? GradeName { get; set; }
     public string? PdfUrl { get; set; }
     public string? PdfFileName { get; set; }
     public long? PdfSizeBytes { get; set; }
     public CurriculumStatus Status { get; set; }
     public string StatusLabel { get; set; } = string.Empty;
-    public int DisplayOrder { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -26,7 +27,7 @@ public class CreateCurriculumDto
     public string? Description { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
     public Guid StageId { get; set; }
-    public int DisplayOrder { get; set; } = 0;
+    public Guid? GradeId { get; set; }
 }
 
 public class UpdateCurriculumDto
@@ -35,5 +36,5 @@ public class UpdateCurriculumDto
     public string? Description { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
     public Guid StageId { get; set; }
-    public int DisplayOrder { get; set; }
+    public Guid? GradeId { get; set; }
 }

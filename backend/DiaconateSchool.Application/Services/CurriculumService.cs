@@ -44,7 +44,7 @@ public class CurriculumService : ICurriculumService
             Description = dto.Description?.Trim(),
             AcademicYear = dto.AcademicYear.Trim(),
             StageId = dto.StageId,
-            DisplayOrder = dto.DisplayOrder,
+            GradeId = dto.GradeId,
             Status = CurriculumStatus.Draft,
             CreatedByUserId = createdByUserId
         };
@@ -64,7 +64,7 @@ public class CurriculumService : ICurriculumService
         c.Description = dto.Description?.Trim();
         c.AcademicYear = dto.AcademicYear.Trim();
         c.StageId = dto.StageId;
-        c.DisplayOrder = dto.DisplayOrder;
+        c.GradeId = dto.GradeId;
         c.UpdatedAt = DateTime.UtcNow;
 
         _repo.Update(c);
@@ -131,7 +131,10 @@ public class CurriculumService : ICurriculumService
         AcademicYear = c.AcademicYear,
         StageId = c.StageId,
         StageName = c.Stage?.Name ?? string.Empty,
+        GradeId = c.GradeId,
+        GradeName = c.Grade?.Name,
         PdfUrl = c.PdfUrl,
+
         PdfFileName = c.PdfFileName,
         PdfSizeBytes = c.PdfSizeBytes,
         Status = c.Status,
@@ -142,7 +145,6 @@ public class CurriculumService : ICurriculumService
             CurriculumStatus.Archived => "مؤرشف",
             _ => string.Empty
         },
-        DisplayOrder = c.DisplayOrder,
         CreatedAt = c.CreatedAt,
         UpdatedAt = c.UpdatedAt
     };

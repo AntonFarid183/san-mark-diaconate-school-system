@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 
-const BASE = 'http://localhost:5016';
+import { BACKEND_URL as BASE } from '../config';
 const PING_INTERVAL = 10; // seconds
 const SEEK_TOLERANCE = 30; // seconds — matches server tolerance
 

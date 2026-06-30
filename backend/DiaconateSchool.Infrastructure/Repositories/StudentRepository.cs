@@ -53,48 +53,59 @@ public class StudentRepository : IStudentRepository
             .ToListAsync();
     }
 
-    public async Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null)
+    public async Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
     {
         var query = _context.Students
             .Include(s => s.User)
-            .Include(s => s.Grade)
-                .ThenInclude(g => g.Stage)
+            .Include(s => s.Grade).ThenInclude(g => g.Stage)
             .AsQueryable();
+
+        if (gradeId.HasValue)
+            query = query.Where(s => s.GradeId == gradeId.Value);
+        else if (stageId.HasValue)
+            query = query.Where(s => s.Grade.StageId == stageId.Value);
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
             var filter = nameFilter.Trim();
             query = query.Where(s =>
-                s.User.FirstName.Contains(filter) ||
-                s.User.MiddleName.Contains(filter) ||
-                s.User.ThirdName.Contains(filter) ||
-                s.User.LastName.Contains(filter) ||
+                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
+                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
                 s.StudentCode.Contains(filter));
         }
 
-        return await query
-            .OrderByDescending(s => s.RegisteredDate)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        return await query.OrderByDescending(s => s.RegisteredDate)
+            .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-    public async Task<int> GetFilteredCountAsync(string? nameFilter = null)
+    public async Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
     {
-        var query = _context.Students.Include(s => s.User).AsQueryable();
+        var query = _context.Students.Include(s => s.User).Include(s => s.Grade).AsQueryable();
+
+        if (gradeId.HasValue)
+            query = query.Where(s => s.GradeId == gradeId.Value);
+        else if (stageId.HasValue)
+            query = query.Where(s => s.Grade.StageId == stageId.Value);
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
             var filter = nameFilter.Trim();
             query = query.Where(s =>
-                s.User.FirstName.Contains(filter) ||
-                s.User.MiddleName.Contains(filter) ||
-                s.User.ThirdName.Contains(filter) ||
-                s.User.LastName.Contains(filter) ||
+                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
+                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
                 s.StudentCode.Contains(filter));
         }
 
         return await query.CountAsync();
+    }
+
+    public async Task<List<Grade>> GetAllGradesAsync()
+    {
+        return await _context.Grades
+            .Include(g => g.Stage)
+            .OrderBy(g => g.Stage.DisplayOrder)
+            .ThenBy(g => g.Name)
+            .ToListAsync();
     }
 
     public async Task<Student?> GetByIdWithIncludesAsync(Guid id)
@@ -104,6 +115,17 @@ public class StudentRepository : IStudentRepository
             .Include(s => s.Grade)
                 .ThenInclude(g => g.Stage)
             .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    public async Task<List<Student>> GetPendingAsync()
+    {
+        return await _context.Students
+            .Include(s => s.User)
+            .Include(s => s.Grade)
+                .ThenInclude(g => g.Stage)
+            .Where(s => !s.User.IsActive)
+            .OrderByDescending(s => s.RegisteredDate)
+            .ToListAsync();
     }
 
     public async Task<Student?> GetByUserIdAsync(Guid userId)

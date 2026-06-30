@@ -4,6 +4,7 @@ using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DiaconateSchool.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626234513_SeedMissingStages")]
+    partial class SeedMissingStages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -628,9 +631,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("GradeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("LyricsImageUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -666,8 +666,6 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GradeId");
 
                     b.HasIndex("StageId");
 
@@ -1122,18 +1120,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.HymnLesson", b =>
                 {
-                    b.HasOne("DiaconateSchool.Domain.Entities.Grade", "Grade")
-                        .WithMany()
-                        .HasForeignKey("GradeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("DiaconateSchool.Domain.Entities.Stage", "Stage")
                         .WithMany()
                         .HasForeignKey("StageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Grade");
 
                     b.Navigation("Stage");
                 });

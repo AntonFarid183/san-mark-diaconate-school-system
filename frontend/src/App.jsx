@@ -23,6 +23,9 @@ import MyExamResultsScreen from './pages/MyExamResultsScreen';
 import CertificateScreen from './pages/CertificateScreen';
 import MyCertificatesScreen from './pages/MyCertificatesScreen';
 import AnnouncementsScreen from './pages/AnnouncementsScreen';
+import SelfRegisterScreen from './pages/SelfRegisterScreen';
+import PendingApprovalsScreen from './pages/PendingApprovalsScreen';
+import StudentProfileScreen from './pages/StudentProfileScreen';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
     const { user, loading } = useAuth();
@@ -44,10 +47,12 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
-            <Route path="/change-password" element={<ChangePasswordScreen />} />
+            <Route path="/self-register" element={<SelfRegisterScreen />} />
+            <Route path="/change-password" element={<ProtectedRoute><ChangePasswordScreen /></ProtectedRoute>} />
 
             {/* Admin only */}
             <Route path="/register-student" element={<ProtectedRoute adminOnly><RegisterStudentScreen /></ProtectedRoute>} />
+            <Route path="/pending-approvals" element={<ProtectedRoute adminOnly><PendingApprovalsScreen /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
             <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
             <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
@@ -69,6 +74,7 @@ function AppRoutes() {
             <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
 
             {/* Student only */}
+            <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />
             <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
             <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
         </Routes>

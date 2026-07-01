@@ -127,20 +127,60 @@ public class StudentQueryService : IStudentQueryService
         return students.Select(MapToDetailDto);
     }
 
-    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false)
+    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
 
         student.User.IsActive = isActive;
         student.Status = isActive ? StudentStatus.Active : StudentStatus.Suspended;
-        if (isActive && withFees) student.FeesPaid = true;
+        if (isActive && withFees)
+        {
+            student.FeesPaid = true;
+            if (paidAmount.HasValue)
+                student.PaidAmount = paidAmount.Value;
+        }
         student.User.UpdatedAt = DateTime.UtcNow;
 
         await _studentRepo.UpdateAsync(student);
         await _userRepo.UpdateAsync(student.User);
         await _uow.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter)
+    {
+        var (items, totalCount, paidCount, totalCollected) = await _studentRepo.GetPaymentReportAsync(
+            filter.NameFilter, filter.StageId, filter.GradeId, filter.PaymentStatus, filter.DateFrom, filter.DateTo);
+
+        return new PaymentReportSummaryDto
+        {
+            Items = items.Select(s =>
+            {
+                string status;
+                if (s.FeesPaid) status = "paid";
+                else if (s.User.IsActive) status = "exempted";
+                else status = "not_paid";
+
+                return new PaymentReportItemDto
+                {
+                    Id = s.Id,
+                    StudentCode = s.StudentCode,
+                    FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
+                    StageName = s.Grade.Stage.Name,
+                    GradeName = s.Grade.Name,
+                    FeesPaid = s.FeesPaid,
+                    PaidAmount = s.PaidAmount,
+                    IsActive = s.User.IsActive,
+                    RegisteredDate = s.RegisteredDate,
+                    PaymentStatus = status
+                };
+            }).ToList(),
+            TotalCount = totalCount,
+            PaidCount = paidCount,
+            NotPaidCount = totalCount - paidCount,
+            TotalCollected = totalCollected
+        };
     }
 
     private static StudentDetailDto MapToDetailDto(Domain.Entities.Student student)
@@ -173,6 +213,7 @@ public class StudentQueryService : IStudentQueryService
             Address = student.Address,
             Landmark = student.Landmark,
             FeesPaid = student.FeesPaid,
+            PaidAmount = student.PaidAmount,
             ProfilePictureUrl = student.ProfilePictureUrl,
             IsActive = student.User.IsActive,
             RegisteredDate = student.RegisteredDate

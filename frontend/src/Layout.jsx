@@ -75,12 +75,16 @@ const Layout = ({ children, title }) => {
     { path: '/students', label: 'جميع الطلاب', icon: 'group' },
     { path: '/register-student', label: 'تسجيل طالب جديد', icon: 'person_add' },
     { path: '/pending-approvals', label: 'طلبات التسجيل', icon: 'pending_actions' },
+    { path: '/payment-reports', label: 'تقرير المدفوعات', icon: 'account_balance' },
   ];
 
   const adminItems = [
     { path: '/curriculum-management', label: 'المناهج', icon: 'import_contacts' },
     { path: '/hymn-lessons-management', label: 'دروس الألحان', icon: 'music_note' },
     { path: '/exams', label: 'الامتحانات', icon: 'assignment' },
+    { path: '/attendance/sessions', label: 'جلسات الحضور', icon: 'how_to_reg' },
+    { path: '/attendance/dashboard', label: 'لوحة الحضور', icon: 'fact_check' },
+    { path: '/attendance/leaves', label: 'طلبات الإجازة', icon: 'event_note' },
     { path: '/announcements', label: 'الإعلانات', icon: 'campaign' },
   ];
 
@@ -90,6 +94,8 @@ const Layout = ({ children, title }) => {
     { path: '/hymn-lessons', label: 'دروس الألحان', icon: 'music_note' },
     { path: '/progress', label: 'التقدم', icon: 'trending_up' },
     { path: '/my-results', label: 'نتائجي', icon: 'assignment' },
+    { path: '/attendance/checkin', label: 'تسجيل الحضور', icon: 'how_to_reg' },
+    { path: '/attendance/leaves', label: 'طلبات الإجازة', icon: 'event_note' },
   ];
 
   const isStudentsActive = location.pathname.startsWith('/students') || location.pathname === '/register-student' || location.pathname === '/pending-approvals';

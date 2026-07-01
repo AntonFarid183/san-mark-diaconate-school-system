@@ -1,0 +1,153 @@
+using DiaconateSchool.Application.DTOs;
+using DiaconateSchool.Application.Interfaces;
+using DiaconateSchool.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+namespace DiaconateSchool.Api.Controllers;
+
+[ApiController]
+[Route("api/attendance")]
+public class AttendanceController : ControllerBase
+{
+    private readonly IAttendanceService _service;
+
+    public AttendanceController(IAttendanceService service)
+    {
+        _service = service;
+    }
+
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private bool IsAdmin() => User.IsInRole(nameof(Role.Admin));
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("sessions")]
+    public async Task<IActionResult> CreateSession([FromBody] CreateAttendanceSessionDto dto)
+    {
+        var result = await _service.CreateSessionAsync(dto, GetUserId());
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetSessions([FromQuery] Guid? gradeId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceSessionStatus? status)
+    {
+        var result = await _service.GetSessionsAsync(gradeId, from, to, status);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("sessions/open-for-me")]
+    public async Task<IActionResult> GetOpenSessionsForMe()
+    {
+        var result = await _service.GetOpenSessionsForStudentAsync(GetUserId());
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("sessions/{id}")]
+    public async Task<IActionResult> GetSessionById(Guid id)
+    {
+        var result = await _service.GetSessionByIdAsync(id);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("sessions/{id}/open")]
+    public async Task<IActionResult> OpenSession(Guid id)
+    {
+        var result = await _service.OpenSessionAsync(id);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("sessions/{id}/close")]
+    public async Task<IActionResult> CloseSession(Guid id)
+    {
+        var result = await _service.CloseSessionAsync(id);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("sessions/{id}/records")]
+    public async Task<IActionResult> GetSessionRecords(Guid id)
+    {
+        var result = await _service.GetSessionRecordsAsync(id);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("sessions/{id}/checkin-manual")]
+    public async Task<IActionResult> ManualCheckIn(Guid id, [FromBody] ManualAttendanceDto dto)
+    {
+        var (success, error, record) = await _service.ManualCheckInAsync(id, dto, GetUserId());
+        return success ? Ok(record) : BadRequest(new { Message = error });
+    }
+
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpPost("sessions/{id}/checkin-pin")]
+    public async Task<IActionResult> PinCheckIn(Guid id, [FromBody] PinCheckInDto dto)
+    {
+        var (success, error, record) = await _service.PinCheckInAsync(id, dto.Pin, GetUserId());
+        return success ? Ok(record) : BadRequest(new { Message = error });
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("records")]
+    public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status)
+    {
+        var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("records/{id}")]
+    public async Task<IActionResult> OverrideRecord(Guid id, [FromBody] UpdateAttendanceRecordDto dto)
+    {
+        var result = await _service.OverrideRecordAsync(id, dto, GetUserId());
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("records/{id}/audit")]
+    public async Task<IActionResult> GetRecordAudit(Guid id)
+    {
+        var result = await _service.GetAuditLogAsync(id);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary([FromQuery] Guid? gradeId, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        var result = await _service.GetSummaryAsync(gradeId, from, to);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("leaves")]
+    public async Task<IActionResult> GetLeaves([FromQuery] Guid? studentId, [FromQuery] LeaveStatus? status)
+    {
+        var result = await _service.GetLeavesAsync(studentId, status, GetUserId(), IsAdmin());
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpPost("leaves")]
+    public async Task<IActionResult> CreateLeave([FromBody] CreateLeaveRequestDto dto)
+    {
+        var result = await _service.CreateLeaveAsync(dto, GetUserId(), IsAdmin());
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("leaves/{id}/decision")]
+    public async Task<IActionResult> DecideLeave(Guid id, [FromBody] LeaveDecisionDto dto)
+    {
+        var result = await _service.DecideLeaveAsync(id, dto, GetUserId());
+        return result == null ? NotFound() : Ok(result);
+    }
+}

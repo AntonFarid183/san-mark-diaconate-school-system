@@ -108,3 +108,31 @@ public enum CertificateStatus
     Active = 0,
     Revoked = 1
 }
+
+public enum AttendanceSessionStatus
+{
+    Scheduled = 0,
+    Open = 1,
+    Closed = 2
+}
+
+public enum AttendanceStatus
+{
+    Present = 0,
+    Late = 1,
+    Absent = 2,
+    Excused = 3
+}
+
+public enum AttendanceMethod
+{
+    Manual = 0,
+    Pin = 1
+}
+
+public enum LeaveStatus
+{
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2
+}

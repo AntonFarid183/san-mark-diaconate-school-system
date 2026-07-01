@@ -93,6 +93,24 @@ public class StudentsController : ControllerBase
     }
 
     [Authorize(Policy = "AdminOnly")]
+    [HttpGet("payment-report")]
+    public async Task<IActionResult> GetPaymentReport([FromQuery] string? name, [FromQuery] Guid? stageId, [FromQuery] Guid? gradeId,
+        [FromQuery] string? paymentStatus, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
+    {
+        var filter = new PaymentReportFilterDto
+        {
+            NameFilter = name,
+            StageId = stageId,
+            GradeId = gradeId,
+            PaymentStatus = paymentStatus,
+            DateFrom = dateFrom,
+            DateTo = dateTo
+        };
+        var result = await _queryService.GetPaymentReportAsync(filter);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetStudent(string id)
     {
@@ -178,7 +196,7 @@ public class StudentsController : ControllerBase
         if (!Guid.TryParse(id, out var parsedId))
             return BadRequest(new { Message = "Invalid student ID format." });
 
-        var success = await _queryService.SetActiveStatusAsync(parsedId, true, dto?.WithFees ?? false);
+        var success = await _queryService.SetActiveStatusAsync(parsedId, true, dto?.WithFees ?? false, dto?.PaidAmount);
         return success ? Ok(new { Message = "تم تفعيل الحساب." }) : NotFound(new { Message = "Student not found." });
     }
 

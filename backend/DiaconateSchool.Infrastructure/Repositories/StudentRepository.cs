@@ -142,4 +142,51 @@ public class StudentRepository : IStudentRepository
         _context.Students.Update(student);
         return Task.CompletedTask;
     }
+
+    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected)> GetPaymentReportAsync(
+        string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo)
+    {
+        var query = _context.Students
+            .Include(s => s.User)
+            .Include(s => s.Grade).ThenInclude(g => g.Stage)
+            .AsQueryable();
+
+        if (gradeId.HasValue)
+            query = query.Where(s => s.GradeId == gradeId.Value);
+        else if (stageId.HasValue)
+            query = query.Where(s => s.Grade.StageId == stageId.Value);
+
+        if (!string.IsNullOrWhiteSpace(nameFilter))
+        {
+            var filter = nameFilter.Trim();
+            query = query.Where(s =>
+                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
+                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
+                s.StudentCode.Contains(filter));
+        }
+
+        if (dateFrom.HasValue)
+            query = query.Where(s => s.RegisteredDate >= dateFrom.Value);
+        if (dateTo.HasValue)
+            query = query.Where(s => s.RegisteredDate <= dateTo.Value);
+
+        var paidCount = await query.CountAsync(s => s.FeesPaid);
+        var totalCollected = await query.Where(s => s.FeesPaid && s.PaidAmount.HasValue)
+            .SumAsync(s => (decimal?)s.PaidAmount) ?? 0;
+
+        if (!string.IsNullOrWhiteSpace(paymentStatus))
+        {
+            query = paymentStatus switch
+            {
+                "paid" => query.Where(s => s.FeesPaid),
+                "not_paid" => query.Where(s => !s.FeesPaid),
+                _ => query
+            };
+        }
+
+        var items = await query.OrderByDescending(s => s.RegisteredDate).ToListAsync();
+        var totalCount = items.Count;
+
+        return (items, totalCount, paidCount, totalCollected);
+    }
 }

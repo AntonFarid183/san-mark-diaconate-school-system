@@ -31,6 +31,7 @@ public class Student
     public string? Landmark { get; set; }
 
     public bool FeesPaid { get; set; }
+    public decimal? PaidAmount { get; set; }
     public string? ProfilePictureUrl { get; set; }
 
     public Guid RegisteredByUserId { get; set; }

@@ -28,6 +28,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Curriculum> Curriculums => Set<Curriculum>();
     public DbSet<HymnLesson> HymnLessons => Set<HymnLesson>();
     public DbSet<HymnLessonProgress> HymnLessonProgresses => Set<HymnLessonProgress>();
+    public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<AttendanceAuditLog> AttendanceAuditLogs => Set<AttendanceAuditLog>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -231,12 +235,78 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Student>()
             .HasIndex(s => s.StudentCode).IsUnique();
+        modelBuilder.Entity<Student>()
+            .Property(s => s.PaidAmount).HasPrecision(18, 2);
 
         modelBuilder.Entity<ContentAccess>()
             .HasIndex(ca => new { ca.StudentId, ca.ContentItemId }).IsUnique();
 
         modelBuilder.Entity<StudentProgressSummary>()
             .HasIndex(sps => sps.StudentId).IsUnique();
+
+
+        modelBuilder.Entity<AttendanceSession>()
+            .HasOne(s => s.Grade)
+            .WithMany()
+            .HasForeignKey(s => s.GradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AttendanceSession>()
+            .HasOne(s => s.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(s => s.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AttendanceSession>()
+            .HasIndex(s => new { s.GradeId, s.StartsAt });
+
+        modelBuilder.Entity<AttendanceRecord>()
+            .HasOne(r => r.Session)
+            .WithMany(s => s.Records)
+            .HasForeignKey(r => r.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AttendanceRecord>()
+            .HasOne(r => r.Student)
+            .WithMany()
+            .HasForeignKey(r => r.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AttendanceRecord>()
+            .HasOne(r => r.RecordedByUser)
+            .WithMany()
+            .HasForeignKey(r => r.RecordedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AttendanceRecord>()
+            .HasIndex(r => new { r.SessionId, r.StudentId }).IsUnique();
+
+        modelBuilder.Entity<AttendanceAuditLog>()
+            .HasOne(l => l.Record)
+            .WithMany(r => r.AuditLogs)
+            .HasForeignKey(l => l.RecordId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AttendanceAuditLog>()
+            .HasOne(l => l.ChangedByUser)
+            .WithMany()
+            .HasForeignKey(l => l.ChangedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .HasOne(l => l.Student)
+            .WithMany()
+            .HasForeignKey(l => l.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .HasOne(l => l.DecidedByUser)
+            .WithMany()
+            .HasForeignKey(l => l.DecidedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .HasIndex(l => new { l.StudentId, l.FromDate, l.ToDate });
 
         SeedStagesAndGrades(modelBuilder);
     }

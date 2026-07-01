@@ -18,8 +18,8 @@ const STAGES = [
   { id: STAGE_IDS.primary,     label: 'ابتدائي',  hasGrade: true,  fetchGrades: true },
   { id: STAGE_IDS.preparatory, label: 'إعدادي',   hasGrade: true,  fetchGrades: true },
   { id: STAGE_IDS.secondary,   label: 'ثانوي',    hasGrade: true,  fetchGrades: true },
-  { id: STAGE_IDS.university,  label: 'جامعة',    sublabel: '/ معهد', hasGrade: true, fetchGrades: false, hasCollege: true,
-    localGrades: Array.from({ length: 7 }, (_, i) => ({ id: `00000000-0000-0000-0004-00000000001${i + 1}`, name: `السنة ${i + 1}` })) },
+  { id: STAGE_IDS.university,  label: 'جامعة',    sublabel: '/ معهد', hasGrade: true, fetchGrades: false, hidePicker: true, hasCollege: true,
+    localGrades: [{ id: '00000000-0000-0000-0004-000000000011', name: 'جامعة' }] },
   { id: STAGE_IDS.graduates,   label: 'خريجون',   hasGrade: true,  fetchGrades: false, hidePicker: true,
     localGrades: [{ id: '00000000-0000-0000-0005-000000000011', name: 'خريجون' }] },
   { id: STAGE_IDS.adults,      label: 'كبار',     hasGrade: true,  fetchGrades: false, hidePicker: true,
@@ -233,25 +233,25 @@ export default function SelfRegisterScreen() {
                 </div>
 
                 {currentStage.hasGrade && !currentStage.hidePicker && (
-                  <div style={{ display: 'grid', gridTemplateColumns: currentStage.hasCollege ? '1fr 1fr' : '1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>السنة الدراسية</label>
-                      <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
-                        {isGradesLoading ? (
-                          <option>جاري التحميل...</option>
-                        ) : grades.length > 0 ? (
-                          grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
-                        ) : (
-                          <option value="">اختر السنة الدراسية</option>
-                        )}
-                      </select>
-                    </div>
-                    {currentStage.hasCollege && (
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الكلية أو المعهد</label>
-                        <input type="text" name="college" className="premium-input" placeholder="مثال: كلية الهندسة..." onChange={handleChange} value={formData.college} />
-                      </div>
-                    )}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>السنة الدراسية</label>
+                    <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
+                      {isGradesLoading ? (
+                        <option>جاري التحميل...</option>
+                      ) : grades.length > 0 ? (
+                        grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
+                      ) : (
+                        <option value="">اختر السنة الدراسية</option>
+                      )}
+                    </select>
+                  </div>
+                )}
+
+                {/* College / institute — shown for جامعة (appears after choosing the stage) */}
+                {currentStage.hasCollege && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الكلية أو المعهد</label>
+                    <input type="text" name="college" className="premium-input" placeholder="مثال: كلية الهندسة..." onChange={handleChange} value={formData.college} />
                   </div>
                 )}
               </div>

@@ -68,6 +68,7 @@ builder.Services.AddScoped<IExamResultRepository, ExamResultRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
 builder.Services.AddScoped<IGradeHistoryRepository, GradeHistoryRepository>();
+builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
 // 5. Dependency Injection — services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -85,6 +86,7 @@ builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // 6. CORS for React

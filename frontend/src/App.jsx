@@ -25,7 +25,12 @@ import MyCertificatesScreen from './pages/MyCertificatesScreen';
 import AnnouncementsScreen from './pages/AnnouncementsScreen';
 import SelfRegisterScreen from './pages/SelfRegisterScreen';
 import PendingApprovalsScreen from './pages/PendingApprovalsScreen';
+import PaymentReportsScreen from './pages/PaymentReportsScreen';
 import StudentProfileScreen from './pages/StudentProfileScreen';
+import AttendanceSessionsScreen from './pages/AttendanceSessionsScreen';
+import AttendanceDashboardScreen from './pages/AttendanceDashboardScreen';
+import StudentCheckInScreen from './pages/StudentCheckInScreen';
+import LeaveRequestsScreen from './pages/LeaveRequestsScreen';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
     const { user, loading } = useAuth();
@@ -53,6 +58,7 @@ function AppRoutes() {
             {/* Admin only */}
             <Route path="/register-student" element={<ProtectedRoute adminOnly><RegisterStudentScreen /></ProtectedRoute>} />
             <Route path="/pending-approvals" element={<ProtectedRoute adminOnly><PendingApprovalsScreen /></ProtectedRoute>} />
+            <Route path="/payment-reports" element={<ProtectedRoute adminOnly><PaymentReportsScreen /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
             <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
             <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
@@ -61,6 +67,8 @@ function AppRoutes() {
             <Route path="/curriculum-management" element={<ProtectedRoute adminOnly><CurriculumManagementScreen /></ProtectedRoute>} />
             <Route path="/hymn-lessons-management" element={<ProtectedRoute adminOnly><HymnLessonManagementScreen /></ProtectedRoute>} />
             <Route path="/exams" element={<ProtectedRoute adminOnly><ExamScoreEntryScreen /></ProtectedRoute>} />
+            <Route path="/attendance/sessions" element={<ProtectedRoute adminOnly><AttendanceSessionsScreen /></ProtectedRoute>} />
+            <Route path="/attendance/dashboard" element={<ProtectedRoute adminOnly><AttendanceDashboardScreen /></ProtectedRoute>} />
 
             {/* Shared */}
             <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
@@ -72,11 +80,13 @@ function AppRoutes() {
             <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
             <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
             <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
+            <Route path="/attendance/leaves" element={<ProtectedRoute><LeaveRequestsScreen /></ProtectedRoute>} />
 
             {/* Student only */}
             <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />
             <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
             <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
+            <Route path="/attendance/checkin" element={<ProtectedRoute><StudentCheckInScreen /></ProtectedRoute>} />
         </Routes>
     );
 }

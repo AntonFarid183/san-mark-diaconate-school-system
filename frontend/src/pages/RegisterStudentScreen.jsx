@@ -23,8 +23,8 @@ const STAGES = [
   { id: STAGE_IDS.secondary,   label: 'ثانوي',        hasGrade: true,  fetchGrades: true },
   {
     id: STAGE_IDS.university, label: 'جامعة', sublabel: '/ معهد',
-    hasGrade: true, fetchGrades: false, hasCollege: true,
-    localGrades: Array.from({ length: 7 }, (_, i) => ({ id: `00000000-0000-0000-0004-00000000001${i + 1}`, name: `السنة ${i + 1}` })),
+    hasGrade: true, fetchGrades: false, hidePicker: true, hasCollege: true,
+    localGrades: [{ id: '00000000-0000-0000-0004-000000000011', name: 'جامعة' }],
   },
   { id: STAGE_IDS.graduates, label: 'خريجون', hasGrade: true, fetchGrades: false, hidePicker: true,
     localGrades: [{ id: '00000000-0000-0000-0005-000000000011', name: 'خريجون' }] },
@@ -41,7 +41,7 @@ const RegisterStudentScreen = () => {
     college: '',
     isDeacon: false, deaconRank: null, fatherOfConfession: '',
     studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
-    address: '', landmark: '', hasPaidFees: false,
+    address: '', landmark: '', hasPaidFees: false, paidAmount: '',
   });
 
   const [grades, setGrades] = useState([]);
@@ -101,6 +101,7 @@ const RegisterStudentScreen = () => {
     setIsLoading(true);
     try {
       const parts = formData.fullName.trim().split(/\s+/);
+      const paidAmount = formData.hasPaidFees && formData.paidAmount ? parseFloat(formData.paidAmount) : null;
       const payload = {
         ...formData,
         firstName:  parts[0] || '',
@@ -108,6 +109,7 @@ const RegisterStudentScreen = () => {
         thirdName:  parts[2] || '',
         lastName:   parts[3] || '',
         gradeId: currentStage.hasGrade ? formData.gradeId : null,
+        paidAmount: paidAmount && paidAmount > 0 ? paidAmount : null,
       };
       const response = await apiClient.post('/students/register', payload);
       setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
@@ -226,29 +228,29 @@ const RegisterStudentScreen = () => {
                 </div>
               </div>
 
-              {/* Grade / year — shown only for stages that have grades */}
+              {/* Grade / year — shown only for stages that have a year picker */}
               {currentStage.hasGrade && !currentStage.hidePicker && (
-                <div style={{ display: 'grid', gridTemplateColumns: currentStage.hasCollege ? '1fr 1fr' : '1fr', gap: '1rem', marginTop: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
-                      {formData.stage === STAGE_IDS.university ? 'السنة الدراسية' : 'السنة الدراسية (الترم)'}
-                    </label>
-                    <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
-                      {isGradesLoading ? (
-                        <option>جاري التحميل...</option>
-                      ) : grades.length > 0 ? (
-                        grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
-                      ) : (
-                        <option value="">لا يوجد بيانات</option>
-                      )}
-                    </select>
-                  </div>
-                  {currentStage.hasCollege && (
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الكلية أو المعهد</label>
-                      <input type="text" name="college" className="premium-input" placeholder="مثال: كلية الهندسة، معهد الفنون..." onChange={handleChange} value={formData.college} />
-                    </div>
-                  )}
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+                    السنة الدراسية (الترم)
+                  </label>
+                  <select name="gradeId" className="premium-input" value={formData.gradeId} onChange={handleChange} required disabled={isGradesLoading}>
+                    {isGradesLoading ? (
+                      <option>جاري التحميل...</option>
+                    ) : grades.length > 0 ? (
+                      grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
+                    ) : (
+                      <option value="">لا يوجد بيانات</option>
+                    )}
+                  </select>
+                </div>
+              )}
+
+              {/* College / institute — shown for جامعة (appears after choosing the stage) */}
+              {currentStage.hasCollege && (
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>الكلية أو المعهد</label>
+                  <input type="text" name="college" className="premium-input" placeholder="مثال: كلية الهندسة، معهد الفنون..." onChange={handleChange} value={formData.college} />
                 </div>
               )}
             </div>
@@ -330,6 +332,15 @@ const RegisterStudentScreen = () => {
                 <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
                 <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>تم سداد المصاريف الإدارية للترم الحالي</label>
               </div>
+              {formData.hasPaidFees && (
+                <div style={{ marginTop: '0.75rem', marginRight: '2rem' }}>
+                  <div style={{ position: 'relative', maxWidth: '250px' }}>
+                    <input type="number" name="paidAmount" className="premium-input" placeholder="المبلغ المدفوع" step="0.01" min="0"
+                      onChange={handleChange} value={formData.paidAmount} style={{ textAlign: 'center', fontWeight: 700, padding: '0.65rem 1rem' }} />
+                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ج.م</span>
+                  </div>
+                </div>
+              )}
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>تأكد من استلام الوصل قبل التحديد</p>
             </div>
           )}

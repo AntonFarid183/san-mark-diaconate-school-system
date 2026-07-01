@@ -416,3 +416,16 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Agent / IDE config (non-app)
+.claude/
+opencode.json
+
+# Secrets
+.secrets/
+
+# Build artifacts
+backend.err
+
+# Uploads
+backend/DiaconateSchool.Api/uploads/

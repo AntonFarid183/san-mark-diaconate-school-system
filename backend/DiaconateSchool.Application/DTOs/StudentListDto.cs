@@ -4,9 +4,43 @@ using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Application.DTOs;
 
+public class PaymentReportFilterDto
+{
+    public string? NameFilter { get; set; }
+    public Guid? StageId { get; set; }
+    public Guid? GradeId { get; set; }
+    public string? PaymentStatus { get; set; } // all, paid, not_paid
+    public DateTime? DateFrom { get; set; }
+    public DateTime? DateTo { get; set; }
+}
+
+public class PaymentReportItemDto
+{
+    public Guid Id { get; set; }
+    public string StudentCode { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string StageName { get; set; } = string.Empty;
+    public string GradeName { get; set; } = string.Empty;
+    public bool FeesPaid { get; set; }
+    public decimal? PaidAmount { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime RegisteredDate { get; set; }
+    public string PaymentStatus { get; set; } = string.Empty;
+}
+
+public class PaymentReportSummaryDto
+{
+    public List<PaymentReportItemDto> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PaidCount { get; set; }
+    public int NotPaidCount { get; set; }
+    public decimal TotalCollected { get; set; }
+}
+
 public class ActivateStudentDto
 {
     public bool WithFees { get; set; } = false;
+    public decimal? PaidAmount { get; set; }
 }
 
 public class StudentListItemDto
@@ -51,6 +85,7 @@ public class StudentDetailDto
     public string Address { get; set; } = string.Empty;
     public string? Landmark { get; set; }
     public bool FeesPaid { get; set; }
+    public decimal? PaidAmount { get; set; }
     public string? ProfilePictureUrl { get; set; }
     public bool IsActive { get; set; }
     public DateTime RegisteredDate { get; set; }

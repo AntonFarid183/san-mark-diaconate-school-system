@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import ExportModal from '../components/ExportModal';
+
+const PAYMENT_EXPORT_COLUMNS = [
+  { key: 'studentCode', label: 'الكود' },
+  { key: 'fullName', label: 'الاسم' },
+  { key: 'stageName', label: 'المرحلة' },
+  { key: 'gradeName', label: 'السنة' },
+  { key: 'registeredDate', label: 'تاريخ التسجيل' },
+  { key: 'paymentStatusLabel', label: 'حالة الدفع' },
+  { key: 'paidAmount', label: 'المبلغ المدفوع' },
+];
 
 const ALL_STAGES = [
   { id: '00000000-0000-0000-0000-000000000001', label: 'طفولة' },
@@ -42,6 +53,8 @@ export default function PaymentReportsScreen() {
   const [loading, setLoading] = useState(false);
   const [stages, setStages] = useState([]);
   const [grades, setGrades] = useState([]);
+
+  const [showExport, setShowExport] = useState(false);
 
   const [filters, setFilters] = useState({
     name: '',
@@ -161,6 +174,19 @@ export default function PaymentReportsScreen() {
               {loading ? 'جاري التحميل...' : 'بحث'}
             </button>
           </div>
+          <div>
+            <button onClick={() => setShowExport(true)} disabled={!data || data.items.length === 0} style={{
+              padding: '0.55rem 1.5rem', borderRadius: 'var(--radius-sm)',
+              background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
+              color: '#4ade80', cursor: (!data || data.items.length === 0) ? 'not-allowed' : 'pointer',
+              opacity: (!data || data.items.length === 0) ? 0.5 : 1,
+              fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+              تصدير Excel
+            </button>
+          </div>
         </div>
       </div>
 
@@ -220,6 +246,21 @@ export default function PaymentReportsScreen() {
             إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.items.filter(i => i.paymentStatus === 'exempted').length} معفى — إجمالي محصل {formatAmount(data.totalCollected)}
           </div>
         </div>
+      )}
+
+      {showExport && data && (
+        <ExportModal
+          columns={PAYMENT_EXPORT_COLUMNS}
+          rows={data.items.map(i => ({
+            ...i,
+            paymentStatusLabel: paymentBadge(i.paymentStatus).label,
+            registeredDate: new Date(i.registeredDate).toLocaleDateString('ar-EG'),
+          }))}
+          storageKey="payment-reports"
+          fileName="تقرير_المدفوعات"
+          sheetName="تقرير المدفوعات"
+          onClose={() => setShowExport(false)}
+        />
       )}
     </Layout>
   );

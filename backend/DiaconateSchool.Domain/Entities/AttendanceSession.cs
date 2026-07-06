@@ -12,6 +12,9 @@ public class AttendanceSession
     public Guid GradeId { get; set; }
     public Grade Grade { get; set; } = null!;
 
+    public Guid ClassId { get; set; }
+    public SchoolClass Class { get; set; } = null!;
+
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public int LateAfterMinutes { get; set; } = 15;

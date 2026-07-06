@@ -3,16 +3,16 @@ import * as XLSX from 'xlsx';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 
-// Enum values mirror DiaconateSchool.Domain.Enums (serialized as numbers by the API)
-const STATUS_LABELS = ['حاضر', 'متأخر', 'غائب', 'معتذر'];
-const STATUS_COLORS = ['var(--success)', '#f59e0b', 'var(--danger)', 'var(--text-muted)'];
-const STATUS_QUERY_NAMES = ['Present', 'Late', 'Absent', 'Excused']; // for query-string filters
+// Enum values mirror DiaconateSchool.Domain.Enums.AttendanceStatus (serialized as numbers)
+const STATUS_LABELS = ['حاضر', 'غائب'];
+const STATUS_COLORS = ['var(--success)', 'var(--danger)'];
+const STATUS_QUERY_NAMES = ['Present', 'Absent'];
 const METHOD_PIN = 1;
 
-const toInputDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const toInputDate = (d) => d.toISOString().slice(0, 10);
 
 const SummaryCard = ({ label, value, color }) => (
-  <div className="glass-card" style={{ padding: '1.25rem', flex: 1, textAlign: 'center' }}>
+  <div className="glass-card" style={{ padding: '1.25rem', flex: 1, minWidth: '120px', textAlign: 'center' }}>
     <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>{label}</p>
     <p style={{ fontSize: '1.6rem', fontWeight: 800, color: color || 'var(--accent-gold)' }}>{value}</p>
   </div>
@@ -83,18 +83,18 @@ const AttendanceDashboardScreen = () => {
     }
   };
 
-  const exportCsv = () => {
+  const exportExcel = () => {
     const rows = records.map((r, i) => ({
       '#': i + 1,
       'الطالب': r.studentName,
       'الكود': r.studentCode,
       'الجلسة': r.sessionTitle,
-      'الحالة': STATUS_LABELS[r.status] || r.status,
+      'الحالة': STATUS_LABELS[r.status] ?? r.status,
       'الطريقة': r.method === METHOD_PIN ? 'رمز دخول' : 'يدوي',
-      'وقت التسجيل': new Date(r.recordedAt).toLocaleString('ar-EG'),
+      'تاريخ التسجيل': new Date(r.recordedAt).toLocaleDateString('ar-EG'),
     }));
-    const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
-    ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 14 }, { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 20 }];
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 14 }, { wch: 24 }, { wch: 8 }, { wch: 10 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'الحضور');
     XLSX.writeFile(wb, `سجل_الحضور_${filters.from}_${filters.to}.xlsx`);
@@ -109,6 +109,7 @@ const AttendanceDashboardScreen = () => {
         </div>
       )}
 
+      {/* Filters */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
         <div>
           <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>الصف</label>
@@ -137,21 +138,21 @@ const AttendanceDashboardScreen = () => {
           <button className="btn-secondary" style={{ width: 'auto', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => applyQuickRange(7)}>أسبوع</button>
           <button className="btn-secondary" style={{ width: 'auto', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => applyQuickRange(30)}>شهر</button>
         </div>
-        <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.25rem', marginRight: 'auto' }} onClick={exportCsv} disabled={records.length === 0}>
+        <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.25rem', marginRight: 'auto' }} onClick={exportExcel} disabled={records.length === 0}>
           تصدير Excel
         </button>
       </div>
 
+      {/* Summary Cards */}
       {summary && (
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <SummaryCard label="عدد الجلسات" value={summary.totalSessions} />
           <SummaryCard label="حاضر" value={summary.presentCount} color={STATUS_COLORS[0]} />
-          <SummaryCard label="متأخر" value={summary.lateCount} color={STATUS_COLORS[1]} />
-          <SummaryCard label="غائب" value={summary.absentCount} color={STATUS_COLORS[2]} />
-          <SummaryCard label="معتذر" value={summary.excusedCount} color={STATUS_COLORS[3]} />
+          <SummaryCard label="غائب" value={summary.absentCount} color={STATUS_COLORS[1]} />
         </div>
       )}
 
+      {/* Consecutive absences alert */}
       {summary && summary.byStudent.some(s => s.consecutiveAbsences >= 3) && (
         <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', border: '1px solid var(--danger)' }}>
           <p style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: '0.5rem' }}>⚠ تنبيه: غياب متتالٍ</p>
@@ -163,6 +164,7 @@ const AttendanceDashboardScreen = () => {
         </div>
       )}
 
+      {/* Records Table */}
       <div className="glass-card" style={{ padding: '1.25rem' }}>
         {loading ? (
           <p style={{ textAlign: 'center', padding: '2rem' }}>جاري التحميل...</p>
@@ -176,7 +178,7 @@ const AttendanceDashboardScreen = () => {
                 <th style={{ padding: '0.6rem' }}>الجلسة</th>
                 <th style={{ padding: '0.6rem' }}>الحالة</th>
                 <th style={{ padding: '0.6rem' }}>الطريقة</th>
-                <th style={{ padding: '0.6rem' }}>وقت التسجيل</th>
+                <th style={{ padding: '0.6rem' }}>التاريخ</th>
                 <th style={{ padding: '0.6rem' }}></th>
               </tr>
             </thead>
@@ -185,9 +187,9 @@ const AttendanceDashboardScreen = () => {
                 <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <td style={{ padding: '0.6rem' }}>{r.studentName} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({r.studentCode})</span></td>
                   <td style={{ padding: '0.6rem' }}>{r.sessionTitle}</td>
-                  <td style={{ padding: '0.6rem', color: STATUS_COLORS[r.status] }}>{STATUS_LABELS[r.status]}</td>
+                  <td style={{ padding: '0.6rem', color: STATUS_COLORS[r.status], fontWeight: 600 }}>{STATUS_LABELS[r.status]}</td>
                   <td style={{ padding: '0.6rem', color: 'var(--text-muted)' }}>{r.method === METHOD_PIN ? 'رمز دخول' : 'يدوي'}</td>
-                  <td style={{ padding: '0.6rem', color: 'var(--text-muted)' }}>{new Date(r.recordedAt).toLocaleString('ar-EG')}</td>
+                  <td style={{ padding: '0.6rem', color: 'var(--text-muted)' }}>{new Date(r.recordedAt).toLocaleDateString('ar-EG')}</td>
                   <td style={{ padding: '0.6rem' }}>
                     <button onClick={() => openOverride(r)} style={{ background: 'none', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '6px', padding: '0.25rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem' }}>تعديل</button>
                   </td>
@@ -198,16 +200,25 @@ const AttendanceDashboardScreen = () => {
         )}
       </div>
 
+      {/* Override Modal */}
       {editing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '440px', direction: 'rtl' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '420px', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>تعديل حالة الحضور</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{editing.studentName} — {editing.sessionTitle}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <select className="premium-input" value={overrideForm.status} onChange={e => setOverrideForm({ ...overrideForm, status: Number(e.target.value) })}>
-                {STATUS_LABELS.map((label, i) => <option key={i} value={i}>{label}</option>)}
-              </select>
-              <textarea className="premium-input" placeholder="سبب التعديل (إلزامي للتدقيق)" rows={3} value={overrideForm.reason} onChange={e => setOverrideForm({ ...overrideForm, reason: e.target.value })} style={{ resize: 'vertical' }} />
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                {STATUS_LABELS.map((label, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setOverrideForm({ ...overrideForm, status: i })}
+                    style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', border: `1px solid ${overrideForm.status === i ? STATUS_COLORS[i] : 'var(--glass-border)'}`, background: overrideForm.status === i ? `${STATUS_COLORS[i]}22` : 'transparent', color: overrideForm.status === i ? STATUS_COLORS[i] : 'var(--text-secondary)', transition: 'all 0.15s' }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <textarea className="premium-input" placeholder="سبب التعديل (إلزامي)" rows={3} value={overrideForm.reason} onChange={e => setOverrideForm({ ...overrideForm, reason: e.target.value })} style={{ resize: 'vertical' }} />
             </div>
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
               <button className="btn-primary" style={{ flex: 1 }} disabled={!overrideForm.reason.trim()} onClick={submitOverride}>حفظ</button>

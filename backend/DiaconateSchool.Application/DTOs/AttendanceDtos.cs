@@ -10,30 +10,29 @@ public class AttendanceSessionDto
     public string Title { get; set; } = string.Empty;
     public Guid GradeId { get; set; }
     public string GradeName { get; set; } = string.Empty;
+    public Guid ClassId { get; set; }
+    public string ClassName { get; set; } = string.Empty;
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
-    public int LateAfterMinutes { get; set; }
     public AttendanceSessionStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public int PresentCount { get; set; }
-    public int LateCount { get; set; }
     public int AbsentCount { get; set; }
-    public int ExcusedCount { get; set; }
     public int TotalStudents { get; set; }
 }
 
 public class AttendanceSessionDetailDto : AttendanceSessionDto
 {
     public string Pin { get; set; } = string.Empty;
+    public bool WasExisting { get; set; } // true when an existing session was returned instead of creating a new one
 }
 
 public class CreateAttendanceSessionDto
 {
     public string Title { get; set; } = string.Empty;
-    public Guid GradeId { get; set; }
+    public Guid ClassId { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
-    public int LateAfterMinutes { get; set; } = 15;
 }
 
 public class AttendanceRecordDto
@@ -56,6 +55,12 @@ public class ManualAttendanceDto
     public Guid StudentId { get; set; }
     public AttendanceStatus Status { get; set; }
     public string? Notes { get; set; }
+}
+
+public class BulkManualAttendanceDto
+{
+    public List<Guid> StudentIds { get; set; } = new();
+    public AttendanceStatus Status { get; set; }
 }
 
 public class PinCheckInDto
@@ -85,9 +90,7 @@ public class AttendanceSummaryDto
     public DateTime To { get; set; }
     public int TotalSessions { get; set; }
     public int PresentCount { get; set; }
-    public int LateCount { get; set; }
     public int AbsentCount { get; set; }
-    public int ExcusedCount { get; set; }
     public List<StudentAttendanceSummaryDto> ByStudent { get; set; } = new();
 }
 
@@ -97,9 +100,7 @@ public class StudentAttendanceSummaryDto
     public string StudentName { get; set; } = string.Empty;
     public string StudentCode { get; set; } = string.Empty;
     public int PresentCount { get; set; }
-    public int LateCount { get; set; }
     public int AbsentCount { get; set; }
-    public int ExcusedCount { get; set; }
     public int ConsecutiveAbsences { get; set; }
 }
 

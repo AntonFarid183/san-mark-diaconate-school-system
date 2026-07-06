@@ -19,6 +19,7 @@ public interface IStudentRepository
     Task<Student?> GetByUserIdAsync(Guid userId);
     Task UpdateAsync(Student student);
     Task<List<Student>> GetPendingAsync();
+    Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId);
     Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo);
 }

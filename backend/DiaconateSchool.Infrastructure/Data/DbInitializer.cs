@@ -38,6 +38,21 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
+        // Seed a default current academic year if none exists
+        if (!await context.AcademicYears.AnyAsync())
+        {
+            context.AcademicYears.Add(new AcademicYear
+            {
+                Id = Guid.NewGuid(),
+                Name = "2025-2026",
+                StartDate = new DateOnly(2025, 9, 1),
+                EndDate = new DateOnly(2026, 6, 30),
+                IsCurrent = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+        }
+
         // Stages and grades are already seeded by migration
         if (await context.Stages.AnyAsync()) return;
 

@@ -8,7 +8,7 @@ namespace DiaconateSchool.Application.Interfaces;
 
 public interface IAttendanceService
 {
-    Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, DateTime? from, DateTime? to, AttendanceSessionStatus? status);
+    Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status);
     Task<List<AttendanceSessionDto>> GetOpenSessionsForStudentAsync(Guid currentUserId);
     Task<AttendanceSessionDetailDto?> GetSessionByIdAsync(Guid id);
     Task<AttendanceSessionDetailDto> CreateSessionAsync(CreateAttendanceSessionDto dto, Guid createdByUserId);
@@ -18,6 +18,7 @@ public interface IAttendanceService
     Task<List<AttendanceRecordDto>> GetSessionRecordsAsync(Guid sessionId);
     Task<(bool Success, string? Error, AttendanceRecordDto? Record)> ManualCheckInAsync(Guid sessionId, ManualAttendanceDto dto, Guid recordedByUserId);
     Task<(bool Success, string? Error, AttendanceRecordDto? Record)> PinCheckInAsync(Guid sessionId, string pin, Guid currentUserId);
+    Task<List<AttendanceRecordDto>> BulkMarkAsync(Guid sessionId, BulkManualAttendanceDto dto, Guid recordedByUserId);
 
     Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status);
     Task<AttendanceRecordDto?> OverrideRecordAsync(Guid recordId, UpdateAttendanceRecordDto dto, Guid changedByUserId);

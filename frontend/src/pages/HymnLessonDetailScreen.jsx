@@ -19,6 +19,18 @@ export default function HymnLessonDetailScreen() {
   const [showResume, setShowResume]     = useState(false);
   const [pdfFullscreen, setPdfFullscreen] = useState(false);
 
+  // Submission state
+  const [submission, setSubmission] = useState(null); // null = not fetched, {} shape or null-from-api = not submitted
+  const [recordedBlob, setRecordedBlob] = useState(null);
+  const [recordedUrl, setRecordedUrl] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [submitMsg, setSubmitMsg] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const recordTimerRef = useRef(null);
+  const fileInputRef = useRef(null);
+
   // Video ref
   const videoRef    = useRef(null);
   const pingTimer   = useRef(null);
@@ -44,19 +56,87 @@ export default function HymnLessonDetailScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [lessonRes, progressRes] = await Promise.all([
+        const [lessonRes, progressRes, submissionRes] = await Promise.all([
           apiClient.get(`/hymn-lessons/${id}`),
           apiClient.get(`/hymn-lessons/${id}/progress`),
+          apiClient.get(`/hymn-submissions/mine/${id}`),
         ]);
         setLesson(lessonRes.data);
         setProgress(progressRes.data);
+        setSubmission(submissionRes.data); // null if not submitted yet
         if (progressRes.data.lastPosition > 5) setShowResume(true);
       } catch { setError('تعذّر تحميل درس اللحن.'); }
       finally { setLoading(false); }
     };
     load();
-    return () => clearInterval(pingTimer.current);
+    return () => { clearInterval(pingTimer.current); clearInterval(recordTimerRef.current); };
   }, [id]);
+
+  // ── Recording controls ──────────────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        setRecordedBlob(blob);
+        setRecordedUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(t => t.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordSeconds(s => s + 1), 1000);
+    } catch {
+      setSubmitMsg({ type: 'error', text: 'تعذّر الوصول إلى الميكروفون.' });
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    clearInterval(recordTimerRef.current);
+  };
+
+  const discardRecording = () => {
+    setRecordedBlob(null);
+    setRecordedUrl(null);
+    setRecordSeconds(0);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRecordedBlob(file);
+    setRecordedUrl(URL.createObjectURL(file));
+  };
+
+  const submitRecording = async () => {
+    if (!recordedBlob) return;
+    setUploading(true);
+    setSubmitMsg(null);
+    try {
+      const fd = new FormData();
+      const fileName = recordedBlob.name || `hymn-${id}-${Date.now()}.webm`;
+      fd.append('file', recordedBlob, fileName);
+      const uploadRes = await apiClient.post('/file/upload?category=hymns', fd, { headers: { 'Content-Type': undefined } });
+
+      const res = await apiClient.post(`/hymn-submissions/${id}`, {
+        recordingUrl: uploadRes.data.url,
+        recordingFileName: fileName,
+      });
+      setSubmission(res.data);
+      discardRecording();
+      setSubmitMsg({ type: 'success', text: 'تم إرسال التسجيل بنجاح.' });
+    } catch (e) {
+      setSubmitMsg({ type: 'error', text: e.response?.data?.message || 'فشل إرسال التسجيل.' });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // ── Ping server every 10s while playing ───────────────────────────────────
   const sendPing = useCallback(async () => {
@@ -299,6 +379,91 @@ export default function HymnLessonDetailScreen() {
           لم يُضف محتوى لهذا الدرس بعد.
         </div>
       )}
+
+      {/* Submit Recording */}
+      <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>mic</span>
+          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>تسجيل الإلقاء</span>
+        </div>
+
+        {submitMsg && (
+          <div style={{ padding: '0.6rem 1rem', marginBottom: '1rem', borderRadius: 'var(--radius-sm)', background: submitMsg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: submitMsg.type === 'success' ? 'var(--success)' : 'var(--danger)', fontSize: '0.85rem' }}>
+            {submitMsg.text}
+          </div>
+        )}
+
+        {submission && submission.status !== 'resubmission_requested' ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+              <span style={{
+                fontSize: '0.78rem', padding: '0.25rem 0.9rem', borderRadius: '20px', fontWeight: 700,
+                background: submission.status === 'approved' ? 'rgba(16,185,129,0.15)' : 'rgba(251,191,36,0.12)',
+                color: submission.status === 'approved' ? 'var(--success)' : 'var(--accent-gold)',
+              }}>
+                {submission.status === 'approved' ? 'تمت المراجعة ✓' : 'قيد المراجعة'}
+              </span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                أُرسل بتاريخ {new Date(submission.submittedAt).toLocaleDateString('ar-EG')}
+              </span>
+            </div>
+            <audio controls src={`${BASE}${submission.recordingUrl}`} style={{ width: '100%', marginBottom: '1rem' }} />
+            {submission.status === 'approved' && (
+              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 700, marginBottom: submission.comments ? '0.5rem' : 0 }}>
+                  الدرجة: {submission.score}
+                </div>
+                {submission.comments && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{submission.comments}</div>}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div>
+            {submission?.status === 'resubmission_requested' && (
+              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--danger)', fontWeight: 700, marginBottom: submission.comments ? '0.5rem' : 0 }}>
+                  مطلوب إعادة التسجيل
+                </div>
+                {submission.comments && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{submission.comments}</div>}
+              </div>
+            )}
+
+            {!recordedUrl ? (
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {!isRecording ? (
+                  <button onClick={startRecording} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fiber_manual_record</span>
+                    بدء التسجيل
+                  </button>
+                ) : (
+                  <button onClick={stopRecording} style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>stop</span>
+                    إيقاف ({recordSeconds}ث)
+                  </button>
+                )}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>أو</span>
+                <button onClick={() => fileInputRef.current?.click()} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload_file</span>
+                  رفع ملف صوتي
+                </button>
+                <input ref={fileInputRef} type="file" accept="audio/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+              </div>
+            ) : (
+              <div>
+                <audio controls src={recordedUrl} style={{ width: '100%', marginBottom: '1rem' }} />
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={submitRecording} disabled={uploading} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>
+                    {uploading ? 'جاري الإرسال...' : 'إرسال التسجيل'}
+                  </button>
+                  <button onClick={discardRecording} disabled={uploading} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>
+                    إعادة المحاولة
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* PDF Fullscreen */}
       {pdfFullscreen && hasPdf && (

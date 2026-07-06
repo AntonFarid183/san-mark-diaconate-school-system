@@ -162,6 +162,7 @@ const StudentDashboard = () => {
           { path: '/lessons', icon: 'arrow_forward', label: 'متابعة التعلم', primary: true },
           { path: '/curriculum', icon: 'import_contacts', label: 'المناهج' },
           { path: '/hymn-lessons', icon: 'music_note', label: 'دروس الألحان' },
+          { path: '/homework', icon: 'edit_note', label: 'الواجبات' },
           { path: '/my-results', icon: 'assignment', label: 'نتائجي' },
           { path: '/profile', icon: 'manage_accounts', label: 'الملف الشخصي' },
         ].map(({ path, icon, label, primary }) => (
@@ -194,9 +195,13 @@ const AdminDashboard = () => {
   const quickActions = [
     { icon: 'person_add',          title: 'تسجيل طالب جديد',     desc: 'إضافة بيانات عضو جديد للمدرسة',          path: '/register-student',        btnLabel: 'إضافة طالب' },
     { icon: 'group',               title: 'شؤون الأعضاء',         desc: 'استعرض وأدر كافة الأعضاء المسجلين',      path: '/students',                btnLabel: 'عرض الأعضاء' },
+    { icon: 'groups',              title: 'توزيع الفصول',         desc: 'وزّع الطلاب على فصول متوازنة تلقائياً',   path: '/class-distribution',      btnLabel: 'توزيع الفصول' },
     { icon: 'import_contacts',     title: 'المناهج الدراسية',     desc: 'أنشئ مناهج وارفع ملفات PDF للمراحل',     path: '/curriculum-management',   btnLabel: 'إدارة المناهج' },
     { icon: 'music_note',          title: 'دروس الألحان',          desc: 'أضف دروس فيديو وكلمات الألحان',          path: '/hymn-lessons-management', btnLabel: 'إدارة الألحان' },
+    { icon: 'graphic_eq',          title: 'تسجيلات الألحان',       desc: 'استمع لتسجيلات الطلاب وقيّمها',          path: '/hymn-submissions',        btnLabel: 'مراجعة التسجيلات' },
+    { icon: 'edit_note',           title: 'الواجبات',              desc: 'ارفع مذاكرات وحدد إجابات الاختبارات',    path: '/homework-management',     btnLabel: 'إدارة الواجبات' },
     { icon: 'assignment',          title: 'الامتحانات والدرجات',   desc: 'أدخل درجات الامتحانات واعتمدها',          path: '/exams',                   btnLabel: 'الامتحانات' },
+    { icon: 'calendar_month',      title: 'السنوات الدراسية',      desc: 'أدر السنة الدراسية الحالية والسابقة',    path: '/academic-years',          btnLabel: 'السنوات الدراسية' },
     { icon: 'campaign',            title: 'الإعلانات',             desc: 'انشر وأدر إعلانات المدرسة',              path: '/announcements',           btnLabel: 'الإعلانات' },
   ];
 
@@ -206,41 +211,28 @@ const AdminDashboard = () => {
         أهلاً بك يا {user?.fullName || user?.userName}، إليك الإجراءات المتاحة في النظام
       </p>
 
-      {/* Pending approvals alert card */}
-      {pendingCount > 0 && (
-        <div onClick={() => navigate('/pending-approvals')}
-          style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.45)' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}>
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>pending_actions</span>
-            <span style={{ position: 'absolute', top: '-6px', left: '-6px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {pendingCount}
-            </span>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, color: 'var(--accent-gold)', fontSize: '0.97rem' }}>
-              {pendingCount === 1 ? 'يوجد طلب تسجيل واحد بانتظار الموافقة' : `يوجد ${pendingCount} طلبات تسجيل بانتظار الموافقة`}
-            </div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              أعضاء سجّلوا أنفسهم — يحتاجون تأكيداً على سداد المصاريف أو الإعفاء قبل تفعيل حساباتهم
-            </div>
-          </div>
-          <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--accent-gold)', flexShrink: 0 }}>arrow_back</span>
-        </div>
-      )}
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-        {/* Pending approvals card */}
-        <div className="glass-card card-hover" style={{ padding: '1.25rem' }} onClick={() => navigate('/pending-approvals')}>
+        {/* Pending approvals card — highlighted when action is needed */}
+        <div className="glass-card card-hover" style={{
+          padding: '1.25rem',
+          border: pendingCount > 0 ? '1px solid rgba(251,191,36,0.45)' : undefined,
+          background: pendingCount > 0 ? 'rgba(251,191,36,0.06)' : undefined,
+        }} onClick={() => navigate('/pending-approvals')}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>how_to_reg</span>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>how_to_reg</span>
+              {pendingCount > 0 && (
+                <span style={{ position: 'absolute', top: '-6px', left: '-6px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {pendingCount}
+                </span>
+              )}
+            </div>
             <div style={{ flex: 1 }}>
               <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', marginBottom: '0.25rem' }}>الموافقة على طلبات التسجيل</h3>
               <p style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>
                 {pendingCount === null ? 'جاري التحميل...' : pendingCount > 0 ? `${pendingCount} طلب بانتظار مراجعتك` : 'لا توجد طلبات معلّقة حالياً'}
               </p>
-              <button onClick={() => navigate('/pending-approvals')} className="btn-primary"
+              <button onClick={e => { e.stopPropagation(); navigate('/pending-approvals'); }} className="btn-primary"
                 style={{ width: 'auto', padding: '0.4rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
                 مراجعة الطلبات

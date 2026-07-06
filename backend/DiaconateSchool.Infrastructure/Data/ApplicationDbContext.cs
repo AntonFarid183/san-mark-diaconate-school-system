@@ -32,6 +32,16 @@ public class ApplicationDbContext : DbContext
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<AttendanceAuditLog> AttendanceAuditLogs => Set<AttendanceAuditLog>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<SchoolClass> SchoolClasses => Set<SchoolClass>();
+    public DbSet<StudentAccount> StudentAccounts => Set<StudentAccount>();
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<HymnSubmission> HymnSubmissions => Set<HymnSubmission>();
+    public DbSet<HomeworkSubject> HomeworkSubjects => Set<HomeworkSubject>();
+    public DbSet<Homework> Homeworks => Set<Homework>();
+    public DbSet<HomeworkQuestion> HomeworkQuestions => Set<HomeworkQuestion>();
+    public DbSet<HomeworkSubmission> HomeworkSubmissions => Set<HomeworkSubmission>();
+    public DbSet<HomeworkAnswer> HomeworkAnswers => Set<HomeworkAnswer>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -252,6 +262,12 @@ public class ApplicationDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<AttendanceSession>()
+            .HasOne(s => s.Class)
+            .WithMany()
+            .HasForeignKey(s => s.ClassId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AttendanceSession>()
             .HasOne(s => s.CreatedByUser)
             .WithMany()
             .HasForeignKey(s => s.CreatedByUserId)
@@ -259,6 +275,9 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<AttendanceSession>()
             .HasIndex(s => new { s.GradeId, s.StartsAt });
+
+        modelBuilder.Entity<AttendanceSession>()
+            .HasIndex(s => new { s.ClassId, s.StartsAt });
 
         modelBuilder.Entity<AttendanceRecord>()
             .HasOne(r => r.Session)
@@ -307,6 +326,176 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<LeaveRequest>()
             .HasIndex(l => new { l.StudentId, l.FromDate, l.ToDate });
+
+        // SchoolClass -> Grade
+        modelBuilder.Entity<SchoolClass>()
+            .HasOne(c => c.Grade)
+            .WithMany()
+            .HasForeignKey(c => c.GradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // SchoolClass -> AcademicYear
+        modelBuilder.Entity<SchoolClass>()
+            .HasOne(c => c.AcademicYear)
+            .WithMany()
+            .HasForeignKey(c => c.AcademicYearId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // SchoolClass unique: Name + GradeId + AcademicYearId
+        modelBuilder.Entity<SchoolClass>()
+            .HasIndex(c => new { c.GradeId, c.AcademicYearId, c.Name }).IsUnique();
+
+        // Student -> SchoolClass (optional)
+        modelBuilder.Entity<Student>()
+            .HasOne(s => s.Class)
+            .WithMany(c => c.Students)
+            .HasForeignKey(s => s.ClassId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // StudentAccount -> Student (1:1)
+        modelBuilder.Entity<StudentAccount>()
+            .HasOne(a => a.Student)
+            .WithOne()
+            .HasForeignKey<StudentAccount>(a => a.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<StudentAccount>()
+            .HasIndex(a => a.StudentId).IsUnique();
+
+        modelBuilder.Entity<StudentAccount>()
+            .Property(a => a.TotalRequired).HasPrecision(18, 2);
+
+        // PaymentTransaction -> StudentAccount
+        modelBuilder.Entity<PaymentTransaction>()
+            .HasOne(t => t.StudentAccount)
+            .WithMany(a => a.Transactions)
+            .HasForeignKey(t => t.StudentAccountId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PaymentTransaction>()
+            .HasOne(t => t.RecordedByUser)
+            .WithMany()
+            .HasForeignKey(t => t.RecordedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PaymentTransaction>()
+            .HasOne(t => t.VoidedByUser)
+            .WithMany()
+            .HasForeignKey(t => t.VoidedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PaymentTransaction>()
+            .Property(t => t.Amount).HasPrecision(18, 2);
+
+        modelBuilder.Entity<PaymentTransaction>()
+            .HasIndex(t => new { t.StudentAccountId, t.TransactionDate });
+
+        // HymnSubmission -> HymnLesson, Student
+        modelBuilder.Entity<HymnSubmission>()
+            .HasOne(s => s.HymnLesson)
+            .WithMany()
+            .HasForeignKey(s => s.HymnLessonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HymnSubmission>()
+            .HasOne(s => s.Student)
+            .WithMany()
+            .HasForeignKey(s => s.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HymnSubmission>()
+            .HasOne(s => s.ReviewedByUser)
+            .WithMany()
+            .HasForeignKey(s => s.ReviewedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<HymnSubmission>()
+            .HasIndex(s => new { s.HymnLessonId, s.StudentId }).IsUnique();
+
+        modelBuilder.Entity<HymnSubmission>()
+            .Property(s => s.Score).HasPrecision(5, 2);
+
+        // Homework -> Subject, Stage, Grade
+        modelBuilder.Entity<Homework>()
+            .HasOne(h => h.Subject)
+            .WithMany()
+            .HasForeignKey(h => h.SubjectId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Homework>()
+            .HasOne(h => h.Stage)
+            .WithMany()
+            .HasForeignKey(h => h.StageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Homework>()
+            .HasOne(h => h.Grade)
+            .WithMany()
+            .HasForeignKey(h => h.GradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Homework>()
+            .Property(h => h.TotalMarks).HasPrecision(5, 2);
+
+        // HomeworkQuestion -> Homework
+        modelBuilder.Entity<HomeworkQuestion>()
+            .HasOne(q => q.Homework)
+            .WithMany(h => h.Questions)
+            .HasForeignKey(q => q.HomeworkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // HomeworkSubmission -> Homework, Student
+        modelBuilder.Entity<HomeworkSubmission>()
+            .HasOne(s => s.Homework)
+            .WithMany()
+            .HasForeignKey(s => s.HomeworkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HomeworkSubmission>()
+            .HasOne(s => s.Student)
+            .WithMany()
+            .HasForeignKey(s => s.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HomeworkSubmission>()
+            .HasIndex(s => new { s.HomeworkId, s.StudentId }).IsUnique();
+
+        modelBuilder.Entity<HomeworkSubmission>()
+            .Property(s => s.Score).HasPrecision(5, 2);
+
+        // HomeworkAnswer -> HomeworkSubmission, HomeworkQuestion
+        modelBuilder.Entity<HomeworkAnswer>()
+            .HasOne(a => a.HomeworkSubmission)
+            .WithMany(s => s.Answers)
+            .HasForeignKey(a => a.HomeworkSubmissionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<HomeworkAnswer>()
+            .HasOne(a => a.HomeworkQuestion)
+            .WithMany()
+            .HasForeignKey(a => a.HomeworkQuestionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Seed homework subjects
+        var subjectCopticId = Guid.Parse("00000000-0000-0000-0100-000000000001");
+        var subjectLiturgicalId = Guid.Parse("00000000-0000-0000-0100-000000000002");
+        var subjectMemorizationId = Guid.Parse("00000000-0000-0000-0100-000000000003");
+
+        modelBuilder.Entity<HomeworkSubject>().HasData(
+            new HomeworkSubject { Id = subjectCopticId, Name = "اللغة القبطية", DisplayOrder = 1 },
+            new HomeworkSubject { Id = subjectLiturgicalId, Name = "الطقس الكنسي", DisplayOrder = 2 },
+            new HomeworkSubject { Id = subjectMemorizationId, Name = "محفوظات", DisplayOrder = 3 }
+        );
+
+        // Notification -> User
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Notification>()
+            .HasIndex(n => new { n.UserId, n.IsRead, n.CreatedAt });
 
         SeedStagesAndGrades(modelBuilder);
     }

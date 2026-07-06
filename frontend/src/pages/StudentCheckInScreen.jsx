@@ -8,6 +8,7 @@ const StudentCheckInScreen = () => {
   const [pins, setPins] = useState({});
   const [msg, setMsg] = useState(null);
   const [submitting, setSubmitting] = useState(null);
+  const [checkedIn, setCheckedIn] = useState({});
 
   useEffect(() => { fetchOpenSessions(); }, []);
 
@@ -22,12 +23,12 @@ const StudentCheckInScreen = () => {
 
   const checkIn = async (sessionId) => {
     const pin = pins[sessionId];
-    if (!pin) return;
+    if (!pin || pin.length !== 6) return;
     setSubmitting(sessionId);
     try {
-      const r = await apiClient.post(`/attendance/sessions/${sessionId}/checkin-pin`, { pin });
-      setMsg({ type: 'success', text: `تم تسجيل حضورك: ${r.data.status === 1 ? 'متأخر' : 'حاضر'}` });
-      fetchOpenSessions();
+      await apiClient.post(`/attendance/sessions/${sessionId}/checkin-pin`, { pin });
+      setCheckedIn(prev => ({ ...prev, [sessionId]: true }));
+      setMsg({ type: 'success', text: 'تم تسجيل حضورك بنجاح ✓' });
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل تسجيل الحضور.' });
     } finally {
@@ -55,28 +56,41 @@ const StudentCheckInScreen = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {sessions.map(s => (
             <div key={s.id} className="glass-card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', marginBottom: '0.4rem' }}>{s.title}</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                {new Date(s.startsAt).toLocaleString('ar-EG')}
-              </p>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <input
-                  className="premium-input"
-                  placeholder="أدخل رمز الدخول"
-                  value={pins[s.id] || ''}
-                  onChange={e => setPins({ ...pins, [s.id]: e.target.value })}
-                  style={{ flex: 1, textAlign: 'center', letterSpacing: '0.2rem', fontSize: '1.1rem' }}
-                  maxLength={6}
-                />
-                <button
-                  className="btn-primary"
-                  style={{ width: 'auto', padding: '0.6rem 1.5rem' }}
-                  disabled={!pins[s.id] || submitting === s.id}
-                  onClick={() => checkIn(s.id)}
-                >
-                  تسجيل الحضور
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', marginBottom: '0.25rem' }}>{s.title}</h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {new Date(s.startsAt).toLocaleDateString('ar-EG')} — {s.gradeName}
+                  </p>
+                </div>
+                {checkedIn[s.id] && (
+                  <span style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--success)', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
+                    ✓ تم التسجيل
+                  </span>
+                )}
               </div>
+              {!checkedIn[s.id] && (
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <input
+                    className="premium-input"
+                    placeholder="أدخل رمز الدخول"
+                    value={pins[s.id] || ''}
+                    onChange={e => setPins({ ...pins, [s.id]: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                    onKeyDown={e => e.key === 'Enter' && checkIn(s.id)}
+                    style={{ flex: 1, textAlign: 'center', letterSpacing: '0.3rem', fontSize: '1.2rem' }}
+                    maxLength={6}
+                    inputMode="numeric"
+                  />
+                  <button
+                    className="btn-primary"
+                    style={{ width: 'auto', padding: '0.6rem 1.5rem' }}
+                    disabled={!pins[s.id] || pins[s.id].length !== 6 || submitting === s.id}
+                    onClick={() => checkIn(s.id)}
+                  >
+                    {submitting === s.id ? '...' : 'تسجيل'}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

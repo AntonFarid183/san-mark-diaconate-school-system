@@ -9,11 +9,13 @@ namespace DiaconateSchool.Application.Services;
 public class CurriculumService : ICurriculumService
 {
     private readonly ICurriculumRepository _repo;
+    private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
 
-    public CurriculumService(ICurriculumRepository repo, IUnitOfWork uow)
+    public CurriculumService(ICurriculumRepository repo, INotificationService notificationService, IUnitOfWork uow)
     {
         _repo = repo;
+        _notificationService = notificationService;
         _uow = uow;
     }
 
@@ -96,10 +98,15 @@ public class CurriculumService : ICurriculumService
         if (string.IsNullOrEmpty(c.PdfUrl))
             throw new InvalidOperationException("لا يمكن نشر المنهج بدون ملف PDF.");
 
+        var wasPublished = c.Status == CurriculumStatus.Published;
         c.Status = CurriculumStatus.Published;
         c.UpdatedAt = DateTime.UtcNow;
         _repo.Update(c);
         await _uow.SaveChangesAsync();
+
+        if (!wasPublished)
+            await _notificationService.NotifyCurriculumPublishedAsync(c.Id, c.StageId, c.GradeId, c.Title);
+
         return true;
     }
 

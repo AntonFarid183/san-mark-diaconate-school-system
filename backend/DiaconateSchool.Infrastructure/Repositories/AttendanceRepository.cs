@@ -19,14 +19,16 @@ public class AttendanceRepository : IAttendanceRepository
         _context = context;
     }
 
-    public async Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, DateTime? from, DateTime? to, AttendanceSessionStatus? status)
+    public async Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status)
     {
         var query = _context.AttendanceSessions
             .Include(s => s.Grade)
+            .Include(s => s.Class)
             .Include(s => s.Records)
             .AsQueryable();
 
         if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);
+        if (classId.HasValue) query = query.Where(s => s.ClassId == classId.Value);
         if (from.HasValue) query = query.Where(s => s.StartsAt >= from.Value);
         if (to.HasValue) query = query.Where(s => s.StartsAt <= to.Value);
         if (status.HasValue) query = query.Where(s => s.Status == status.Value);
@@ -38,8 +40,20 @@ public class AttendanceRepository : IAttendanceRepository
     {
         return await _context.AttendanceSessions
             .Include(s => s.Grade)
+            .Include(s => s.Class)
             .Include(s => s.Records)
             .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    public async Task<AttendanceSession?> GetSessionByClassAndDateAsync(Guid classId, DateOnly date)
+    {
+        var start = date.ToDateTime(TimeOnly.MinValue);
+        var end = date.ToDateTime(TimeOnly.MaxValue);
+        return await _context.AttendanceSessions
+            .Include(s => s.Grade)
+            .Include(s => s.Class)
+            .Include(s => s.Records)
+            .FirstOrDefaultAsync(s => s.ClassId == classId && s.StartsAt >= start && s.StartsAt <= end);
     }
 
     public async Task AddSessionAsync(AttendanceSession session)
@@ -119,13 +133,16 @@ public class AttendanceRepository : IAttendanceRepository
             .ToListAsync();
     }
 
-    public async Task<List<Student>> GetActiveStudentsByGradeAsync(Guid gradeId)
+    public async Task<List<Student>> GetActiveStudentsByClassAsync(Guid classId)
     {
         return await _context.Students
             .Include(s => s.User)
-            .Where(s => s.GradeId == gradeId && s.Status == StudentStatus.Active)
+            .Where(s => s.ClassId == classId && s.Status == StudentStatus.Active)
             .ToListAsync();
     }
+
+    public async Task<int> GetOpenSessionsCountAsync()
+        => await _context.AttendanceSessions.CountAsync(s => s.Status == AttendanceSessionStatus.Open);
 
     public async Task<LeaveRequest?> GetLeaveByIdAsync(Guid id)
     {

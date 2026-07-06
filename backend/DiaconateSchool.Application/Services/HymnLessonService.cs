@@ -9,11 +9,13 @@ namespace DiaconateSchool.Application.Services;
 public class HymnLessonService : IHymnLessonService
 {
     private readonly IHymnLessonRepository _repo;
+    private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
 
-    public HymnLessonService(IHymnLessonRepository repo, IUnitOfWork uow)
+    public HymnLessonService(IHymnLessonRepository repo, INotificationService notificationService, IUnitOfWork uow)
     {
         _repo = repo;
+        _notificationService = notificationService;
         _uow = uow;
     }
 
@@ -148,10 +150,15 @@ public class HymnLessonService : IHymnLessonService
         var h = await _repo.GetByIdAsync(id);
         if (h == null) return false;
 
+        var wasPublished = h.Status == LessonStatus.Published;
         h.Status = LessonStatus.Published;
         h.UpdatedAt = DateTime.UtcNow;
         _repo.Update(h);
         await _uow.SaveChangesAsync();
+
+        if (!wasPublished)
+            await _notificationService.NotifyHymnLessonPublishedAsync(h.Id, h.StageId, h.GradeId, h.Title);
+
         return true;
     }
 

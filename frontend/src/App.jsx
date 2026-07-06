@@ -31,6 +31,13 @@ import AttendanceSessionsScreen from './pages/AttendanceSessionsScreen';
 import AttendanceDashboardScreen from './pages/AttendanceDashboardScreen';
 import StudentCheckInScreen from './pages/StudentCheckInScreen';
 import LeaveRequestsScreen from './pages/LeaveRequestsScreen';
+import AcademicYearsScreen from './pages/AcademicYearsScreen';
+import ClassDistributionScreen from './pages/ClassDistributionScreen';
+import HymnSubmissionsScreen from './pages/HymnSubmissionsScreen';
+import HomeworkManagementScreen from './pages/HomeworkManagementScreen';
+import StudentHomeworkListScreen from './pages/StudentHomeworkListScreen';
+import StudentHomeworkDetailScreen from './pages/StudentHomeworkDetailScreen';
+import NotificationsScreen from './pages/NotificationsScreen';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
     const { user, loading } = useAuth();
@@ -69,9 +76,14 @@ function AppRoutes() {
             <Route path="/exams" element={<ProtectedRoute adminOnly><ExamScoreEntryScreen /></ProtectedRoute>} />
             <Route path="/attendance/sessions" element={<ProtectedRoute adminOnly><AttendanceSessionsScreen /></ProtectedRoute>} />
             <Route path="/attendance/dashboard" element={<ProtectedRoute adminOnly><AttendanceDashboardScreen /></ProtectedRoute>} />
+            <Route path="/academic-years" element={<ProtectedRoute adminOnly><AcademicYearsScreen /></ProtectedRoute>} />
+            <Route path="/class-distribution" element={<ProtectedRoute adminOnly><ClassDistributionScreen /></ProtectedRoute>} />
+            <Route path="/hymn-submissions" element={<ProtectedRoute adminOnly><HymnSubmissionsScreen /></ProtectedRoute>} />
+            <Route path="/homework-management" element={<ProtectedRoute adminOnly><HomeworkManagementScreen /></ProtectedRoute>} />
 
             {/* Shared */}
             <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsScreen /></ProtectedRoute>} />
             <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailScreen /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><ProgressScreen /></ProtectedRoute>} />
@@ -87,6 +99,8 @@ function AppRoutes() {
             <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
             <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
             <Route path="/attendance/checkin" element={<ProtectedRoute><StudentCheckInScreen /></ProtectedRoute>} />
+            <Route path="/homework" element={<ProtectedRoute><StudentHomeworkListScreen /></ProtectedRoute>} />
+            <Route path="/homework/:id" element={<ProtectedRoute><StudentHomeworkDetailScreen /></ProtectedRoute>} />
         </Routes>
     );
 }

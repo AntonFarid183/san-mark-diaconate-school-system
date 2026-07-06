@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import StudentPaymentModal from '../components/StudentPaymentModal';
 
 const genderLabels = { Male: 'ذكر', Female: 'أنثى' };
 const deaconRankLabels = {
@@ -20,6 +21,7 @@ const StudentDetailScreen = () => {
   const [activating, setActivating] = useState(false);
   const [paymentModal, setPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -139,6 +141,10 @@ const StudentDetailScreen = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setShowAccountModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>payments</span>
+              المدفوعات
+            </button>
             <button onClick={() => navigate(`/students/${id}/edit`)} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
               تعديل
@@ -222,6 +228,14 @@ const StudentDetailScreen = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showAccountModal && (
+        <StudentPaymentModal
+          studentId={id}
+          studentName={student.fullName}
+          onClose={() => setShowAccountModal(false)}
+        />
       )}
     </Layout>
   );

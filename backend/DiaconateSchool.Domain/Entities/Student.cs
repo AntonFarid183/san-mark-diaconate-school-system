@@ -16,6 +16,9 @@ public class Student
     public Guid GradeId { get; set; }
     public Grade Grade { get; set; } = null!;
 
+    public Guid? ClassId { get; set; }
+    public SchoolClass? Class { get; set; }
+
     public bool IsDeacon { get; set; }
     public DeaconRank? DeaconRank { get; set; }
 

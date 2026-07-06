@@ -15,17 +15,20 @@ public class StudentQueryService : IStudentQueryService
     private readonly IStudentRepository _studentRepo;
     private readonly IUserRepository _userRepo;
     private readonly IPasswordHasher _hasher;
+    private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
 
     public StudentQueryService(
         IStudentRepository studentRepo,
         IUserRepository userRepo,
         IPasswordHasher hasher,
+        INotificationService notificationService,
         IUnitOfWork uow)
     {
         _studentRepo = studentRepo;
         _userRepo = userRepo;
         _hasher = hasher;
+        _notificationService = notificationService;
         _uow = uow;
     }
 
@@ -132,6 +135,7 @@ public class StudentQueryService : IStudentQueryService
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
 
+        var wasActive = student.User.IsActive;
         student.User.IsActive = isActive;
         student.Status = isActive ? StudentStatus.Active : StudentStatus.Suspended;
         if (isActive && withFees)
@@ -145,6 +149,10 @@ public class StudentQueryService : IStudentQueryService
         await _studentRepo.UpdateAsync(student);
         await _userRepo.UpdateAsync(student.User);
         await _uow.SaveChangesAsync();
+
+        if (isActive && !wasActive)
+            await _notificationService.NotifyAccountActivatedAsync(student.UserId);
+
         return true;
     }
 

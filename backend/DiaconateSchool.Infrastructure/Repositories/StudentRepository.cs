@@ -128,6 +128,20 @@ public class StudentRepository : IStudentRepository
             .ToListAsync();
     }
 
+    // Fan-out target list for notifications: by grade, by stage, or everyone (both null)
+    public async Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId)
+    {
+        var query = _context.Students
+            .Include(s => s.User)
+            .Where(s => s.User.IsActive)
+            .AsQueryable();
+
+        if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);
+        else if (stageId.HasValue) query = query.Where(s => s.Grade.StageId == stageId.Value);
+
+        return await query.ToListAsync();
+    }
+
     public async Task<Student?> GetByUserIdAsync(Guid userId)
     {
         return await _context.Students

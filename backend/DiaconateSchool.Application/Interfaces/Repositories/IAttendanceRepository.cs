@@ -8,8 +8,9 @@ namespace DiaconateSchool.Application.Interfaces.Repositories;
 
 public interface IAttendanceRepository
 {
-    Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, DateTime? from, DateTime? to, AttendanceSessionStatus? status);
+    Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status);
     Task<AttendanceSession?> GetSessionByIdAsync(Guid id);
+    Task<AttendanceSession?> GetSessionByClassAndDateAsync(Guid classId, DateOnly date);
     Task AddSessionAsync(AttendanceSession session);
     Task UpdateSessionAsync(AttendanceSession session);
 
@@ -23,7 +24,8 @@ public interface IAttendanceRepository
     Task AddAuditLogAsync(AttendanceAuditLog log);
     Task<List<AttendanceAuditLog>> GetAuditLogsAsync(Guid recordId);
 
-    Task<List<Student>> GetActiveStudentsByGradeAsync(Guid gradeId);
+    Task<List<Student>> GetActiveStudentsByClassAsync(Guid classId);
+    Task<int> GetOpenSessionsCountAsync();
 
     Task<LeaveRequest?> GetLeaveByIdAsync(Guid id);
     Task<List<LeaveRequest>> GetLeavesAsync(Guid? studentId, LeaveStatus? status);

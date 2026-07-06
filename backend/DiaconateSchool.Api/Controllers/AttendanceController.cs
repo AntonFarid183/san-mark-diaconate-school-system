@@ -27,15 +27,22 @@ public class AttendanceController : ControllerBase
     [HttpPost("sessions")]
     public async Task<IActionResult> CreateSession([FromBody] CreateAttendanceSessionDto dto)
     {
-        var result = await _service.CreateSessionAsync(dto, GetUserId());
-        return Ok(result);
+        try
+        {
+            var result = await _service.CreateSessionAsync(dto, GetUserId());
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
     }
 
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("sessions")]
-    public async Task<IActionResult> GetSessions([FromQuery] Guid? gradeId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceSessionStatus? status)
+    public async Task<IActionResult> GetSessions([FromQuery] Guid? gradeId, [FromQuery] Guid? classId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceSessionStatus? status)
     {
-        var result = await _service.GetSessionsAsync(gradeId, from, to, status);
+        var result = await _service.GetSessionsAsync(gradeId, classId, from, to, status);
         return Ok(result);
     }
 
@@ -93,6 +100,14 @@ public class AttendanceController : ControllerBase
     {
         var (success, error, record) = await _service.PinCheckInAsync(id, dto.Pin, GetUserId());
         return success ? Ok(record) : BadRequest(new { Message = error });
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("sessions/{id}/mark-bulk")]
+    public async Task<IActionResult> BulkMark(Guid id, [FromBody] BulkManualAttendanceDto dto)
+    {
+        var result = await _service.BulkMarkAsync(id, dto, GetUserId());
+        return Ok(result);
     }
 
     [Authorize(Policy = "AdminOnly")]

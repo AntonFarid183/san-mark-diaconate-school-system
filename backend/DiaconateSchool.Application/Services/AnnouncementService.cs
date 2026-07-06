@@ -12,11 +12,13 @@ namespace DiaconateSchool.Application.Services;
 public class AnnouncementService : IAnnouncementService
 {
     private readonly IAnnouncementRepository _repo;
+    private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
 
-    public AnnouncementService(IAnnouncementRepository repo, IUnitOfWork uow)
+    public AnnouncementService(IAnnouncementRepository repo, INotificationService notificationService, IUnitOfWork uow)
     {
         _repo = repo;
+        _notificationService = notificationService;
         _uow = uow;
     }
 
@@ -48,6 +50,9 @@ public class AnnouncementService : IAnnouncementService
 
         await _repo.AddAsync(a);
         await _uow.SaveChangesAsync();
+
+        await _notificationService.NotifyAnnouncementPostedAsync(a.Id, a.TargetStageId, a.Title);
+
         return MapToDto(a);
     }
 

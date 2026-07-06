@@ -5,7 +5,6 @@ using DiaconateSchool.Application.Services;
 using DiaconateSchool.Domain.Enums;
 using DiaconateSchool.Infrastructure.Data;
 using DiaconateSchool.Infrastructure.Repositories;
-using DiaconateSchool.Application.Services;
 using DiaconateSchool.Infrastructure.Security;
 using DiaconateSchool.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -69,6 +68,12 @@ builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
 builder.Services.AddScoped<IGradeHistoryRepository, GradeHistoryRepository>();
 builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+builder.Services.AddScoped<IAcademicYearRepository, AcademicYearRepository>();
+builder.Services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IHymnSubmissionRepository, HymnSubmissionRepository>();
+builder.Services.AddScoped<IHomeworkRepository, HomeworkRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // 5. Dependency Injection — services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -87,6 +92,12 @@ builder.Services.AddScoped<ICertificateService, CertificateService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
+builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IHymnSubmissionService, HymnSubmissionService>();
+builder.Services.AddScoped<IHomeworkService, HomeworkService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // 6. CORS for React

@@ -26,7 +26,7 @@ public class FileController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "No file provided." });
 
-        var allowedCategories = new[] { "profiles", "lessons", "hymns", "general" };
+        var allowedCategories = new[] { "profiles", "lessons", "hymns", "homework", "general" };
         if (!Array.Exists(allowedCategories, c => c == category))
             return BadRequest(new { Message = "Invalid category." });
 

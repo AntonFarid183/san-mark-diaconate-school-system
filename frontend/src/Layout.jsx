@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import apiClient from './apiClient';
+import NotificationBell from './components/NotificationBell';
 
 const COLLAPSED_WIDTH = '64px';
 const EXPANDED_WIDTH = '260px';
@@ -36,12 +37,52 @@ const NavButton = ({ icon, label, isActive, open, onClick, indent = false, badge
   </button>
 );
 
+const NavGroup = ({ icon, label, items, open, isActive, location, navigate, expandedGroup, setExpandedGroup, groupKey }) => {
+  const isExpanded = expandedGroup === groupKey;
+  return (
+    <div>
+      <button
+        onClick={() => open && setExpandedGroup(g => g === groupKey ? null : groupKey)}
+        title={!open ? label : undefined}
+        style={{
+          display: 'flex', alignItems: 'center',
+          gap: open ? '0.75rem' : '0',
+          justifyContent: open ? 'flex-start' : 'center',
+          padding: open ? '0.65rem 1rem' : '0.75rem',
+          borderRadius: 'var(--radius-sm)', border: 'none',
+          background: isActive ? 'rgba(251,191,36,0.1)' : 'transparent',
+          color: isActive ? 'var(--accent-gold)' : 'var(--text-secondary)',
+          fontFamily: 'inherit', fontSize: '0.93rem', fontWeight: isActive ? 700 : 500,
+          cursor: 'pointer', width: '100%', textAlign: 'right',
+          whiteSpace: 'nowrap', overflow: 'hidden', position: 'relative',
+        }}
+      >
+        {isActive && (
+          <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: '3px', height: '60%', background: 'var(--accent-gold)', borderRadius: '0 3px 3px 0' }} />
+        )}
+        <span className="material-symbols-outlined" style={{ fontSize: '22px', flexShrink: 0 }}>{icon}</span>
+        {open && <span style={{ flex: 1 }}>{label}</span>}
+        {open && <span className="material-symbols-outlined" style={{ fontSize: '18px', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>chevron_left</span>}
+      </button>
+
+      {open && isExpanded && (
+        <div style={{ marginTop: '0.15rem', marginBottom: '0.15rem' }}>
+          {items.map(item => (
+            <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path} open={open} onClick={() => navigate(item.path)} indent />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Layout = ({ children, title }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(true);
   const [gradesOpen, setGradesOpen] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState(null);
   const [grades, setGrades] = useState([]);
 
   const roleLabels = { Admin: 'مدير النظام', Student: 'طالب' };
@@ -64,6 +105,12 @@ const Layout = ({ children, title }) => {
     }
   }, [user?.role]);
 
+  useEffect(() => {
+    const activeGroup = navGroups.find(g => g.items.some(i => i.path === location.pathname));
+    if (activeGroup) setExpandedGroup(activeGroup.key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   // Group DB grades by stageId
   const gradesByStageId = grades.reduce((acc, g) => {
     if (!acc[g.stageId]) acc[g.stageId] = [];
@@ -79,19 +126,42 @@ const Layout = ({ children, title }) => {
   ];
 
   const adminItems = [
+    { path: '/academic-years', label: 'السنوات الدراسية', icon: 'calendar_month' },
+    { path: '/class-distribution', label: 'توزيع الفصول', icon: 'groups' },
     { path: '/curriculum-management', label: 'المناهج', icon: 'import_contacts' },
-    { path: '/hymn-lessons-management', label: 'دروس الألحان', icon: 'music_note' },
-    { path: '/exams', label: 'الامتحانات', icon: 'assignment' },
-    { path: '/attendance/sessions', label: 'جلسات الحضور', icon: 'how_to_reg' },
-    { path: '/attendance/dashboard', label: 'لوحة الحضور', icon: 'fact_check' },
-    { path: '/attendance/leaves', label: 'طلبات الإجازة', icon: 'event_note' },
     { path: '/announcements', label: 'الإعلانات', icon: 'campaign' },
+  ];
+
+  const navGroups = [
+    {
+      key: 'hymns', icon: 'music_note', label: 'الألحان',
+      items: [
+        { path: '/hymn-lessons-management', label: 'دروس الألحان', icon: 'music_note' },
+        { path: '/hymn-submissions', label: 'مراجعة التسجيلات', icon: 'graphic_eq' },
+      ],
+    },
+    {
+      key: 'assessments', icon: 'assignment', label: 'الواجبات والامتحانات',
+      items: [
+        { path: '/homework-management', label: 'إدارة الواجبات', icon: 'edit_note' },
+        { path: '/exams', label: 'الامتحانات', icon: 'assignment' },
+      ],
+    },
+    {
+      key: 'attendance', icon: 'how_to_reg', label: 'الحضور',
+      items: [
+        { path: '/attendance/sessions', label: 'جلسات الحضور', icon: 'how_to_reg' },
+        { path: '/attendance/dashboard', label: 'لوحة الحضور', icon: 'fact_check' },
+        { path: '/attendance/leaves', label: 'طلبات الإجازة', icon: 'event_note' },
+      ],
+    },
   ];
 
   const studentNavItems = [
     { path: '/lessons', label: 'الدروس', icon: 'menu_book' },
     { path: '/curriculum', label: 'المناهج', icon: 'import_contacts' },
     { path: '/hymn-lessons', label: 'دروس الألحان', icon: 'music_note' },
+    { path: '/homework', label: 'الواجبات', icon: 'edit_note' },
     { path: '/progress', label: 'التقدم', icon: 'trending_up' },
     { path: '/my-results', label: 'نتائجي', icon: 'assignment' },
     { path: '/attendance/checkin', label: 'تسجيل الحضور', icon: 'how_to_reg' },
@@ -231,6 +301,22 @@ const Layout = ({ children, title }) => {
                 {adminItems.map(item => (
                   <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path} open={open} onClick={() => navigate(item.path)} />
                 ))}
+
+                {navGroups.map(group => (
+                  <NavGroup
+                    key={group.key}
+                    groupKey={group.key}
+                    icon={group.icon}
+                    label={group.label}
+                    items={group.items}
+                    open={open}
+                    isActive={group.items.some(i => i.path === location.pathname)}
+                    location={location}
+                    navigate={navigate}
+                    expandedGroup={expandedGroup}
+                    setExpandedGroup={setExpandedGroup}
+                  />
+                ))}
               </>
             ) : (
               studentNavItems.map(item => (
@@ -265,6 +351,7 @@ const Layout = ({ children, title }) => {
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.5rem' }}>{title || ''}</h1>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <NotificationBell />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', background: 'var(--glass-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>account_circle</span>
                 <div style={{ textAlign: 'right' }}>

@@ -119,9 +119,7 @@ public enum AttendanceSessionStatus
 public enum AttendanceStatus
 {
     Present = 0,
-    Late = 1,
-    Absent = 2,
-    Excused = 3
+    Absent = 1
 }
 
 public enum AttendanceMethod
@@ -135,4 +133,27 @@ public enum LeaveStatus
     Pending = 0,
     Approved = 1,
     Rejected = 2
+}
+
+public enum HymnSubmissionStatus
+{
+    Pending = 0,
+    Approved = 1,
+    ResubmissionRequested = 2
+}
+
+public enum HomeworkMaterialType
+{
+    Pdf = 0,
+    Image = 1
+}
+
+public enum NotificationType
+{
+    AccountActivated = 0,
+    HomeworkPublished = 1,
+    HymnReviewed = 2,
+    AnnouncementPosted = 3,
+    CurriculumPublished = 4,
+    HymnLessonPublished = 5
 }

@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import * as XLSX from 'xlsx';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import StudentPaymentModal from '../components/StudentPaymentModal';
+import ExportModal from '../components/ExportModal';
+
+const STUDENT_EXPORT_COLUMNS = [
+  { key: 'studentCode', label: 'الكود' },
+  { key: 'fullName', label: 'الاسم الكامل' },
+  { key: 'stageName', label: 'المرحلة' },
+  { key: 'gradeName', label: 'السنة الدراسية' },
+  { key: 'dateOfBirth', label: 'تاريخ الميلاد' },
+  { key: 'status', label: 'الحالة' },
+  { key: 'registeredDate', label: 'تاريخ التسجيل' },
+];
 
 const StudentListScreen = () => {
   const navigate = useNavigate();
@@ -18,7 +29,10 @@ const StudentListScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [exporting, setExporting] = useState(false);
+  const [paymentModalStudent, setPaymentModalStudent] = useState(null);
+  const [showExport, setShowExport] = useState(false);
+  const [exportRows, setExportRows] = useState([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fetchStudents = async (pg = page) => {
     setLoading(true);
@@ -44,48 +58,22 @@ const StudentListScreen = () => {
 
   const handleSearch = (e) => { e.preventDefault(); setPage(1); fetchStudents(1); };
 
-  // ── Export all pages as Excel ─────────────────────────────────────────────
-  const handleExport = async () => {
-    setExporting(true);
+  // ── Export: fetch all matching rows, then let the user pick columns ───────
+  const openExport = async () => {
+    setExportLoading(true);
     try {
-      const params = { page: 1, pageSize: 200 };
+      const params = { page: 1, pageSize: 500 };
       if (searchTerm.trim()) params.name = searchTerm.trim();
       if (gradeId) params.gradeId = gradeId;
       else if (stageId) params.stageId = stageId;
 
-      // Fetch up to 200 — adjust pageSize if school grows large
       const res = await apiClient.get('/students', { params });
-      const all = res.data.students;
-
-      const rows = all.map((s, i) => ({
-        '#': i + 1,
-        'الكود': s.studentCode || '',
-        'الاسم الكامل': s.fullName,
-        'المرحلة': s.stageName,
-        'السنة الدراسية': s.gradeName,
-        'تاريخ الميلاد': s.dateOfBirth || '',
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
-
-      // Column widths
-      ws['!cols'] = [
-        { wch: 5 }, { wch: 14 }, { wch: 28 }, { wch: 14 }, { wch: 18 }, { wch: 14 },
-      ];
-
-      const wb = XLSX.utils.book_new();
-      const sheetName = gradeName || 'جميع الطلاب';
-      XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-
-      const fileName = gradeName
-        ? `طلاب_${gradeName}.xlsx`
-        : 'جميع_الطلاب.xlsx';
-
-      XLSX.writeFile(wb, fileName);
+      setExportRows(res.data.students);
+      setShowExport(true);
     } catch {
-      alert('فشل تصدير البيانات');
+      alert('فشل تحميل بيانات التصدير');
     } finally {
-      setExporting(false);
+      setExportLoading(false);
     }
   };
 
@@ -110,14 +98,14 @@ const StudentListScreen = () => {
         </p>
 
         <button
-          onClick={handleExport}
-          disabled={exporting || totalCount === 0}
+          onClick={openExport}
+          disabled={exportLoading || totalCount === 0}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             padding: '0.55rem 1.25rem', borderRadius: 'var(--radius-sm)',
             background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
             color: '#4ade80', fontWeight: 700, fontSize: '0.88rem',
-            cursor: exporting || totalCount === 0 ? 'not-allowed' : 'pointer',
+            cursor: exportLoading || totalCount === 0 ? 'not-allowed' : 'pointer',
             opacity: totalCount === 0 ? 0.5 : 1, transition: 'all 0.2s',
             fontFamily: 'inherit',
           }}
@@ -125,9 +113,9 @@ const StudentListScreen = () => {
           onMouseLeave={e => e.currentTarget.style.background = 'rgba(34,197,94,0.12)'}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-            {exporting ? 'hourglass_top' : 'download'}
+            {exportLoading ? 'hourglass_top' : 'download'}
           </span>
-          {exporting ? 'جاري التصدير...' : 'تصدير Excel'}
+          {exportLoading ? 'جاري التحميل...' : 'تصدير Excel'}
         </button>
       </div>
 
@@ -183,9 +171,15 @@ const StudentListScreen = () => {
                       </td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{s.dateOfBirth}</td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
-                        <button onClick={() => navigate(`/students/${s.id}`)} className="btn-secondary" style={{ padding: '0.3rem 1rem', fontSize: '0.8rem' }}>
-                          عرض الملف
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                          <button onClick={() => navigate(`/students/${s.id}`)} className="btn-secondary" style={{ padding: '0.3rem 1rem', fontSize: '0.8rem' }}>
+                            عرض الملف
+                          </button>
+                          <button onClick={() => setPaymentModalStudent(s)} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>payments</span>
+                            المدفوعات
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -221,6 +215,25 @@ const StudentListScreen = () => {
             </div>
           </div>
         </>
+      )}
+
+      {paymentModalStudent && (
+        <StudentPaymentModal
+          studentId={paymentModalStudent.id}
+          studentName={paymentModalStudent.fullName}
+          onClose={() => setPaymentModalStudent(null)}
+        />
+      )}
+
+      {showExport && (
+        <ExportModal
+          columns={STUDENT_EXPORT_COLUMNS}
+          rows={exportRows}
+          storageKey="students-list"
+          fileName={gradeName ? `طلاب_${gradeName}` : 'جميع_الطلاب'}
+          sheetName={gradeName || 'جميع الطلاب'}
+          onClose={() => setShowExport(false)}
+        />
       )}
     </Layout>
   );

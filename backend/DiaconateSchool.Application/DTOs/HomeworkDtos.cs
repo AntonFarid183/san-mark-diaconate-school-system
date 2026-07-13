@@ -121,3 +121,29 @@ public class SubmitHomeworkResultDto
     public int CorrectCount { get; set; }
     public int TotalQuestions { get; set; }
 }
+
+// ── Manual grade entry (admin) ───────────────────────────────────────
+
+// Roster of a homework's grade — lets the admin see who's graded and enter scores
+// for students who submitted in person rather than through the website.
+public class HomeworkGradingRosterItemDto
+{
+    public Guid StudentId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public string? ClassName { get; set; }
+    public bool HasSubmitted { get; set; }
+    public decimal? Score { get; set; }
+    public bool IsManualEntry { get; set; }
+}
+
+public class ManualGradeEntryDto
+{
+    public List<ManualGradeItemDto> Grades { get; set; } = new();
+}
+
+public class ManualGradeItemDto
+{
+    public Guid StudentId { get; set; }
+    public decimal Score { get; set; }
+}

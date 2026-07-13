@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
+import ExportModal from '../components/ExportModal';
+import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
 
 const TAB_DISTRIBUTE = 'distribute';
 const TAB_MANAGE = 'manage';
+const TAB_LEVELS = 'levels';
+
+const LEVEL_OPTIONS = [
+  { value: 1, label: 'المستوى 1' },
+  { value: 2, label: 'المستوى 2' },
+];
 
 export default function ClassDistributionScreen() {
   const [tab, setTab] = useState(TAB_DISTRIBUTE);
@@ -14,6 +22,7 @@ export default function ClassDistributionScreen() {
   // Distribution tab state
   const [distGradeId, setDistGradeId] = useState('');
   const [distYearId, setDistYearId] = useState('');
+  const [distLevel, setDistLevel] = useState(1);
   const [preferredSize, setPreferredSize] = useState(20);
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -23,10 +32,24 @@ export default function ClassDistributionScreen() {
   // Manual tab state
   const [manGradeId, setManGradeId] = useState('');
   const [manYearId, setManYearId] = useState('');
+  const [manLevel, setManLevel] = useState(1);
   const [classes, setClasses] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [movingTo, setMovingTo] = useState(null); // classId being moved to
+
+  // Manage Levels tab state
+  const [levelsGradeId, setLevelsGradeId] = useState('');
+  const [levelStudents, setLevelStudents] = useState([]);
+  const [loadingLevelStudents, setLoadingLevelStudents] = useState(false);
+  const [selectedLevel1, setSelectedLevel1] = useState(new Set());
+  const [selectedLevel2, setSelectedLevel2] = useState(new Set());
+  const [movingLevel, setMovingLevel] = useState(false);
+
+  // Per-class Excel export
+  const [exportingClassId, setExportingClassId] = useState(null);
+  const [exportRows, setExportRows] = useState(null);
+  const [exportLabel, setExportLabel] = useState('');
 
   useEffect(() => {
     apiClient.get('/students/grades').then(r => setGrades(r.data)).catch(() => {});
@@ -45,7 +68,7 @@ export default function ClassDistributionScreen() {
     setSelectedOption(null);
     try {
       const r = await apiClient.get('/classes/distribution-options', {
-        params: { gradeId: distGradeId, academicYearId: distYearId, preferredSize }
+        params: { gradeId: distGradeId, academicYearId: distYearId, level: distLevel, preferredSize }
       });
       setOptions(r.data);
       if (r.data.length > 0) {
@@ -67,6 +90,7 @@ export default function ClassDistributionScreen() {
       await apiClient.post('/classes/distribution/apply', {
         gradeId: distGradeId,
         academicYearId: distYearId,
+        level: distLevel,
         classes: selectedOption.classes.map(c => ({
           name: c.name,
           studentIds: c.students.map(s => s.id)
@@ -78,6 +102,7 @@ export default function ClassDistributionScreen() {
       // Switch to manage tab to see result
       setManGradeId(distGradeId);
       setManYearId(distYearId);
+      setManLevel(distLevel);
       setTab(TAB_MANAGE);
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل تطبيق التوزيع.' });
@@ -87,12 +112,12 @@ export default function ClassDistributionScreen() {
   };
 
   // Manual tab
-  const fetchClasses = async (gradeId, yearId) => {
+  const fetchClasses = async (gradeId, yearId, level) => {
     if (!gradeId || !yearId) return;
     setLoadingClasses(true);
     setSelectedStudents(new Set());
     try {
-      const r = await apiClient.get('/classes', { params: { gradeId, academicYearId: yearId } });
+      const r = await apiClient.get('/classes', { params: { gradeId, academicYearId: yearId, level } });
       setClasses(r.data);
     } catch {
       setMsg({ type: 'error', text: 'فشل تحميل الفصول.' });
@@ -101,7 +126,46 @@ export default function ClassDistributionScreen() {
     }
   };
 
-  useEffect(() => { if (tab === TAB_MANAGE) fetchClasses(manGradeId, manYearId); }, [manGradeId, manYearId, tab]);
+  useEffect(() => { if (tab === TAB_MANAGE) fetchClasses(manGradeId, manYearId, manLevel); }, [manGradeId, manYearId, manLevel, tab]);
+
+  // Manage Levels tab
+  const fetchLevelStudents = async (gradeId) => {
+    if (!gradeId) return;
+    setLoadingLevelStudents(true);
+    setSelectedLevel1(new Set());
+    setSelectedLevel2(new Set());
+    try {
+      const r = await apiClient.get('/students', { params: { gradeId, page: 1, pageSize: 1000 } });
+      setLevelStudents(r.data.students);
+    } catch {
+      setMsg({ type: 'error', text: 'فشل تحميل الطلاب.' });
+    } finally {
+      setLoadingLevelStudents(false);
+    }
+  };
+
+  useEffect(() => { if (tab === TAB_LEVELS) fetchLevelStudents(levelsGradeId); }, [levelsGradeId, tab]);
+
+  const toggleLevelStudent = (setSelected, studentId) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(studentId) ? next.delete(studentId) : next.add(studentId);
+      return next;
+    });
+  };
+
+  const moveLevel = async (studentIds, targetLevel) => {
+    if (studentIds.size === 0) return;
+    setMovingLevel(true);
+    try {
+      await apiClient.post('/students/level', { studentIds: [...studentIds], level: targetLevel });
+      fetchLevelStudents(levelsGradeId);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل نقل الطلاب.' });
+    } finally {
+      setMovingLevel(false);
+    }
+  };
 
   const toggleStudent = (studentId) => {
     setSelectedStudents(prev => {
@@ -120,7 +184,7 @@ export default function ClassDistributionScreen() {
         targetClassId: targetClassId || null
       });
       setSelectedStudents(new Set());
-      fetchClasses(manGradeId, manYearId);
+      fetchClasses(manGradeId, manYearId, manLevel);
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل نقل الطلاب.' });
     } finally {
@@ -131,7 +195,7 @@ export default function ClassDistributionScreen() {
   const toggleLock = async (classId) => {
     try {
       await apiClient.post(`/classes/${classId}/toggle-lock`);
-      fetchClasses(manGradeId, manYearId);
+      fetchClasses(manGradeId, manYearId, manLevel);
     } catch {
       setMsg({ type: 'error', text: 'فشل تغيير حالة القفل.' });
     }
@@ -141,7 +205,7 @@ export default function ClassDistributionScreen() {
     if (!window.confirm(`حذف الفصل "${cls.name}"؟ سيتم إلغاء تعيين طلابه.`)) return;
     try {
       await apiClient.delete(`/classes/${cls.id}`);
-      fetchClasses(manGradeId, manYearId);
+      fetchClasses(manGradeId, manYearId, manLevel);
     } catch {
       setMsg({ type: 'error', text: 'فشل الحذف.' });
     }
@@ -149,9 +213,22 @@ export default function ClassDistributionScreen() {
 
   const gradeName = (id) => grades.find(g => g.id === id)?.name ?? '';
 
+  const exportClass = async (cls) => {
+    setExportingClassId(cls.id);
+    try {
+      const r = await apiClient.get('/students', { params: { classId: cls.id, page: 1, pageSize: 1000 } });
+      setExportRows(r.data.students.map(formatStudentForExport));
+      setExportLabel(`${gradeName(manGradeId)} — فصل ${cls.name}`);
+    } catch {
+      setMsg({ type: 'error', text: 'فشل تحميل بيانات التصدير.' });
+    } finally {
+      setExportingClassId(null);
+    }
+  };
+
   return (
     <Layout title="توزيع الفصول">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         توزيع الطلاب على الفصول الدراسية وإدارة التعيينات يدوياً.
       </p>
 
@@ -163,8 +240,8 @@ export default function ClassDistributionScreen() {
       )}
 
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'rgba(15,23,42,0.5)', borderRadius: 'var(--radius-sm)', padding: '0.25rem', width: 'fit-content' }}>
-        {[{ id: TAB_DISTRIBUTE, label: 'توزيع ذكي', icon: 'auto_awesome' }, { id: TAB_MANAGE, label: 'إدارة يدوية', icon: 'manage_accounts' }].map(t => (
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'rgba(15,23,42,0.5)', borderRadius: 'var(--radius-sm)', padding: '0.25rem', width: 'fit-content', flexWrap: 'wrap' }}>
+        {[{ id: TAB_DISTRIBUTE, label: 'توزيع ذكي', icon: 'auto_awesome' }, { id: TAB_MANAGE, label: 'إدارة يدوية', icon: 'manage_accounts' }, { id: TAB_LEVELS, label: 'إدارة المستويات', icon: 'stairs' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: tab === t.id ? 'var(--accent-gold)' : 'transparent', color: tab === t.id ? '#1e293b' : 'var(--text-secondary)', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: tab === t.id ? 700 : 500, cursor: 'pointer', transition: 'all 0.2s' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{t.icon}</span>
             {t.label}
@@ -190,6 +267,12 @@ export default function ClassDistributionScreen() {
                 <select className="premium-input" value={distGradeId} onChange={e => { setDistGradeId(e.target.value); setOptions([]); setSelectedOption(null); }}>
                   <option value="">اختر الصف</option>
                   {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
+              <div style={{ minWidth: '160px' }}>
+                <label style={labelStyle}>المستوى</label>
+                <select className="premium-input" value={distLevel} onChange={e => { setDistLevel(Number(e.target.value)); setOptions([]); setSelectedOption(null); }}>
+                  {LEVEL_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
               </div>
               <div style={{ minWidth: '160px' }}>
@@ -309,6 +392,12 @@ export default function ClassDistributionScreen() {
                   {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
+              <div style={{ minWidth: '160px' }}>
+                <label style={labelStyle}>المستوى</label>
+                <select className="premium-input" value={manLevel} onChange={e => setManLevel(Number(e.target.value))}>
+                  {LEVEL_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -360,11 +449,17 @@ export default function ClassDistributionScreen() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.3rem' }}>
+                      <button onClick={() => exportClass(cls)} disabled={exportingClassId === cls.id || cls.studentCount === 0} title="تصدير Excel" style={{ ...iconBtnStyle, color: '#4ade80', opacity: cls.studentCount === 0 ? 0.4 : 1 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{exportingClassId === cls.id ? 'hourglass_top' : 'download'}</span>
+                        <span style={iconBtnLabelStyle}>تصدير</span>
+                      </button>
                       <button onClick={() => toggleLock(cls.id)} title={cls.isLocked ? 'فك القفل' : 'قفل الفصل'} style={iconBtnStyle}>
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{cls.isLocked ? 'lock_open' : 'lock'}</span>
+                        <span style={iconBtnLabelStyle}>{cls.isLocked ? 'فك القفل' : 'قفل'}</span>
                       </button>
                       <button onClick={() => deleteClass(cls)} title="حذف الفصل" style={{ ...iconBtnStyle, color: 'var(--danger)' }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                        <span style={iconBtnLabelStyle}>حذف</span>
                       </button>
                     </div>
                   </div>
@@ -398,6 +493,89 @@ export default function ClassDistributionScreen() {
           )}
         </div>
       )}
+
+      {/* ── MANAGE LEVELS TAB ── */}
+      {tab === TAB_LEVELS && (
+        <div>
+          <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+            <div style={{ minWidth: '220px', maxWidth: '320px' }}>
+              <label style={labelStyle}>الصف الدراسي</label>
+              <select className="premium-input" value={levelsGradeId} onChange={e => setLevelsGradeId(e.target.value)}>
+                <option value="">اختر الصف</option>
+                {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {loadingLevelStudents ? (
+            <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
+          ) : !levelsGradeId ? (
+            <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>stairs</span>
+              <p style={{ color: 'var(--text-muted)' }}>اختر الصف الدراسي لإدارة مستويات طلابه</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {[1, 2].map(levelNum => {
+                const students = levelStudents.filter(s => (s.level ?? 1) === levelNum);
+                const selected = levelNum === 1 ? selectedLevel1 : selectedLevel2;
+                const setSelected = levelNum === 1 ? setSelectedLevel1 : setSelectedLevel2;
+                const targetLevel = levelNum === 1 ? 2 : 1;
+                const moveLabel = levelNum === 1 ? 'نقل إلى المستوى 2 ←' : '→ نقل إلى المستوى 1';
+
+                return (
+                  <div key={levelNum} className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--accent-gold)' }}>المستوى {levelNum}</span>
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(251,191,36,0.12)', color: 'var(--accent-gold)', padding: '0.1rem 0.5rem', borderRadius: '12px' }}>
+                        {students.length} طالب
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => moveLevel(selected, targetLevel)}
+                      disabled={selected.size === 0 || movingLevel}
+                      className="btn-primary"
+                      style={{ width: '100%', marginBottom: '1rem', opacity: selected.size === 0 ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                        {movingLevel ? 'hourglass_top' : 'sync_alt'}
+                      </span>
+                      {selected.size > 0 ? `${moveLabel} (${selected.size})` : moveLabel}
+                    </button>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '400px', overflowY: 'auto' }}>
+                      {students.map(s => {
+                        const checked = selected.has(s.id);
+                        return (
+                          <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0.5rem', borderRadius: '6px', cursor: 'pointer', background: checked ? 'rgba(251,191,36,0.08)' : 'transparent', transition: 'background 0.15s' }}>
+                            <input type="checkbox" checked={checked} onChange={() => toggleLevelStudent(setSelected, s.id)} style={{ accentColor: 'var(--accent-gold)', width: '14px', height: '14px', flexShrink: 0 }} />
+                            <span style={{ fontSize: '0.85rem', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.fullName}</span>
+                          </label>
+                        );
+                      })}
+                      {students.length === 0 && (
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem' }}>لا يوجد طلاب في هذا المستوى</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {exportRows && (
+        <ExportModal
+          columns={STUDENT_EXPORT_COLUMNS}
+          rows={exportRows}
+          storageKey="students-list"
+          fileName={`طلاب_${exportLabel}`.replace(/\s+/g, '_')}
+          sheetName={exportLabel}
+          onClose={() => setExportRows(null)}
+        />
+      )}
     </Layout>
   );
 }
@@ -407,6 +585,9 @@ const labelStyle = {
 };
 
 const iconBtnStyle = {
-  background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '6px',
-  padding: '0.3rem', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center',
+  background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '6px',
+  padding: '0.3rem 0.4rem', cursor: 'pointer', color: 'var(--text-muted)',
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', minWidth: '46px',
 };
+
+const iconBtnLabelStyle = { fontSize: '0.6rem', fontWeight: 600, lineHeight: 1, whiteSpace: 'nowrap' };

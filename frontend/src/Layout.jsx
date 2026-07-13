@@ -90,7 +90,7 @@ const Layout = ({ children, title }) => {
 
   // All stages — same order as registration form
   const ALL_STAGES = [
-    { id: '00000000-0000-0000-0000-000000000001', label: 'طفولة',   hasSubGrades: false },
+    { id: '00000000-0000-0000-0000-000000000001', label: 'طفولة',   hasSubGrades: true  },
     { id: '00000000-0000-0000-0001-000000000001', label: 'ابتدائي', hasSubGrades: true  },
     { id: '00000000-0000-0000-0002-000000000001', label: 'إعدادي',  hasSubGrades: true  },
     { id: '00000000-0000-0000-0003-000000000001', label: 'ثانوي',   hasSubGrades: true  },
@@ -126,9 +126,11 @@ const Layout = ({ children, title }) => {
   ];
 
   const adminItems = [
+    { path: '/student-performance', label: 'لوحة أداء الطلاب', icon: 'insights' },
     { path: '/academic-years', label: 'السنوات الدراسية', icon: 'calendar_month' },
     { path: '/class-distribution', label: 'توزيع الفصول', icon: 'groups' },
     { path: '/curriculum-management', label: 'المناهج', icon: 'import_contacts' },
+    { path: '/homework-management', label: 'إدارة الواجبات', icon: 'edit_note' },
     { path: '/announcements', label: 'الإعلانات', icon: 'campaign' },
   ];
 
@@ -138,13 +140,6 @@ const Layout = ({ children, title }) => {
       items: [
         { path: '/hymn-lessons-management', label: 'دروس الألحان', icon: 'music_note' },
         { path: '/hymn-submissions', label: 'مراجعة التسجيلات', icon: 'graphic_eq' },
-      ],
-    },
-    {
-      key: 'assessments', icon: 'assignment', label: 'الواجبات والامتحانات',
-      items: [
-        { path: '/homework-management', label: 'إدارة الواجبات', icon: 'edit_note' },
-        { path: '/exams', label: 'الامتحانات', icon: 'assignment' },
       ],
     },
     {
@@ -327,7 +322,13 @@ const Layout = ({ children, title }) => {
 
           {/* Logout */}
           <div style={{ padding: open ? '1rem' : '0.75rem 0.5rem', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-            <button onClick={() => { logout(); navigate('/login'); }}
+            <button onClick={() => {
+              logout();
+              // Deferred: logging out flips ProtectedRoute's redirect-to-/login for the
+              // still-mounted admin route in the same commit — navigating here last,
+              // after that settles, ensures landing-page is the final destination.
+              setTimeout(() => navigate('/'), 0);
+            }}
               title={!open ? 'تسجيل الخروج' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: open ? '0.75rem' : '0',

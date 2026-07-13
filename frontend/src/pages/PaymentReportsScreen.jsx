@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 import ExportModal from '../components/ExportModal';
@@ -49,6 +50,8 @@ const paymentBadge = (status) => {
 };
 
 export default function PaymentReportsScreen() {
+  const [searchParams] = useSearchParams();
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [stages, setStages] = useState([]);
@@ -57,10 +60,10 @@ export default function PaymentReportsScreen() {
   const [showExport, setShowExport] = useState(false);
 
   const [filters, setFilters] = useState({
-    name: '',
-    stageId: '',
-    gradeId: '',
-    paymentStatus: '',
+    name: searchParams.get('name') || '',
+    stageId: searchParams.get('stageId') || '',
+    gradeId: searchParams.get('gradeId') || '',
+    paymentStatus: searchParams.get('paymentStatus') || '',
     dateFrom: '',
     dateTo: '',
   });
@@ -99,6 +102,15 @@ export default function PaymentReportsScreen() {
 
   useEffect(() => { fetchReport(); }, []);
 
+  // Live search — debounced so typing doesn't hit the server on every keystroke
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    const timer = setTimeout(() => { fetchReport(); }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.name]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -118,7 +130,7 @@ export default function PaymentReportsScreen() {
 
   return (
     <Layout title="تقرير المدفوعات">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>تقرير شامل بمدفوعات الطلاب والمبالغ المحصلة.</p>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>تقرير شامل بمدفوعات الطلاب والمبالغ المحصلة.</p>
 
       {/* Summary stats */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>

@@ -1,6 +1,7 @@
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
+using DiaconateSchool.Application.Interfaces.Services;
 using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Domain.Enums;
 
@@ -11,12 +12,36 @@ public class CurriculumService : ICurriculumService
     private readonly ICurriculumRepository _repo;
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
+    private readonly IStudentRegistrationService _registrationService;
 
-    public CurriculumService(ICurriculumRepository repo, INotificationService notificationService, IUnitOfWork uow)
+    public CurriculumService(ICurriculumRepository repo, INotificationService notificationService, IUnitOfWork uow, IStudentRegistrationService registrationService)
     {
         _repo = repo;
         _notificationService = notificationService;
         _uow = uow;
+        _registrationService = registrationService;
+    }
+
+    public async Task<IEnumerable<StageWithCurriculumCountDto>> GetPublicStagesAsync(CurriculumSubject subject)
+    {
+        var stages = await _registrationService.GetAllStagesAsync();
+        var published = await _repo.GetPublishedBySubjectAsync(subject, null);
+        var countsByStage = published.GroupBy(c => c.StageId).ToDictionary(g => g.Key, g => g.Count());
+
+        return stages
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new StageWithCurriculumCountDto
+            {
+                StageId = s.Id,
+                StageName = s.Name,
+                CurriculumCount = countsByStage.TryGetValue(s.Id, out var count) ? count : 0
+            });
+    }
+
+    public async Task<IEnumerable<CurriculumDto>> GetPublicAsync(CurriculumSubject subject, Guid stageId)
+    {
+        var items = await _repo.GetPublishedBySubjectAsync(subject, stageId);
+        return items.Select(Map);
     }
 
     public async Task<IEnumerable<CurriculumDto>> GetAllAsync(Guid? stageId, CurriculumStatus? status, string? academicYear)
@@ -45,6 +70,7 @@ public class CurriculumService : ICurriculumService
             Title = dto.Title.Trim(),
             Description = dto.Description?.Trim(),
             AcademicYear = dto.AcademicYear.Trim(),
+            Subject = dto.Subject,
             StageId = dto.StageId,
             GradeId = dto.GradeId,
             Status = CurriculumStatus.Draft,
@@ -65,6 +91,7 @@ public class CurriculumService : ICurriculumService
         c.Title = dto.Title.Trim();
         c.Description = dto.Description?.Trim();
         c.AcademicYear = dto.AcademicYear.Trim();
+        c.Subject = dto.Subject;
         c.StageId = dto.StageId;
         c.GradeId = dto.GradeId;
         c.UpdatedAt = DateTime.UtcNow;
@@ -136,6 +163,14 @@ public class CurriculumService : ICurriculumService
         Title = c.Title,
         Description = c.Description,
         AcademicYear = c.AcademicYear,
+        Subject = c.Subject,
+        SubjectLabel = c.Subject switch
+        {
+            CurriculumSubject.Rites => "الطقس",
+            CurriculumSubject.Hymns => "الألحان",
+            CurriculumSubject.Coptic => "القبطي",
+            _ => string.Empty
+        },
         StageId = c.StageId,
         StageName = c.Stage?.Name ?? string.Empty,
         GradeId = c.GradeId,

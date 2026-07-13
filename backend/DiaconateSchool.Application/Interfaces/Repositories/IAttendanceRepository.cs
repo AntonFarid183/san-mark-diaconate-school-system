@@ -20,12 +20,14 @@ public interface IAttendanceRepository
     Task AddRecordAsync(AttendanceRecord record);
     Task UpdateRecordAsync(AttendanceRecord record);
     Task<List<AttendanceRecord>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status);
+    Task<List<AttendanceRecord>> GetRecordsByStudentIdsAsync(IEnumerable<Guid> studentIds);
 
     Task AddAuditLogAsync(AttendanceAuditLog log);
     Task<List<AttendanceAuditLog>> GetAuditLogsAsync(Guid recordId);
 
     Task<List<Student>> GetActiveStudentsByClassAsync(Guid classId);
     Task<int> GetOpenSessionsCountAsync();
+    Task<AttendanceSession?> GetFirstOpenSessionAsync();
 
     Task<LeaveRequest?> GetLeaveByIdAsync(Guid id);
     Task<List<LeaveRequest>> GetLeavesAsync(Guid? studentId, LeaveStatus? status);

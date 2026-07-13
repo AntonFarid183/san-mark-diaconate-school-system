@@ -1,4 +1,5 @@
 using DiaconateSchool.Application.DTOs;
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,10 +8,10 @@ namespace DiaconateSchool.Application.Interfaces;
 
 public interface ISchoolClassService
 {
-    Task<List<SchoolClassDto>> GetClassesAsync(Guid gradeId, Guid academicYearId);
+    Task<List<SchoolClassDto>> GetClassesAsync(Guid gradeId, Guid academicYearId, StudentLevel level);
 
     // Returns 3-4 preview options for different class counts
-    Task<List<DistributionPreviewDto>> GetDistributionOptionsAsync(Guid gradeId, Guid academicYearId, int preferredSize);
+    Task<List<DistributionPreviewDto>> GetDistributionOptionsAsync(Guid gradeId, Guid academicYearId, StudentLevel level, int preferredSize);
 
     // Preview for a specific class count
     Task<DistributionPreviewDto> PreviewDistributionAsync(PreviewDistributionDto dto);

@@ -91,7 +91,7 @@ const ContentManagementScreen = () => {
   return (
     <Layout title="إدارة المحتوى">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <p style={{ fontSize: '0.9rem' }}>إضافة وتعديل وترتيب الدروس والمحتوى التعليمي</p>
+        <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>إضافة وتعديل وترتيب الدروس والمحتوى التعليمي</p>
         <button onClick={() => { setEditLesson(null); setForm({ title: '', description: '', lessonNumber: 1, weekNumber: 1, stageId: '', gradeId: '' }); setShowCreate(true); }} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
           درس جديد

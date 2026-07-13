@@ -15,6 +15,7 @@ public class HomeworkSubmission
 
     public decimal Score { get; set; }
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    public bool IsManualEntry { get; set; }
 
     public ICollection<HomeworkAnswer> Answers { get; set; } = new List<HomeworkAnswer>();
 }

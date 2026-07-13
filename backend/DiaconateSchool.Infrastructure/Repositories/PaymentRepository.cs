@@ -3,6 +3,8 @@ using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Infrastructure.Repositories;
@@ -35,8 +37,12 @@ public class PaymentRepository : IPaymentRepository
     public async Task<bool> StudentExistsAsync(Guid studentId)
         => await _context.Students.AnyAsync(s => s.Id == studentId);
 
-    public async Task<int> GetOutstandingBalanceCountAsync()
-        => await _context.StudentAccounts.CountAsync(a =>
-            a.TotalRequired > 0 &&
-            a.TotalRequired > a.Transactions.Where(t => !t.IsVoided).Sum(t => (decimal?)t.Amount ?? 0));
+    public async Task<List<StudentAccount>> GetOutstandingAccountsAsync()
+        => await _context.StudentAccounts
+            .Include(a => a.Student).ThenInclude(s => s.User)
+            .Include(a => a.Student).ThenInclude(s => s.Grade).ThenInclude(g => g.Stage)
+            .Include(a => a.Transactions)
+            .Where(a => a.TotalRequired > 0 &&
+                a.TotalRequired > a.Transactions.Where(t => !t.IsVoided).Sum(t => (decimal?)t.Amount ?? 0))
+            .ToListAsync();
 }

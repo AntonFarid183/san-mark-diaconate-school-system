@@ -57,7 +57,7 @@ export default function PendingApprovalsScreen() {
 
   return (
     <Layout title="طلبات التسجيل الذاتي">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         الأعضاء الذين سجّلوا أنفسهم عبر نموذج التسجيل — في انتظار موافقة الإدارة على قبولهم وتفعيل حساباتهم.
       </p>
 

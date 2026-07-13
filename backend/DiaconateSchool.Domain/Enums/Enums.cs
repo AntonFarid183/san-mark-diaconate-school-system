@@ -20,6 +20,14 @@ public enum DeaconRank
     Diakon = 4
 }
 
+// Internal educational grouping within a Grade — orthogonal to Class. Not admin-managed
+// (no CRUD): every Grade implicitly has both levels available, defaulting to Level1.
+public enum StudentLevel
+{
+    Level1 = 1,
+    Level2 = 2
+}
+
 public enum StudentStatus
 {
     Pending = 0,
@@ -66,6 +74,14 @@ public enum CurriculumStatus
     Draft = 0,
     Published = 1,
     Archived = 2
+}
+
+// Drives the public Curriculum Browser's subject dropdown (الطقس/الألحان/القبطي).
+public enum CurriculumSubject
+{
+    Rites = 1,
+    Hymns = 2,
+    Coptic = 3
 }
 
 public enum HymnVideoType

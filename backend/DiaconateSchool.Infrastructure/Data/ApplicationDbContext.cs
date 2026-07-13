@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<GradeHistory> GradeHistories => Set<GradeHistory>();
     public DbSet<Curriculum> Curriculums => Set<Curriculum>();
+    public DbSet<PublicFeedback> PublicFeedbacks => Set<PublicFeedback>();
     public DbSet<HymnLesson> HymnLessons => Set<HymnLesson>();
     public DbSet<HymnLessonProgress> HymnLessonProgresses => Set<HymnLessonProgress>();
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
@@ -201,6 +202,10 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(c => c.StageId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Curriculum>()
+            .Property(c => c.Subject)
+            .HasDefaultValue(Domain.Enums.CurriculumSubject.Rites);
+
         // HymnLesson -> Stage
         modelBuilder.Entity<HymnLesson>()
             .HasOne(hl => hl.Stage)
@@ -341,9 +346,19 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(c => c.AcademicYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // SchoolClass unique: Name + GradeId + AcademicYearId
+        // SchoolClass unique: Name + GradeId + AcademicYearId + Level (each level has its own class set)
         modelBuilder.Entity<SchoolClass>()
-            .HasIndex(c => new { c.GradeId, c.AcademicYearId, c.Name }).IsUnique();
+            .HasIndex(c => new { c.GradeId, c.AcademicYearId, c.Level, c.Name }).IsUnique();
+
+        // Existing rows (and any row that omits Level) default to Level1 — not the enum's
+        // underlying 0, which has no corresponding StudentLevel value.
+        modelBuilder.Entity<SchoolClass>()
+            .Property(c => c.Level)
+            .HasDefaultValue(StudentLevel.Level1);
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.Level)
+            .HasDefaultValue(StudentLevel.Level1);
 
         // Student -> SchoolClass (optional)
         modelBuilder.Entity<Student>()

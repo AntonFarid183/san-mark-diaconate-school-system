@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 
@@ -12,6 +13,15 @@ const SESSION_OPEN = 1;
 const SESSION_CLOSED = 2;
 
 const AttendanceSessionsScreen = () => {
+  // Deep-link target from a notification click — consumed once, then cleared
+  const [searchParams] = useSearchParams();
+  const initialTarget = useRef({
+    academicYearId: searchParams.get('academicYearId') || '',
+    stageId: searchParams.get('stageId') || '',
+    gradeId: searchParams.get('gradeId') || '',
+    classId: searchParams.get('classId') || '',
+  });
+
   const [academicYears, setAcademicYears] = useState([]);
   const [stages, setStages] = useState([]);
   const [grades, setGrades] = useState([]);
@@ -40,23 +50,40 @@ const AttendanceSessionsScreen = () => {
   useEffect(() => {
     apiClient.get('/academic-years').then(r => {
       setAcademicYears(r.data);
+      const target = initialTarget.current.academicYearId;
+      const match = target && r.data.find(y => y.id === target);
       const current = r.data.find(y => y.isCurrent);
-      if (current) setAcademicYearId(current.id);
+      if (match) setAcademicYearId(match.id);
+      else if (current) setAcademicYearId(current.id);
     }).catch(() => {});
-    apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
+    apiClient.get('/students/stages').then(r => {
+      setStages(r.data);
+      if (initialTarget.current.stageId) setStageId(initialTarget.current.stageId);
+    }).catch(() => {});
   }, []);
 
   // Stage -> grades
   useEffect(() => {
     setGradeId(''); setGrades([]); setClassId(''); setClasses([]); setSessions([]);
-    if (stageId) apiClient.get(`/students/grades/${stageId}`).then(r => setGrades(r.data)).catch(() => setGrades([]));
+    if (stageId) {
+      apiClient.get(`/students/grades/${stageId}`).then(r => {
+        setGrades(r.data);
+        const target = initialTarget.current.gradeId;
+        if (target && r.data.find(g => g.id === target)) setGradeId(target);
+      }).catch(() => setGrades([]));
+    }
   }, [stageId]);
 
   // Grade + year -> classes
   useEffect(() => {
     setClassId(''); setClasses([]); setSessions([]);
     if (gradeId && academicYearId) {
-      apiClient.get('/classes', { params: { gradeId, academicYearId } }).then(r => setClasses(r.data)).catch(() => setClasses([]));
+      apiClient.get('/classes', { params: { gradeId, academicYearId } }).then(r => {
+        setClasses(r.data);
+        const target = initialTarget.current.classId;
+        if (target && r.data.find(c => c.id === target)) setClassId(target);
+        initialTarget.current = {}; // consume — only auto-apply once
+      }).catch(() => setClasses([]));
     }
   }, [gradeId, academicYearId]);
 

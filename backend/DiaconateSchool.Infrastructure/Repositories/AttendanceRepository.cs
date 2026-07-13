@@ -119,6 +119,14 @@ public class AttendanceRepository : IAttendanceRepository
         return await query.OrderByDescending(r => r.RecordedAt).ToListAsync();
     }
 
+    public async Task<List<AttendanceRecord>> GetRecordsByStudentIdsAsync(IEnumerable<Guid> studentIds)
+    {
+        var ids = studentIds.ToList();
+        return await _context.AttendanceRecords
+            .Where(r => ids.Contains(r.StudentId))
+            .ToListAsync();
+    }
+
     public async Task AddAuditLogAsync(AttendanceAuditLog log)
     {
         await _context.AttendanceAuditLogs.AddAsync(log);
@@ -143,6 +151,14 @@ public class AttendanceRepository : IAttendanceRepository
 
     public async Task<int> GetOpenSessionsCountAsync()
         => await _context.AttendanceSessions.CountAsync(s => s.Status == AttendanceSessionStatus.Open);
+
+    public async Task<AttendanceSession?> GetFirstOpenSessionAsync()
+        => await _context.AttendanceSessions
+            .Include(s => s.Grade).ThenInclude(g => g.Stage)
+            .Include(s => s.Class)
+            .Where(s => s.Status == AttendanceSessionStatus.Open)
+            .OrderBy(s => s.StartsAt)
+            .FirstOrDefaultAsync();
 
     public async Task<LeaveRequest?> GetLeaveByIdAsync(Guid id)
     {

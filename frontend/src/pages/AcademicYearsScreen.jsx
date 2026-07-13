@@ -98,7 +98,7 @@ export default function AcademicYearsScreen() {
 
   return (
     <Layout title="السنوات الدراسية">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         إدارة السنوات الدراسية. السنة الحالية تُستخدم كمرجع افتراضي لجميع العمليات.
       </p>
 

@@ -19,6 +19,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
 
   const [editingTotal, setEditingTotal] = useState(false);
   const [totalInput, setTotalInput] = useState('');
+  const [totalDescriptionInput, setTotalDescriptionInput] = useState('');
   const [savingTotal, setSavingTotal] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -49,6 +50,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
 
   const openEditTotal = () => {
     setTotalInput(String(account?.totalRequired ?? 0));
+    setTotalDescriptionInput(account?.description ?? '');
     setEditingTotal(true);
   };
 
@@ -57,7 +59,10 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
     if (isNaN(value) || value < 0) return;
     setSavingTotal(true);
     try {
-      const r = await apiClient.put(`/students/${studentId}/account/total-required`, { totalRequired: value });
+      const r = await apiClient.put(`/students/${studentId}/account/total-required`, {
+        totalRequired: value,
+        description: totalDescriptionInput.trim() || null,
+      });
       setAccount(r.data);
       setEditingTotal(false);
     } catch (e) {
@@ -160,20 +165,14 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
               <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(15,23,42,0.5)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المبلغ المطلوب</div>
-                {editingTotal ? (
-                  <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                    <input autoFocus type="number" min="0" step="0.01" value={totalInput} onChange={e => setTotalInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && saveTotal()}
-                      className="premium-input" style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem', textAlign: 'center' }} />
-                    <button onClick={saveTotal} disabled={savingTotal} style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span>
-                    </button>
-                  </div>
-                ) : (
+                {!editingTotal && (
                   <div onClick={openEditTotal} style={{ fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
                     {formatAmount(account.totalRequired)}
                     <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--text-muted)' }}>edit</span>
                   </div>
+                )}
+                {!editingTotal && account.description && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{account.description}</div>
                 )}
               </div>
               <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(15,23,42,0.5)', textAlign: 'center' }}>
@@ -185,6 +184,21 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: account.remainingBalance > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{formatAmount(account.remainingBalance)}</div>
               </div>
             </div>
+
+            {editingTotal && (
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <input autoFocus className="premium-input" type="number" min="0" step="0.01" placeholder="المبلغ المطلوب" value={totalInput} onChange={e => setTotalInput(e.target.value)} style={{ flex: 1 }} />
+                </div>
+                <input className="premium-input" placeholder="سبب المبلغ (مثال: رسوم الفصل الدراسي الثاني)" value={totalDescriptionInput} onChange={e => setTotalDescriptionInput(e.target.value)} style={{ width: '100%', marginBottom: '0.75rem' }} />
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={saveTotal} disabled={savingTotal} className="btn-primary" style={{ flex: 1 }}>
+                    {savingTotal ? 'جاري الحفظ...' : 'حفظ'}
+                  </button>
+                  <button onClick={() => setEditingTotal(false)} className="btn-secondary" style={{ flex: 1 }}>إلغاء</button>
+                </div>
+              </div>
+            )}
 
             {status && (
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>

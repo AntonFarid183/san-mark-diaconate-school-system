@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -53,17 +54,23 @@ public class StudentRepository : IStudentRepository
             .ToListAsync();
     }
 
-    public async Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
+    public async Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null, Guid? classId = null, StudentLevel? level = null)
     {
         var query = _context.Students
             .Include(s => s.User)
             .Include(s => s.Grade).ThenInclude(g => g.Stage)
+            .Include(s => s.Class)
             .AsQueryable();
 
-        if (gradeId.HasValue)
+        if (classId.HasValue)
+            query = query.Where(s => s.ClassId == classId.Value);
+        else if (gradeId.HasValue)
             query = query.Where(s => s.GradeId == gradeId.Value);
         else if (stageId.HasValue)
             query = query.Where(s => s.Grade.StageId == stageId.Value);
+
+        if (level.HasValue)
+            query = query.Where(s => s.Level == level.Value);
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
@@ -78,14 +85,19 @@ public class StudentRepository : IStudentRepository
             .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-    public async Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
+    public async Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null, Guid? classId = null, StudentLevel? level = null)
     {
         var query = _context.Students.Include(s => s.User).Include(s => s.Grade).AsQueryable();
 
-        if (gradeId.HasValue)
+        if (classId.HasValue)
+            query = query.Where(s => s.ClassId == classId.Value);
+        else if (gradeId.HasValue)
             query = query.Where(s => s.GradeId == gradeId.Value);
         else if (stageId.HasValue)
             query = query.Where(s => s.Grade.StageId == stageId.Value);
+
+        if (level.HasValue)
+            query = query.Where(s => s.Level == level.Value);
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
@@ -151,15 +163,27 @@ public class StudentRepository : IStudentRepository
             .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
+    public async Task<List<Student>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var idList = ids.ToList();
+        return await _context.Students
+            .Where(s => idList.Contains(s.Id))
+            .ToListAsync();
+    }
+
     public Task UpdateAsync(Student student)
     {
         _context.Students.Update(student);
         return Task.CompletedTask;
     }
 
-    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected)> GetPaymentReportAsync(
+    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo)
     {
+        // Payment status/amounts come from the ledger (StudentAccount/PaymentTransaction) — the
+        // source of truth the "المدفوعات" modal actually writes to — not the legacy
+        // Student.FeesPaid/PaidAmount fields, which are only ever set once at registration/activation
+        // and go stale the moment a payment is recorded afterward.
         var query = _context.Students
             .Include(s => s.User)
             .Include(s => s.Grade).ThenInclude(g => g.Stage)
@@ -184,23 +208,35 @@ public class StudentRepository : IStudentRepository
         if (dateTo.HasValue)
             query = query.Where(s => s.RegisteredDate <= dateTo.Value);
 
-        var paidCount = await query.CountAsync(s => s.FeesPaid);
-        var totalCollected = await query.Where(s => s.FeesPaid && s.PaidAmount.HasValue)
-            .SumAsync(s => (decimal?)s.PaidAmount) ?? 0;
+        var matching = await query.OrderByDescending(s => s.RegisteredDate).ToListAsync();
+        var studentIds = matching.Select(s => s.Id).ToList();
 
-        if (!string.IsNullOrWhiteSpace(paymentStatus))
+        var accountsByStudent = await _context.StudentAccounts
+            .Include(a => a.Transactions)
+            .Where(a => studentIds.Contains(a.StudentId))
+            .ToDictionaryAsync(a => a.StudentId);
+
+        var payments = new Dictionary<Guid, (decimal PaidAmount, string Status)>();
+        foreach (var s in matching)
         {
-            query = paymentStatus switch
+            decimal paid = 0;
+            var status = "exempted"; // no fee obligation recorded for this student
+            if (accountsByStudent.TryGetValue(s.Id, out var account))
             {
-                "paid" => query.Where(s => s.FeesPaid),
-                "not_paid" => query.Where(s => !s.FeesPaid),
-                _ => query
-            };
+                paid = account.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
+                if (account.TotalRequired > 0)
+                    status = paid >= account.TotalRequired ? "paid" : "not_paid";
+            }
+            payments[s.Id] = (paid, status);
         }
 
-        var items = await query.OrderByDescending(s => s.RegisteredDate).ToListAsync();
-        var totalCount = items.Count;
+        var paidCount = payments.Values.Count(p => p.Status == "paid");
+        var totalCollected = payments.Values.Sum(p => p.PaidAmount);
 
-        return (items, totalCount, paidCount, totalCollected);
+        var items = matching;
+        if (!string.IsNullOrWhiteSpace(paymentStatus))
+            items = items.Where(s => payments[s.Id].Status == paymentStatus).ToList();
+
+        return (items, items.Count, paidCount, totalCollected, payments);
     }
 }

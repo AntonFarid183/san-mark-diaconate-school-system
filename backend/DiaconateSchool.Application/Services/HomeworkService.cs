@@ -118,6 +118,74 @@ public class HomeworkService : IHomeworkService
         return (true, null);
     }
 
+    public async Task<(bool Success, string? Error, List<HomeworkGradingRosterItemDto>? Result)> GetGradingRosterAsync(Guid homeworkId)
+    {
+        var homework = await _repo.GetByIdAsync(homeworkId);
+        if (homework == null) return (false, "الواجب غير موجود.", null);
+
+        var students = await _studentRepo.GetAllAsync(1, 1000, null, homework.GradeId);
+        var submissions = await _repo.GetSubmissionsByHomeworkIdAsync(homeworkId);
+        var byStudentId = submissions.ToDictionary(s => s.StudentId);
+
+        var roster = students.Select(student =>
+        {
+            byStudentId.TryGetValue(student.Id, out var sub);
+            return new HomeworkGradingRosterItemDto
+            {
+                StudentId = student.Id,
+                StudentName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim(),
+                StudentCode = student.StudentCode,
+                ClassName = student.Class?.Name,
+                HasSubmitted = sub != null,
+                Score = sub?.Score,
+                IsManualEntry = sub?.IsManualEntry ?? false
+            };
+        }).ToList();
+
+        return (true, null, roster);
+    }
+
+    public async Task<(bool Success, string? Error)> SetManualGradesAsync(Guid homeworkId, ManualGradeEntryDto dto)
+    {
+        var homework = await _repo.GetByIdAsync(homeworkId);
+        if (homework == null) return (false, "الواجب غير موجود.");
+
+        if (dto.Grades.Count == 0) return (false, "لم يتم تحديد أي درجات.");
+
+        foreach (var grade in dto.Grades)
+        {
+            if (grade.Score < 0 || grade.Score > homework.TotalMarks)
+                return (false, $"الدرجة يجب أن تكون بين 0 و {homework.TotalMarks}.");
+        }
+
+        var existing = await _repo.GetSubmissionsByHomeworkIdAsync(homeworkId);
+        var byStudentId = existing.ToDictionary(s => s.StudentId);
+
+        foreach (var grade in dto.Grades)
+        {
+            if (byStudentId.TryGetValue(grade.StudentId, out var submission))
+            {
+                submission.Score = grade.Score;
+                submission.IsManualEntry = true;
+            }
+            else
+            {
+                await _repo.AddSubmissionAsync(new HomeworkSubmission
+                {
+                    Id = Guid.NewGuid(),
+                    HomeworkId = homeworkId,
+                    StudentId = grade.StudentId,
+                    Score = grade.Score,
+                    SubmittedAt = DateTime.UtcNow,
+                    IsManualEntry = true
+                });
+            }
+        }
+
+        await _uow.SaveChangesAsync();
+        return (true, null);
+    }
+
     public async Task<List<StudentHomeworkListItemDto>> GetAvailableForStudentAsync(Guid studentId)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);

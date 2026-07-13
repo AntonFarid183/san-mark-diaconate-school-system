@@ -38,6 +38,7 @@ public class PaymentService : IPaymentService
         if (account == null) return (false, "الطالب غير موجود.", null);
 
         account.TotalRequired = dto.TotalRequired;
+        account.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
         await _uow.SaveChangesAsync();
 
         return (true, null, Map(account));
@@ -177,6 +178,7 @@ public class PaymentService : IPaymentService
         {
             StudentId = a.StudentId,
             TotalRequired = a.TotalRequired,
+            Description = a.Description,
             AmountPaid = amountPaid,
             RemainingBalance = Math.Max(0, remaining),
             Status = status,

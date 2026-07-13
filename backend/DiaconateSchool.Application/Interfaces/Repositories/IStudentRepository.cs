@@ -1,4 +1,5 @@
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,14 +13,15 @@ public interface IStudentRepository
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
     Task<IEnumerable<Stage>> GetAllStagesAsync();
-    Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null);
-    Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null);
+    Task<List<Student>> GetAllAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null, Guid? classId = null, StudentLevel? level = null);
+    Task<int> GetFilteredCountAsync(string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null, Guid? classId = null, StudentLevel? level = null);
     Task<List<Grade>> GetAllGradesAsync();
     Task<Student?> GetByIdWithIncludesAsync(Guid id);
     Task<Student?> GetByUserIdAsync(Guid userId);
+    Task<List<Student>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task UpdateAsync(Student student);
     Task<List<Student>> GetPendingAsync();
     Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId);
-    Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected)> GetPaymentReportAsync(
+    Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo);
 }

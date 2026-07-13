@@ -84,6 +84,22 @@ public class HomeworkController : ControllerBase
         return success ? NoContent() : NotFound(new { Message = error });
     }
 
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("{id}/roster")]
+    public async Task<IActionResult> GetGradingRoster(Guid id)
+    {
+        var (success, error, result) = await _service.GetGradingRosterAsync(id);
+        return success ? Ok(result) : NotFound(new { Message = error });
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/manual-grades")]
+    public async Task<IActionResult> SetManualGrades(Guid id, [FromBody] ManualGradeEntryDto dto)
+    {
+        var (success, error) = await _service.SetManualGradesAsync(id, dto);
+        return success ? Ok() : BadRequest(new { Message = error });
+    }
+
     // ── Student ────────────────────────────────────────────
 
     [Authorize(Policy = "AllAuthenticated")]

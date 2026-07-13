@@ -12,5 +12,7 @@ public interface IHymnSubmissionRepository
     Task AddAsync(HymnSubmission submission);
     Task<List<Student>> GetStudentsForRosterAsync(Guid gradeId, Guid? classId);
     Task<List<HymnSubmission>> GetSubmissionsByLessonAsync(Guid hymnLessonId);
+    Task<List<HymnSubmission>> GetSubmissionsByStudentIdsAsync(IEnumerable<Guid> studentIds);
     Task<int> GetPendingCountAsync();
+    Task<HymnSubmission?> GetFirstPendingAsync();
 }

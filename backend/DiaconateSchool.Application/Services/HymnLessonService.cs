@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
@@ -183,17 +184,22 @@ public class HymnLessonService : IHymnLessonService
         return true;
     }
 
+    // Matches the video ID out of any common YouTube URL shape — watch (any query
+    // param order), youtu.be short links, embed, Shorts, and Live — with or without
+    // scheme/www, so every format a teacher might paste normalizes to one canonical
+    // embed URL instead of silently failing to play.
+    private static readonly Regex YouTubeIdRegex = new(
+        @"youtube(?:-nocookie)?\.com/(?:watch\?(?:[^#]*&)?v=|embed/|shorts/|live/)([a-zA-Z0-9_-]{6,})|youtu\.be/([a-zA-Z0-9_-]{6,})",
+        RegexOptions.IgnoreCase);
+
     private static string NormalizeYouTubeUrl(string url)
     {
-        // Convert watch URL to embed URL
-        if (url.Contains("watch?v="))
-            return url.Replace("watch?v=", "embed/").Split('&')[0];
-        if (url.Contains("youtu.be/"))
-        {
-            var id = url.Split("youtu.be/").Last().Split('?')[0];
-            return $"https://www.youtube.com/embed/{id}";
-        }
-        return url; // already embed or custom
+        var trimmed = url.Trim();
+        var match = YouTubeIdRegex.Match(trimmed);
+        if (!match.Success) return trimmed; // unrecognized format — stored as-is
+
+        var id = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
+        return $"https://www.youtube.com/embed/{id}";
     }
 
     private static HymnLessonDto Map(HymnLesson h) => new()

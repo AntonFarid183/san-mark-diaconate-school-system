@@ -57,7 +57,7 @@ const LessonsScreen = () => {
 
   return (
     <Layout title="الدروس">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.95rem' }}>تصفح الدروس المتاحة للمرحلة الدراسية الخاصة بك</p>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>تصفح الدروس المتاحة للمرحلة الدراسية الخاصة بك</p>
 
       {/* Filter pills */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>

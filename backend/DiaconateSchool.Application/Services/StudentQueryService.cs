@@ -32,10 +32,10 @@ public class StudentQueryService : IStudentQueryService
         _uow = uow;
     }
 
-    public async Task<StudentListResponseDto> GetStudentsAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null)
+    public async Task<StudentListResponseDto> GetStudentsAsync(int page, int pageSize, string? nameFilter = null, Guid? gradeId = null, Guid? stageId = null, Guid? classId = null, StudentLevel? level = null)
     {
-        var students = await _studentRepo.GetAllAsync(page, pageSize, nameFilter, gradeId, stageId);
-        var totalCount = await _studentRepo.GetFilteredCountAsync(nameFilter, gradeId, stageId);
+        var students = await _studentRepo.GetAllAsync(page, pageSize, nameFilter, gradeId, stageId, classId, level);
+        var totalCount = await _studentRepo.GetFilteredCountAsync(nameFilter, gradeId, stageId, classId, level);
 
         return new StudentListResponseDto
         {
@@ -43,11 +43,32 @@ public class StudentQueryService : IStudentQueryService
             {
                 Id = s.Id,
                 StudentCode = s.StudentCode,
+                UserName = s.User.UserName,
                 FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
+                FirstName = s.User.FirstName,
+                SecondName = s.User.MiddleName,
+                ThirdName = s.User.ThirdName,
+                LastName = s.User.LastName,
+                Gender = s.Gender.ToString(),
                 GradeName = s.Grade.Name,
                 StageName = s.Grade.Stage.Name,
+                Level = s.Level,
+                ClassName = s.Class?.Name,
                 Status = s.Status.ToString(),
+                IsActive = s.User.IsActive,
                 DateOfBirth = s.DateOfBirth,
+                IsDeacon = s.IsDeacon,
+                DeaconRank = s.DeaconRank?.ToString(),
+                FatherOfConfession = s.FatherOfConfession,
+                FatherMobile = s.FatherMobile,
+                MotherMobile = s.MotherMobile,
+                StudentMobile = s.StudentMobile,
+                WhatsAppNumber = s.WhatsAppNumber,
+                Landline = s.Landline,
+                Address = s.Address,
+                Landmark = s.Landmark,
+                FeesPaid = s.FeesPaid,
+                PaidAmount = s.PaidAmount,
                 RegisteredDate = s.RegisteredDate,
                 ProfilePictureUrl = s.ProfilePictureUrl
             }).ToList(),
@@ -156,19 +177,33 @@ public class StudentQueryService : IStudentQueryService
         return true;
     }
 
+    public async Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level)
+    {
+        if (studentIds.Count == 0) return (false, "لم يتم تحديد أي طلاب.");
+
+        var students = await _studentRepo.GetByIdsAsync(studentIds);
+        foreach (var student in students)
+        {
+            student.Level = level;
+            // Their current class belongs to the previous level — pending redistribution
+            // rather than a stale/incorrect assignment (see Manage Levels feature).
+            student.ClassId = null;
+            await _studentRepo.UpdateAsync(student);
+        }
+        await _uow.SaveChangesAsync();
+        return (true, null);
+    }
+
     public async Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter)
     {
-        var (items, totalCount, paidCount, totalCollected) = await _studentRepo.GetPaymentReportAsync(
+        var (items, totalCount, paidCount, totalCollected, payments) = await _studentRepo.GetPaymentReportAsync(
             filter.NameFilter, filter.StageId, filter.GradeId, filter.PaymentStatus, filter.DateFrom, filter.DateTo);
 
         return new PaymentReportSummaryDto
         {
             Items = items.Select(s =>
             {
-                string status;
-                if (s.FeesPaid) status = "paid";
-                else if (s.User.IsActive) status = "exempted";
-                else status = "not_paid";
+                var (paidAmount, status) = payments[s.Id];
 
                 return new PaymentReportItemDto
                 {
@@ -177,8 +212,8 @@ public class StudentQueryService : IStudentQueryService
                     FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
                     StageName = s.Grade.Stage.Name,
                     GradeName = s.Grade.Name,
-                    FeesPaid = s.FeesPaid,
-                    PaidAmount = s.PaidAmount,
+                    FeesPaid = status == "paid",
+                    PaidAmount = paidAmount,
                     IsActive = s.User.IsActive,
                     RegisteredDate = s.RegisteredDate,
                     PaymentStatus = status

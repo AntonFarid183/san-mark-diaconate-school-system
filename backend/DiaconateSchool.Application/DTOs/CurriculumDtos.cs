@@ -8,6 +8,8 @@ public class CurriculumDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
+    public CurriculumSubject Subject { get; set; }
+    public string SubjectLabel { get; set; } = string.Empty;
     public Guid StageId { get; set; }
     public string StageName { get; set; } = string.Empty;
     public Guid? GradeId { get; set; }
@@ -26,6 +28,7 @@ public class CreateCurriculumDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
+    public CurriculumSubject Subject { get; set; } = CurriculumSubject.Rites;
     public Guid StageId { get; set; }
     public Guid? GradeId { get; set; }
 }
@@ -35,6 +38,14 @@ public class UpdateCurriculumDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
+    public CurriculumSubject Subject { get; set; } = CurriculumSubject.Rites;
     public Guid StageId { get; set; }
     public Guid? GradeId { get; set; }
+}
+
+public class StageWithCurriculumCountDto
+{
+    public Guid StageId { get; set; }
+    public string StageName { get; set; } = string.Empty;
+    public int CurriculumCount { get; set; }
 }

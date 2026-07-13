@@ -20,7 +20,12 @@ public class DynamicNotificationDto
 {
     public string Key { get; set; } = string.Empty; // e.g. "pending-approvals" — stable id for the frontend to route on
     public string Title { get; set; } = string.Empty;
+    public string? Message { get; set; }
     public int Count { get; set; }
+
+    // Filter values (stageId, gradeId, classId, academicYearId, paymentStatus, ...) pre-applied
+    // to the target screen so the admin lands on the exact record instead of an empty filter form.
+    public Dictionary<string, string> Filters { get; set; } = new();
 }
 
 public class NotificationSummaryDto

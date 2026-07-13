@@ -23,17 +23,29 @@ export const NOTIFICATION_ICONS = {
   5: 'music_note',      // HymnLessonPublished
 };
 
-// Maps an admin dynamic action-item key to the management page that resolves it.
-export const getDynamicItemRoute = (key) => {
-  switch (key) {
-    case 'pending-approvals': return '/pending-approvals';
-    case 'pending-hymn-reviews': return '/hymn-submissions';
-    case 'outstanding-balances': return '/payment-reports';
-    case 'draft-homework': return '/homework-management';
-    case 'open-attendance-sessions': return '/attendance/sessions';
-    case 'outstanding-balance': return '/profile';
-    default: return '/dashboard';
+// Maps an admin dynamic action-item key to the management page that resolves it,
+// pre-applying any filters the backend resolved (stage/grade/class/etc.) as a query string
+// so the admin lands directly on the relevant record instead of an empty filter form.
+export const getDynamicItemRoute = (key, filters) => {
+  const base = (() => {
+    // One admin notification per outstanding student — "outstanding-balance-{studentId}" —
+    // plus an overflow summary item, both resolve to the same filtered report.
+    if (key.startsWith('outstanding-balance-') || key === 'outstanding-balances-more') return '/payment-reports';
+    switch (key) {
+      case 'pending-approvals': return '/pending-approvals';
+      case 'pending-hymn-reviews': return '/hymn-submissions';
+      case 'draft-homework': return '/homework-management';
+      case 'open-attendance-sessions': return '/attendance/sessions';
+      case 'outstanding-balance': return '/profile';
+      default: return '/dashboard';
+    }
+  })();
+
+  if (filters && Object.keys(filters).length > 0) {
+    const qs = new URLSearchParams(filters).toString();
+    return `${base}?${qs}`;
   }
+  return base;
 };
 
 // Arabic relative time — "منذ لحظات" / "منذ 5 دقائق" / "أمس" / "منذ 3 أيام" / falls back to date

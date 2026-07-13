@@ -200,7 +200,6 @@ const AdminDashboard = () => {
     { icon: 'music_note',          title: 'دروس الألحان',          desc: 'أضف دروس فيديو وكلمات الألحان',          path: '/hymn-lessons-management', btnLabel: 'إدارة الألحان' },
     { icon: 'graphic_eq',          title: 'تسجيلات الألحان',       desc: 'استمع لتسجيلات الطلاب وقيّمها',          path: '/hymn-submissions',        btnLabel: 'مراجعة التسجيلات' },
     { icon: 'edit_note',           title: 'الواجبات',              desc: 'ارفع مذاكرات وحدد إجابات الاختبارات',    path: '/homework-management',     btnLabel: 'إدارة الواجبات' },
-    { icon: 'assignment',          title: 'الامتحانات والدرجات',   desc: 'أدخل درجات الامتحانات واعتمدها',          path: '/exams',                   btnLabel: 'الامتحانات' },
     { icon: 'calendar_month',      title: 'السنوات الدراسية',      desc: 'أدر السنة الدراسية الحالية والسابقة',    path: '/academic-years',          btnLabel: 'السنوات الدراسية' },
     { icon: 'campaign',            title: 'الإعلانات',             desc: 'انشر وأدر إعلانات المدرسة',              path: '/announcements',           btnLabel: 'الإعلانات' },
   ];

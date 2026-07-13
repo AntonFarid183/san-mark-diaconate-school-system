@@ -11,6 +11,8 @@ public class Curriculum
     public int DisplayOrder { get; set; } = 0;
     public CurriculumStatus Status { get; set; } = CurriculumStatus.Draft;
 
+    public CurriculumSubject Subject { get; set; } = CurriculumSubject.Rites;
+
     public Guid StageId { get; set; }
     public Stage Stage { get; set; } = null!;
 

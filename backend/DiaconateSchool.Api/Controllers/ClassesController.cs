@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
+using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -20,15 +21,16 @@ public class ClassesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetClasses([FromQuery] Guid gradeId, [FromQuery] Guid academicYearId)
-        => Ok(await _service.GetClassesAsync(gradeId, academicYearId));
+    public async Task<IActionResult> GetClasses([FromQuery] Guid gradeId, [FromQuery] Guid academicYearId, [FromQuery] StudentLevel level = StudentLevel.Level1)
+        => Ok(await _service.GetClassesAsync(gradeId, academicYearId, level));
 
     [HttpGet("distribution-options")]
     public async Task<IActionResult> GetDistributionOptions(
         [FromQuery] Guid gradeId,
         [FromQuery] Guid academicYearId,
+        [FromQuery] StudentLevel level = StudentLevel.Level1,
         [FromQuery] int preferredSize = 20)
-        => Ok(await _service.GetDistributionOptionsAsync(gradeId, academicYearId, preferredSize));
+        => Ok(await _service.GetDistributionOptionsAsync(gradeId, academicYearId, level, preferredSize));
 
     [HttpPost("distribution/preview")]
     public async Task<IActionResult> PreviewDistribution([FromBody] PreviewDistributionDto dto)

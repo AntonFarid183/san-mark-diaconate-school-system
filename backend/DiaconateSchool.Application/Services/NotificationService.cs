@@ -52,19 +52,87 @@ public class NotificationService : INotificationService
 
         var pendingHymnReviews = await _hymnSubmissionRepo.GetPendingCountAsync();
         if (pendingHymnReviews > 0)
-            dynamicItems.Add(new DynamicNotificationDto { Key = "pending-hymn-reviews", Title = "تسجيلات ألحان بانتظار المراجعة", Count = pendingHymnReviews });
+        {
+            var filters = new Dictionary<string, string>();
+            var firstPending = await _hymnSubmissionRepo.GetFirstPendingAsync();
+            if (firstPending != null)
+            {
+                filters["stageId"] = firstPending.HymnLesson.StageId.ToString();
+                if (firstPending.HymnLesson.GradeId.HasValue)
+                    filters["gradeId"] = firstPending.HymnLesson.GradeId.Value.ToString();
+                filters["hymnLessonId"] = firstPending.HymnLessonId.ToString();
+            }
+            dynamicItems.Add(new DynamicNotificationDto { Key = "pending-hymn-reviews", Title = "تسجيلات ألحان بانتظار المراجعة", Count = pendingHymnReviews, Filters = filters });
+        }
 
-        var outstandingBalances = await _paymentRepo.GetOutstandingBalanceCountAsync();
-        if (outstandingBalances > 0)
-            dynamicItems.Add(new DynamicNotificationDto { Key = "outstanding-balances", Title = "طلاب لديهم مبالغ مستحقة", Count = outstandingBalances });
+        var outstandingAccounts = await _paymentRepo.GetOutstandingAccountsAsync();
+        if (outstandingAccounts.Count > 0)
+        {
+            // One line per student with the exact amount they still owe — not just an
+            // aggregate count — so the admin knows precisely who owes how much.
+            const int MaxOutstandingItems = 10;
+            var byRemaining = outstandingAccounts
+                .Select(a => new
+                {
+                    Account = a,
+                    Paid = a.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount),
+                })
+                .Select(x => new { x.Account, Remaining = x.Account.TotalRequired - x.Paid })
+                .OrderByDescending(x => x.Remaining)
+                .ToList();
+
+            foreach (var x in byRemaining.Take(MaxOutstandingItems))
+            {
+                var student = x.Account.Student;
+                var fullName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.ThirdName} {student.User.LastName}".Trim();
+                dynamicItems.Add(new DynamicNotificationDto
+                {
+                    Key = $"outstanding-balance-{student.Id}",
+                    Title = $"{fullName} — متبقي {x.Remaining:N0} ج.م",
+                    Message = x.Account.Description,
+                    Count = 1,
+                    // School-wide, not narrowed to this one student — clicking any of these
+                    // items should land on the full list of every unpaid student.
+                    Filters = new Dictionary<string, string> { ["paymentStatus"] = "not_paid" }
+                });
+            }
+
+            if (byRemaining.Count > MaxOutstandingItems)
+            {
+                dynamicItems.Add(new DynamicNotificationDto
+                {
+                    Key = "outstanding-balances-more",
+                    Title = $"و {byRemaining.Count - MaxOutstandingItems} طالب آخر لديهم مبالغ مستحقة",
+                    Count = byRemaining.Count - MaxOutstandingItems,
+                    Filters = new Dictionary<string, string> { ["paymentStatus"] = "not_paid" }
+                });
+            }
+        }
 
         var draftHomework = await _homeworkRepo.GetDraftCountAsync();
         if (draftHomework > 0)
-            dynamicItems.Add(new DynamicNotificationDto { Key = "draft-homework", Title = "واجبات لم تُنشر بعد", Count = draftHomework });
+        {
+            var filters = new Dictionary<string, string>();
+            var firstDraft = await _homeworkRepo.GetFirstDraftAsync();
+            if (firstDraft != null)
+                filters["stageId"] = firstDraft.StageId.ToString();
+            dynamicItems.Add(new DynamicNotificationDto { Key = "draft-homework", Title = "واجبات لم تُنشر بعد", Count = draftHomework, Filters = filters });
+        }
 
         var openSessions = await _attendanceRepo.GetOpenSessionsCountAsync();
         if (openSessions > 0)
-            dynamicItems.Add(new DynamicNotificationDto { Key = "open-attendance-sessions", Title = "جلسات حضور مفتوحة لم تُغلق", Count = openSessions });
+        {
+            var filters = new Dictionary<string, string>();
+            var firstSession = await _attendanceRepo.GetFirstOpenSessionAsync();
+            if (firstSession != null)
+            {
+                filters["academicYearId"] = firstSession.Class.AcademicYearId.ToString();
+                filters["stageId"] = firstSession.Grade.StageId.ToString();
+                filters["gradeId"] = firstSession.GradeId.ToString();
+                filters["classId"] = firstSession.ClassId.ToString();
+            }
+            dynamicItems.Add(new DynamicNotificationDto { Key = "open-attendance-sessions", Title = "جلسات حضور مفتوحة لم تُغلق", Count = openSessions, Filters = filters });
+        }
 
         return new NotificationSummaryDto { DynamicItems = dynamicItems };
     }
@@ -79,7 +147,15 @@ public class NotificationService : INotificationService
             var paid = account.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
             var remaining = account.TotalRequired - paid;
             if (remaining > 0)
-                dynamicItems.Add(new DynamicNotificationDto { Key = "outstanding-balance", Title = "لديك مبلغ مستحق للسداد", Count = 1 });
+            {
+                dynamicItems.Add(new DynamicNotificationDto
+                {
+                    Key = "outstanding-balance",
+                    Title = $"لديك مبلغ مستحق للسداد: {remaining:N0} ج.م",
+                    Message = account.Description,
+                    Count = 1
+                });
+            }
         }
 
         var recent = await _repo.GetForUserAsync(userId, null, 1, PreviewCount);

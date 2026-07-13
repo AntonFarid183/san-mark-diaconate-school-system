@@ -2,6 +2,7 @@ using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,16 +24,16 @@ public class SchoolClassService : ISchoolClassService
         _uow = uow;
     }
 
-    public async Task<List<SchoolClassDto>> GetClassesAsync(Guid gradeId, Guid academicYearId)
+    public async Task<List<SchoolClassDto>> GetClassesAsync(Guid gradeId, Guid academicYearId, StudentLevel level)
     {
-        var classes = await _repo.GetByGradeAndYearAsync(gradeId, academicYearId);
+        var classes = await _repo.GetByGradeAndYearAsync(gradeId, academicYearId, level);
         return classes.Select(MapToDto).ToList();
     }
 
     public async Task<List<DistributionPreviewDto>> GetDistributionOptionsAsync(
-        Guid gradeId, Guid academicYearId, int preferredSize)
+        Guid gradeId, Guid academicYearId, StudentLevel level, int preferredSize)
     {
-        var students = await _repo.GetStudentsByGradeAsync(gradeId);
+        var students = await _repo.GetStudentsByGradeAsync(gradeId, level);
         int n = students.Count;
 
         if (n == 0)
@@ -59,7 +60,7 @@ public class SchoolClassService : ISchoolClassService
         if (dto.ClassCount < 1 || dto.ClassCount > ClassLetters.Length)
             return new DistributionPreviewDto();
 
-        var students = await _repo.GetStudentsByGradeAsync(dto.GradeId);
+        var students = await _repo.GetStudentsByGradeAsync(dto.GradeId, dto.Level);
         return BuildPreview(dto.ClassCount, students);
     }
 
@@ -72,8 +73,8 @@ public class SchoolClassService : ISchoolClassService
         if (dto.Classes.Count > ClassLetters.Length)
             return (false, $"الحد الأقصى المسموح به هو {ClassLetters.Length} فصول.", new());
 
-        // Remove existing unlocked classes for this grade+year
-        var existing = await _repo.GetByGradeAndYearAsync(dto.GradeId, dto.AcademicYearId);
+        // Remove existing unlocked classes for this grade+year+level
+        var existing = await _repo.GetByGradeAndYearAsync(dto.GradeId, dto.AcademicYearId, dto.Level);
         var unlocked = existing.Where(c => !c.IsLocked).ToList();
         var lockedStudentIds = existing
             .Where(c => c.IsLocked)
@@ -81,7 +82,7 @@ public class SchoolClassService : ISchoolClassService
             .ToHashSet();
 
         // Clear ClassId for students being re-assigned (only those not in locked classes)
-        var allStudents = await _repo.GetStudentsByGradeAsync(dto.GradeId);
+        var allStudents = await _repo.GetStudentsByGradeAsync(dto.GradeId, dto.Level);
         foreach (var student in allStudents.Where(s => !lockedStudentIds.Contains(s.Id)))
             student.ClassId = null;
 
@@ -96,6 +97,7 @@ public class SchoolClassService : ISchoolClassService
                 Id = Guid.NewGuid(),
                 Name = slot.Name,
                 GradeId = dto.GradeId,
+                Level = dto.Level,
                 AcademicYearId = dto.AcademicYearId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -113,7 +115,7 @@ public class SchoolClassService : ISchoolClassService
         await _uow.SaveChangesAsync();
 
         // Re-fetch to get navigation properties populated
-        var result = await _repo.GetByGradeAndYearAsync(dto.GradeId, dto.AcademicYearId);
+        var result = await _repo.GetByGradeAndYearAsync(dto.GradeId, dto.AcademicYearId, dto.Level);
         return (true, null, result.Select(MapToDto).ToList());
     }
 
@@ -205,6 +207,7 @@ public class SchoolClassService : ISchoolClassService
         Name = c.Name,
         GradeId = c.GradeId,
         GradeName = c.Grade.Name,
+        Level = c.Level,
         AcademicYearId = c.AcademicYearId,
         AcademicYearName = c.AcademicYear.Name,
         IsLocked = c.IsLocked,

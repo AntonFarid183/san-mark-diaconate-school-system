@@ -18,15 +18,18 @@ public class StudentsController : ControllerBase
     private readonly IStudentRegistrationService _registrationService;
     private readonly IStudentQueryService _queryService;
     private readonly IPromotionService _promotionService;
+    private readonly IStudentPerformanceService _performanceService;
 
     public StudentsController(
         IStudentRegistrationService registrationService,
         IStudentQueryService queryService,
-        IPromotionService promotionService)
+        IPromotionService promotionService,
+        IStudentPerformanceService performanceService)
     {
         _registrationService = registrationService;
         _queryService = queryService;
         _promotionService = promotionService;
+        _performanceService = performanceService;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -74,13 +77,28 @@ public class StudentsController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string? name = null,
         [FromQuery] Guid? gradeId = null,
-        [FromQuery] Guid? stageId = null)
+        [FromQuery] Guid? stageId = null,
+        [FromQuery] Guid? classId = null,
+        [FromQuery] StudentLevel? level = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
-        if (pageSize > 200) pageSize = 200;
+        if (pageSize > 1000) pageSize = 1000;
 
-        var result = await _queryService.GetStudentsAsync(page, pageSize, name, gradeId, stageId);
+        var result = await _queryService.GetStudentsAsync(page, pageSize, name, gradeId, stageId, classId, level);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("performance")]
+    public async Task<IActionResult> GetPerformance(
+        [FromQuery] Guid? stageId = null,
+        [FromQuery] Guid? gradeId = null,
+        [FromQuery] StudentLevel? level = null,
+        [FromQuery] Guid? classId = null,
+        [FromQuery] string? name = null)
+    {
+        var result = await _performanceService.GetPerformanceAsync(stageId, gradeId, level, classId, name);
         return Ok(result);
     }
 
@@ -159,6 +177,14 @@ public class StudentsController : ControllerBase
             return NotFound(new { Message = "Student not found." });
 
         return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("level")]
+    public async Task<IActionResult> SetStudentsLevel([FromBody] SetStudentsLevelDto dto)
+    {
+        var (success, error) = await _queryService.SetStudentsLevelAsync(dto.StudentIds, dto.Level);
+        return success ? Ok() : BadRequest(new { Message = error });
     }
 
     [Authorize(Policy = "AdminOnly")]

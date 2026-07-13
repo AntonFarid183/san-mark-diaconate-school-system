@@ -16,6 +16,8 @@ public class Student
     public Guid GradeId { get; set; }
     public Grade Grade { get; set; } = null!;
 
+    public StudentLevel Level { get; set; } = StudentLevel.Level1;
+
     public Guid? ClassId { get; set; }
     public SchoolClass? Class { get; set; }
 

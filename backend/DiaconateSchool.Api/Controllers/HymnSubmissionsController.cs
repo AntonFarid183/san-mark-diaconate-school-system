@@ -69,4 +69,12 @@ public class HymnSubmissionsController : ControllerBase
         if (!success) return error!.Contains("غير موجود") ? NotFound(new { Message = error }) : BadRequest(new { Message = error });
         return Ok(result);
     }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("manual")]
+    public async Task<IActionResult> SubmitManualScore([FromBody] ManualHymnScoreDto dto)
+    {
+        var (success, error, result) = await _service.SubmitManualScoreAsync(dto, GetUserId());
+        return success ? Ok(result) : BadRequest(new { Message = error });
+    }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 
@@ -19,19 +20,28 @@ const emptyForm = {
 };
 
 export default function HomeworkManagementScreen() {
+  const [searchParams] = useSearchParams();
+
   const [homeworks, setHomeworks] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
 
-  const [filterStageId, setFilterStageId] = useState('');
+  const [filterStageId, setFilterStageId] = useState(searchParams.get('stageId') || '');
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [formGrades, setFormGrades] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Manual grade entry
+  const [gradingHomework, setGradingHomework] = useState(null);
+  const [roster, setRoster] = useState([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+  const [scoreInputs, setScoreInputs] = useState({});
+  const [savingGrades, setSavingGrades] = useState(false);
 
   useEffect(() => {
     apiClient.get('/homework/subjects').then(r => setSubjects(r.data)).catch(() => {});
@@ -146,9 +156,41 @@ export default function HomeworkManagementScreen() {
     }
   };
 
+  const openGrading = async (hw) => {
+    setGradingHomework(hw);
+    setRosterLoading(true);
+    setScoreInputs({});
+    try {
+      const r = await apiClient.get(`/homework/${hw.id}/roster`);
+      setRoster(r.data);
+    } catch {
+      setMsg({ type: 'error', text: 'فشل تحميل كشف الطلاب.' });
+    } finally {
+      setRosterLoading(false);
+    }
+  };
+
+  const saveManualGrades = async () => {
+    const grades = Object.entries(scoreInputs)
+      .filter(([, v]) => v !== '' && v != null)
+      .map(([studentId, score]) => ({ studentId, score: Number(score) }));
+    if (grades.length === 0) return;
+
+    setSavingGrades(true);
+    try {
+      await apiClient.post(`/homework/${gradingHomework.id}/manual-grades`, { grades });
+      setMsg({ type: 'success', text: 'تم حفظ الدرجات.' });
+      openGrading(gradingHomework);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل حفظ الدرجات.' });
+    } finally {
+      setSavingGrades(false);
+    }
+  };
+
   return (
     <Layout title="إدارة الواجبات">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         ارفع ملف المذاكرة (يحتوي على الأسئلة والاختيارات) وحدد الإجابة الصحيحة لكل سؤال فقط.
       </p>
 
@@ -192,6 +234,11 @@ export default function HomeworkManagementScreen() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {hw.status === 'published' && (
+                    <button onClick={() => openGrading(hw)} style={{ padding: '0.4rem 0.9rem', borderRadius: '6px', border: '1px solid var(--accent-gold)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit' }}>
+                      إدخال درجات يدوي
+                    </button>
+                  )}
                   <button onClick={() => togglePublish(hw)} style={{ padding: '0.4rem 0.9rem', borderRadius: '6px', border: `1px solid ${hw.status === 'published' ? 'var(--text-muted)' : 'var(--success)'}`, background: 'transparent', color: hw.status === 'published' ? 'var(--text-muted)' : 'var(--success)', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit' }}>
                     {hw.status === 'published' ? 'إلغاء النشر' : 'نشر'}
                   </button>
@@ -281,6 +328,57 @@ export default function HomeworkManagementScreen() {
                 {saving ? 'جاري الحفظ...' : 'حفظ كمسودة'}
               </button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual grade entry modal */}
+      {gradingHomework && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }} onClick={() => setGradingHomework(null)}>
+          <div className="glass-card" style={{ padding: '2rem', width: '560px', maxWidth: '95vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ color: 'var(--accent-gold)' }}>إدخال درجات — {gradingHomework.title}</h3>
+              <span onClick={() => setGradingHomework(null)} style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem' }}>✕</span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              للطلاب الذين لم يسلّموا عبر الموقع (تقييم حضوري). الدرجة الكلية: {gradingHomework.totalMarks}
+            </p>
+
+            {rosterLoading ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                {roster.map(item => (
+                  <div key={item.studentId} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.studentName}</div>
+                      {item.hasSubmitted && (
+                        <div style={{ fontSize: '0.72rem', color: item.isManualEntry ? 'var(--accent-gold)' : 'var(--success)' }}>
+                          {item.isManualEntry ? 'تم إدخالها يدوياً' : 'تم التسليم أونلاين'} — {item.score}/{gradingHomework.totalMarks}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      className="premium-input" type="number" min="0" max={gradingHomework.totalMarks} step="0.5"
+                      placeholder={item.hasSubmitted ? String(item.score) : '—'}
+                      value={scoreInputs[item.studentId] ?? ''}
+                      onChange={e => setScoreInputs(s => ({ ...s, [item.studentId]: e.target.value }))}
+                      style={{ width: '90px', padding: '0.35rem 0.5rem', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                ))}
+                {roster.length === 0 && (
+                  <p style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>لا يوجد طلاب في هذا الصف</p>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={savingGrades} onClick={saveManualGrades}>
+                {savingGrades ? 'جاري الحفظ...' : 'حفظ الدرجات'}
+              </button>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setGradingHomework(null)}>إغلاق</button>
             </div>
           </div>
         </div>

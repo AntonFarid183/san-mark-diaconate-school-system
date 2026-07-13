@@ -1,3 +1,4 @@
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -9,6 +10,7 @@ public class SchoolClassDto
     public string Name { get; set; } = string.Empty;
     public Guid GradeId { get; set; }
     public string GradeName { get; set; } = string.Empty;
+    public StudentLevel Level { get; set; }
     public Guid AcademicYearId { get; set; }
     public string AcademicYearName { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
@@ -43,6 +45,7 @@ public class PreviewDistributionDto
 {
     public Guid GradeId { get; set; }
     public Guid AcademicYearId { get; set; }
+    public StudentLevel Level { get; set; } = StudentLevel.Level1;
     public int ClassCount { get; set; }
 }
 
@@ -51,6 +54,7 @@ public class ApplyDistributionDto
 {
     public Guid GradeId { get; set; }
     public Guid AcademicYearId { get; set; }
+    public StudentLevel Level { get; set; } = StudentLevel.Level1;
     public List<ApplyClassSlotDto> Classes { get; set; } = new();
 }
 

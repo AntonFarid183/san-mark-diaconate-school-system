@@ -12,5 +12,9 @@ public class StudentAccount
 
     public decimal TotalRequired { get; set; }
 
+    // What the required amount is for (e.g. "رسوم الفصل الدراسي الثاني") — shown to the
+    // student alongside the amount so they know what they're being asked to pay for.
+    public string? Description { get; set; }
+
     public ICollection<PaymentTransaction> Transactions { get; set; } = new List<PaymentTransaction>();
 }

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import Layout from '../Layout';
 import { BACKEND_URL as BASE } from '../config';
@@ -11,6 +12,15 @@ const STATUS_LABELS = {
 };
 
 export default function HymnSubmissionsScreen() {
+  // Deep-link target from a notification click — consumed once, then cleared
+  const [searchParams] = useSearchParams();
+  const initialTarget = useRef({
+    stageId: searchParams.get('stageId') || '',
+    gradeId: searchParams.get('gradeId') || '',
+    classId: searchParams.get('classId') || '',
+    hymnLessonId: searchParams.get('hymnLessonId') || '',
+  });
+
   const [stages, setStages] = useState([]);
   const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -30,13 +40,21 @@ export default function HymnSubmissionsScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
+    apiClient.get('/students/stages').then(r => {
+      setStages(r.data);
+      if (initialTarget.current.stageId) setStageId(initialTarget.current.stageId);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
-    setGradeId(''); setClasses([]); setClassId(''); setHymnLessonId(''); setHymnLessons([]); setRoster([]);
-    if (stageId) apiClient.get(`/students/grades/${stageId}`).then(r => setGrades(r.data)).catch(() => setGrades([]));
-    else setGrades([]);
+    setGradeId(''); setClasses([]); setClassId(''); setRoster([]);
+    if (stageId) {
+      apiClient.get(`/students/grades/${stageId}`).then(r => {
+        setGrades(r.data);
+        const target = initialTarget.current.gradeId;
+        if (target && r.data.find(g => g.id === target)) setGradeId(target);
+      }).catch(() => setGrades([]));
+    } else setGrades([]);
   }, [stageId]);
 
   useEffect(() => {
@@ -47,7 +65,11 @@ export default function HymnSubmissionsScreen() {
         const current = yRes.data.find(y => y.isCurrent);
         if (current) {
           apiClient.get('/classes', { params: { gradeId, academicYearId: current.id } })
-            .then(r => setClasses(r.data)).catch(() => setClasses([]));
+            .then(r => {
+              setClasses(r.data);
+              const target = initialTarget.current.classId;
+              if (target && r.data.find(c => c.id === target)) setClassId(target);
+            }).catch(() => setClasses([]));
         }
       }).catch(() => {});
     } else {
@@ -56,9 +78,14 @@ export default function HymnSubmissionsScreen() {
   }, [gradeId]);
 
   useEffect(() => {
-    setHymnLessonId(''); setRoster([]);
+    setHymnLessonId('');
     if (stageId) {
-      apiClient.get('/hymn-lessons', { params: { stageId } }).then(r => setHymnLessons(r.data)).catch(() => setHymnLessons([]));
+      apiClient.get('/hymn-lessons', { params: { stageId } }).then(r => {
+        setHymnLessons(r.data);
+        const target = initialTarget.current.hymnLessonId;
+        if (target && r.data.find(l => l.id === target)) setHymnLessonId(target);
+        initialTarget.current = {}; // consume — only auto-apply once
+      }).catch(() => setHymnLessons([]));
     }
   }, [stageId]);
 
@@ -86,6 +113,12 @@ export default function HymnSubmissionsScreen() {
     setCommentsInput(item.comments || '');
   };
 
+  const openManualEntry = (item) => {
+    setReviewItem({ ...item, isManual: true });
+    setScoreInput('');
+    setCommentsInput('');
+  };
+
   const submitReview = async (approve) => {
     if (!reviewItem?.submissionId) return;
     if (approve && (!scoreInput || parseFloat(scoreInput) < 0)) {
@@ -108,9 +141,31 @@ export default function HymnSubmissionsScreen() {
     }
   };
 
+  const submitManualScore = async () => {
+    if (!scoreInput || parseFloat(scoreInput) < 0) {
+      setMsg({ type: 'error', text: 'الدرجة مطلوبة.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiClient.post('/hymn-submissions/manual', {
+        studentId: reviewItem.studentId,
+        hymnLessonId,
+        score: parseFloat(scoreInput),
+        comments: commentsInput.trim() || null,
+      });
+      setReviewItem(null);
+      loadRoster();
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل حفظ الدرجة.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Layout title="مراجعة تسجيلات الألحان">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         استعرض تسجيلات الطلاب لكل لحن وقيّمها.
       </p>
 
@@ -205,7 +260,9 @@ export default function HymnSubmissionsScreen() {
                             استماع ومراجعة
                           </button>
                         ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>—</span>
+                          <button onClick={() => openManualEntry(item)} style={{ padding: '0.3rem 1rem', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent-gold)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            تقييم يدوي
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -223,7 +280,13 @@ export default function HymnSubmissionsScreen() {
           <div className="glass-card" style={{ padding: '2rem', width: '480px', maxWidth: '92vw', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.25rem' }}>{reviewItem.studentName}</h3>
 
-            <audio controls src={`${BASE}${reviewItem.recordingUrl}`} style={{ width: '100%', marginBottom: '1.25rem' }} />
+            {reviewItem.isManual ? (
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                تقييم حضوري — لا يوجد تسجيل مرفوع. أدخل الدرجة كما سُمعت في الكنيسة.
+              </p>
+            ) : (
+              <audio controls src={`${BASE}${reviewItem.recordingUrl}`} style={{ width: '100%', marginBottom: '1.25rem' }} />
+            )}
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={labelStyle}>الدرجة</label>
@@ -234,15 +297,24 @@ export default function HymnSubmissionsScreen() {
               <textarea className="premium-input" value={commentsInput} onChange={e => setCommentsInput(e.target.value)} style={{ width: '100%', minHeight: '80px', resize: 'vertical' }} />
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button onClick={() => submitReview(true)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
-                {saving ? '...' : 'موافقة'}
-              </button>
-              <button onClick={() => submitReview(false)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
-                طلب إعادة تسجيل
-              </button>
-              <button onClick={() => setReviewItem(null)} className="btn-secondary" style={{ flex: 1 }}>إغلاق</button>
-            </div>
+            {reviewItem.isManual ? (
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={submitManualScore} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                  {saving ? '...' : 'حفظ الدرجة'}
+                </button>
+                <button onClick={() => setReviewItem(null)} className="btn-secondary" style={{ flex: 1 }}>إلغاء</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={() => submitReview(true)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                  {saving ? '...' : 'موافقة'}
+                </button>
+                <button onClick={() => submitReview(false)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                  طلب إعادة تسجيل
+                </button>
+                <button onClick={() => setReviewItem(null)} className="btn-secondary" style={{ flex: 1 }}>إغلاق</button>
+              </div>
+            )}
           </div>
         </div>
       )}

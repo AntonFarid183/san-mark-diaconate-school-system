@@ -45,3 +45,14 @@ public class HymnSubmissionRosterItemDto
     public decimal? Score { get; set; }
     public string? Comments { get; set; }
 }
+
+// Admin assigns a score directly (e.g. student recited in person at church) — no
+// recording required. Only usable when the student has no existing submission yet;
+// if one exists already, use the normal Review action instead.
+public class ManualHymnScoreDto
+{
+    public Guid StudentId { get; set; }
+    public Guid HymnLessonId { get; set; }
+    public decimal Score { get; set; }
+    public string? Comments { get; set; }
+}

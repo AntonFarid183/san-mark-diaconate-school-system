@@ -13,8 +13,11 @@ public class HymnSubmission
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
-    public required string RecordingUrl { get; set; }
+    // Null when the score was entered manually (e.g. recited in person at church)
+    // rather than from an uploaded recording.
+    public string? RecordingUrl { get; set; }
     public string? RecordingFileName { get; set; }
+    public bool IsManualEntry { get; set; }
 
     public HymnSubmissionStatus Status { get; set; } = HymnSubmissionStatus.Pending;
 

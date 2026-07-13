@@ -7,6 +7,8 @@ public interface ICurriculumService
 {
     Task<IEnumerable<CurriculumDto>> GetAllAsync(Guid? stageId, CurriculumStatus? status, string? academicYear);
     Task<IEnumerable<CurriculumDto>> GetMyAsync(Guid studentStageId);
+    Task<IEnumerable<StageWithCurriculumCountDto>> GetPublicStagesAsync(CurriculumSubject subject);
+    Task<IEnumerable<CurriculumDto>> GetPublicAsync(CurriculumSubject subject, Guid stageId);
     Task<CurriculumDto?> GetByIdAsync(Guid id);
     Task<CurriculumDto> CreateAsync(CreateCurriculumDto dto, Guid createdByUserId);
     Task<CurriculumDto?> UpdateAsync(Guid id, UpdateCurriculumDto dto);

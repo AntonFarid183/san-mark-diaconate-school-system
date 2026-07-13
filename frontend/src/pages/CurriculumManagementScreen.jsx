@@ -11,6 +11,13 @@ const STATUS_MAP = {
 
 const CURRENT_YEAR = `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`;
 
+const SUBJECT_OPTIONS = [
+  { value: 1, label: 'الطقس' },
+  { value: 2, label: 'الألحان' },
+  { value: 3, label: 'القبطي' },
+];
+const subjectLabel = (v) => SUBJECT_OPTIONS.find(s => s.value === Number(v))?.label || '';
+
 // Stages that have sub-grades in the DB
 const STAGES_WITH_GRADES = new Set([
   '00000000-0000-0000-0001-000000000001', // ابتدائي
@@ -30,7 +37,8 @@ export default function CurriculumManagementScreen() {
 
   const [showForm, setShowForm]       = useState(false);
   const [editing, setEditing]         = useState(null);
-  const [form, setForm]               = useState({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: '', gradeId: '' });
+  const [filterSubject, setFilterSubject] = useState('');
+  const [form, setForm]               = useState({ title: '', description: '', academicYear: CURRENT_YEAR, subject: 1, stageId: '', gradeId: '' });
   const [pendingFile, setPendingFile] = useState(null);
 
   const [uploadTarget, setUploadTarget] = useState(null);
@@ -76,12 +84,12 @@ export default function CurriculumManagementScreen() {
   // ── form ──────────────────────────────────────────────────────────────────
   const openCreate = () => {
     setEditing(null); setPendingFile(null);
-    setForm({ title: '', description: '', academicYear: CURRENT_YEAR, stageId: stages[0]?.id || '', gradeId: '' });
+    setForm({ title: '', description: '', academicYear: CURRENT_YEAR, subject: 1, stageId: stages[0]?.id || '', gradeId: '' });
     setShowForm(true);
   };
   const openEdit = (item) => {
     setEditing(item); setPendingFile(null);
-    setForm({ title: item.title, description: item.description || '', academicYear: item.academicYear, stageId: item.stageId, gradeId: item.gradeId || '' });
+    setForm({ title: item.title, description: item.description || '', academicYear: item.academicYear, subject: item.subject, stageId: item.stageId, gradeId: item.gradeId || '' });
     setShowForm(true);
   };
 
@@ -102,6 +110,7 @@ export default function CurriculumManagementScreen() {
         title: form.title,
         description: form.description,
         academicYear: form.academicYear,
+        subject: Number(form.subject),
         stageId: form.stageId,
         gradeId: selectedStageHasGrades && form.gradeId ? form.gradeId : null,
       };
@@ -148,7 +157,10 @@ export default function CurriculumManagementScreen() {
     catch { flash('error', 'فشل الحذف.'); }
   };
 
-  const filtered = items.filter(i => !search || i.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = items.filter(i =>
+    (!search || i.title.toLowerCase().includes(search.toLowerCase())) &&
+    (!filterSubject || i.subject === Number(filterSubject))
+  );
   const fmt = (b) => b ? (b > 1e6 ? `${(b/1e6).toFixed(1)} MB` : `${Math.round(b/1024)} KB`) : null;
 
   return (
@@ -183,6 +195,10 @@ export default function CurriculumManagementScreen() {
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input className="premium-input" placeholder="بحث في العنوان..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: '180px' }} />
+        <select className="premium-input" value={filterSubject} onChange={e => setFilterSubject(e.target.value)} style={{ width: '130px' }}>
+          <option value="">كل المواد</option>
+          {SUBJECT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
         <select className="premium-input" value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ width: '160px' }}>
           <option value="">كل المراحل</option>
           {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -222,6 +238,7 @@ export default function CurriculumManagementScreen() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 600, fontSize: '0.97rem' }}>{item.title}</span>
+                      <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', whiteSpace: 'nowrap' }}>{subjectLabel(item.subject)}</span>
                       <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{st.label}</span>
                       {item.pdfUrl && (
                         <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: '#f87171', whiteSpace: 'nowrap' }}>PDF ✓</span>
@@ -235,31 +252,37 @@ export default function CurriculumManagementScreen() {
                   </div>
 
                   {/* Icon action buttons */}
-                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
                     <button onClick={() => setUploadTarget(item)} className="btn-icon" title="رفع / استبدال PDF">
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload_file</span>
+                      <span className="btn-icon-label">رفع</span>
                     </button>
                     {item.pdfUrl && (
                       <a href={`${BACKEND_URL}${item.pdfUrl}`} target="_blank" rel="noopener noreferrer"
                         className="btn-icon info" style={{ textDecoration: 'none' }} title="معاينة PDF">
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>visibility</span>
+                        <span className="btn-icon-label">معاينة</span>
                       </a>
                     )}
                     <button onClick={() => openEdit(item)} className="btn-icon" title="تعديل">
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
+                      <span className="btn-icon-label">تعديل</span>
                     </button>
                     {item.status === 0 && item.pdfUrl && (
                       <button onClick={() => publish(item.id)} className="btn-icon success" title="نشر">
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>publish</span>
+                        <span className="btn-icon-label">نشر</span>
                       </button>
                     )}
                     {item.status === 1 && (
                       <button onClick={() => archive(item.id)} className="btn-icon" title="أرشفة">
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>archive</span>
+                        <span className="btn-icon-label">أرشفة</span>
                       </button>
                     )}
                     <button onClick={() => del(item.id)} className="btn-icon danger" title="حذف">
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                      <span className="btn-icon-label">حذف</span>
                     </button>
                   </div>
                 </div>
@@ -329,16 +352,23 @@ export default function CurriculumManagementScreen() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
+                  <label style={lbl}>المادة *</label>
+                  <select className="premium-input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
+                    {SUBJECT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
+                <div>
                   <label style={lbl}>المرحلة الدراسية *</label>
                   <select className="premium-input" value={form.stageId} onChange={handleStageChange}>
                     <option value="">اختر المرحلة</option>
                     {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={lbl}>العام الدراسي *</label>
-                  <input className="premium-input" value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })} placeholder="2024/2025" />
-                </div>
+              </div>
+
+              <div>
+                <label style={lbl}>العام الدراسي *</label>
+                <input className="premium-input" value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })} placeholder="2024/2025" />
               </div>
 
               {/* Grade picker — only appears when stage has sub-grades */}

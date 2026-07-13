@@ -69,9 +69,37 @@ public class HomeworkRepository : IHomeworkRepository
             .Include(s => s.Answers)
             .FirstOrDefaultAsync(s => s.HomeworkId == homeworkId && s.StudentId == studentId);
 
+    public async Task<List<HomeworkSubmission>> GetSubmissionsByHomeworkIdAsync(Guid homeworkId)
+        => await _context.HomeworkSubmissions
+            .Where(s => s.HomeworkId == homeworkId)
+            .ToListAsync();
+
+    public async Task<List<HomeworkSubmission>> GetSubmissionsByStudentIdsAsync(IEnumerable<Guid> studentIds)
+    {
+        var ids = studentIds.ToList();
+        return await _context.HomeworkSubmissions
+            .Include(s => s.Homework).ThenInclude(h => h.Subject)
+            .Where(s => ids.Contains(s.StudentId))
+            .ToListAsync();
+    }
+
+    public async Task<List<Homework>> GetPublishedForGradesAsync(IEnumerable<Guid> gradeIds)
+    {
+        var ids = gradeIds.ToList();
+        return await _context.Homeworks
+            .Where(h => ids.Contains(h.GradeId) && h.Status == LessonStatus.Published)
+            .ToListAsync();
+    }
+
     public async Task AddSubmissionAsync(HomeworkSubmission submission)
         => await _context.HomeworkSubmissions.AddAsync(submission);
 
     public async Task<int> GetDraftCountAsync()
         => await _context.Homeworks.CountAsync(h => h.Status == LessonStatus.Draft);
+
+    public async Task<Homework?> GetFirstDraftAsync()
+        => await _context.Homeworks
+            .Where(h => h.Status == LessonStatus.Draft)
+            .OrderByDescending(h => h.CreatedAt)
+            .FirstOrDefaultAsync();
 }

@@ -124,6 +124,38 @@ public class HymnSubmissionService : IHymnSubmissionService
         return (true, null, Map(refreshed!));
     }
 
+    public async Task<(bool Success, string? Error, HymnSubmissionDto? Result)> SubmitManualScoreAsync(
+        ManualHymnScoreDto dto, Guid reviewedByUserId)
+    {
+        if (dto.Score < 0)
+            return (false, "الدرجة يجب أن تكون صفر أو أكبر.", null);
+
+        var existing = await _repo.GetByStudentAndLessonAsync(dto.StudentId, dto.HymnLessonId);
+        if (existing != null)
+            return (false, "يوجد تسجيل بالفعل لهذا الطالب — استخدم المراجعة العادية.", null);
+
+        var submission = new HymnSubmission
+        {
+            Id = Guid.NewGuid(),
+            HymnLessonId = dto.HymnLessonId,
+            StudentId = dto.StudentId,
+            RecordingUrl = null,
+            IsManualEntry = true,
+            Status = HymnSubmissionStatus.Approved,
+            Score = dto.Score,
+            Comments = dto.Comments,
+            SubmittedAt = DateTime.UtcNow,
+            ReviewedAt = DateTime.UtcNow,
+            ReviewedByUserId = reviewedByUserId
+        };
+
+        await _repo.AddAsync(submission);
+        await _uow.SaveChangesAsync();
+
+        var saved = await _repo.GetByStudentAndLessonAsync(dto.StudentId, dto.HymnLessonId);
+        return (true, null, Map(saved!));
+    }
+
     private static string StatusToString(HymnSubmissionStatus status) => status switch
     {
         HymnSubmissionStatus.Approved => "approved",
@@ -137,7 +169,7 @@ public class HymnSubmissionService : IHymnSubmissionService
         HymnLessonId = s.HymnLessonId,
         HymnTitle = s.HymnLesson?.Title ?? string.Empty,
         Status = StatusToString(s.Status),
-        RecordingUrl = s.RecordingUrl,
+        RecordingUrl = s.RecordingUrl ?? string.Empty,
         RecordingFileName = s.RecordingFileName,
         Score = s.Score,
         Comments = s.Comments,

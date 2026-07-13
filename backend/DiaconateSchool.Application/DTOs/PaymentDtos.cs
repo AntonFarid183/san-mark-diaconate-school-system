@@ -7,6 +7,7 @@ public class StudentAccountDto
 {
     public Guid StudentId { get; set; }
     public decimal TotalRequired { get; set; }
+    public string? Description { get; set; }
     public decimal AmountPaid { get; set; }
     public decimal RemainingBalance { get; set; }
     public string Status { get; set; } = string.Empty; // paid / partial / not_paid / no_balance
@@ -31,6 +32,7 @@ public class PaymentTransactionDto
 public class SetTotalRequiredDto
 {
     public decimal TotalRequired { get; set; }
+    public string? Description { get; set; }
 }
 
 public class CreateTransactionDto

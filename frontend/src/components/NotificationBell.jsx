@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { getNotificationRoute, getDynamicItemRoute, NOTIFICATION_ICONS, timeAgo } from '../utils/notifications';
+import { readDismissed, writeDismissed } from '../utils/notificationDismissal';
 
 const POLL_INTERVAL_MS = 60000;
 
@@ -9,12 +10,20 @@ export default function NotificationBell() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [summary, setSummary] = useState({ dynamicItems: [], recentPersistent: [], unreadPersistentCount: 0 });
+  const [dismissed, setDismissed] = useState(readDismissed);
   const containerRef = useRef(null);
 
   const fetchSummary = async () => {
     try {
       const r = await apiClient.get('/notifications/summary');
       setSummary(r.data);
+      // Prune dismissed entries for items that are fully resolved / gone
+      setDismissed(d => {
+        const liveKeys = new Set((r.data.dynamicItems || []).map(i => i.key));
+        const pruned = Object.fromEntries(Object.entries(d).filter(([k]) => liveKeys.has(k)));
+        writeDismissed(pruned);
+        return pruned;
+      });
     } catch { /* silent — bell just stays at last known state */ }
   };
 
@@ -33,20 +42,33 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const totalBadge = (summary.dynamicItems?.reduce((sum, i) => sum + i.count, 0) || 0) + (summary.unreadPersistentCount || 0);
+  const totalBadge = (summary.dynamicItems?.reduce((sum, i) => sum + Math.max(0, i.count - (dismissed[i.key] || 0)), 0) || 0)
+    + (summary.unreadPersistentCount || 0);
 
-  const openDynamicItem = (key) => {
+  const openDynamicItem = (item) => {
     setOpen(false);
-    navigate(getDynamicItemRoute(key));
+    // Mark this backlog as "seen" up to its current count — the badge drops immediately
+    // and stays down (survives the remount on navigation) until the count grows further.
+    setDismissed(d => {
+      const next = { ...d, [item.key]: item.count };
+      writeDismissed(next);
+      return next;
+    });
+    navigate(getDynamicItemRoute(item.key, item.filters));
   };
 
   const openNotification = async (n) => {
     setOpen(false);
     if (!n.isRead) {
+      // Optimistic local update so the badge decreases immediately, not on next poll
+      setSummary(s => ({
+        ...s,
+        unreadPersistentCount: Math.max(0, (s.unreadPersistentCount || 0) - 1),
+        recentPersistent: s.recentPersistent.map(i => i.id === n.id ? { ...i, isRead: true } : i),
+      }));
       try { await apiClient.post(`/notifications/${n.id}/read`); } catch { /* ignore */ }
     }
     navigate(getNotificationRoute(n.type, n.referenceId));
-    fetchSummary();
   };
 
   const markAllRead = async () => {
@@ -97,10 +119,13 @@ export default function NotificationBell() {
           {summary.dynamicItems?.length > 0 && (
             <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', borderBottom: '1px solid var(--glass-border)' }}>
               {summary.dynamicItems.map(item => (
-                <div key={item.key} onClick={() => openDynamicItem(item.key)}
+                <div key={item.key} onClick={() => openDynamicItem(item)}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(251,191,36,0.08)', cursor: 'pointer' }}>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{item.title}</span>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-gold)', background: 'rgba(251,191,36,0.15)', borderRadius: '10px', padding: '0.1rem 0.5rem' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{item.title}</div>
+                    {item.message && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{item.message}</div>}
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-gold)', background: 'rgba(251,191,36,0.15)', borderRadius: '10px', padding: '0.1rem 0.5rem', flexShrink: 0, marginRight: '0.5rem' }}>
                     {item.count}
                   </span>
                 </div>

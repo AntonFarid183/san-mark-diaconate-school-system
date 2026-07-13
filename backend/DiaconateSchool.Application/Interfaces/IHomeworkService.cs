@@ -17,6 +17,10 @@ public interface IHomeworkService
     Task<(bool Success, string? Error)> SetStatusAsync(Guid id, LessonStatus status);
     Task<(bool Success, string? Error)> DeleteAsync(Guid id);
 
+    // Manual grade entry — for students graded in person rather than online
+    Task<(bool Success, string? Error, List<HomeworkGradingRosterItemDto>? Result)> GetGradingRosterAsync(Guid homeworkId);
+    Task<(bool Success, string? Error)> SetManualGradesAsync(Guid homeworkId, ManualGradeEntryDto dto);
+
     // Student
     Task<List<StudentHomeworkListItemDto>> GetAvailableForStudentAsync(Guid studentId);
     Task<(bool Success, string? Error, StudentHomeworkDetailDto? Result)> GetForStudentAsync(Guid homeworkId, Guid studentId);

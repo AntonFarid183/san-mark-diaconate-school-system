@@ -74,6 +74,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IHymnSubmissionRepository, HymnSubmissionRepository>();
 builder.Services.AddScoped<IHomeworkRepository, HomeworkRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPublicFeedbackRepository, PublicFeedbackRepository>();
 
 // 5. Dependency Injection — services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -97,6 +98,8 @@ builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IHymnSubmissionService, HymnSubmissionService>();
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
+builder.Services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
+builder.Services.AddScoped<IStudentPerformanceService, StudentPerformanceService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 

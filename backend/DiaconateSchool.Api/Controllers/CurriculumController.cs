@@ -21,6 +21,22 @@ public class CurriculumController : ControllerBase
 
     private Guid GetUserId() => Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
+    [AllowAnonymous]
+    [HttpGet("public/stages")]
+    public async Task<IActionResult> GetPublicStages([FromQuery] CurriculumSubject subject)
+    {
+        var result = await _service.GetPublicStagesAsync(subject);
+        return Ok(result);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("public")]
+    public async Task<IActionResult> GetPublic([FromQuery] CurriculumSubject subject, [FromQuery] Guid stageId)
+    {
+        var result = await _service.GetPublicAsync(subject, stageId);
+        return Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     public async Task<IActionResult> GetAll(

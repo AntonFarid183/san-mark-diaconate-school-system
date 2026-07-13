@@ -56,6 +56,23 @@ public class HymnSubmissionRepository : IHymnSubmissionRepository
             .Where(s => s.HymnLessonId == hymnLessonId)
             .ToListAsync();
 
+    public async Task<List<HymnSubmission>> GetSubmissionsByStudentIdsAsync(IEnumerable<Guid> studentIds)
+    {
+        var ids = studentIds.ToList();
+        return await _context.HymnSubmissions
+            .Include(s => s.HymnLesson)
+            .Where(s => ids.Contains(s.StudentId) && s.Score != null)
+            .ToListAsync();
+    }
+
     public async Task<int> GetPendingCountAsync()
         => await _context.HymnSubmissions.CountAsync(s => s.Status == Domain.Enums.HymnSubmissionStatus.Pending);
+
+    public async Task<HymnSubmission?> GetFirstPendingAsync()
+        => await _context.HymnSubmissions
+            .Include(s => s.HymnLesson)
+            .Include(s => s.Student)
+            .Where(s => s.Status == Domain.Enums.HymnSubmissionStatus.Pending)
+            .OrderBy(s => s.SubmittedAt)
+            .FirstOrDefaultAsync();
 }

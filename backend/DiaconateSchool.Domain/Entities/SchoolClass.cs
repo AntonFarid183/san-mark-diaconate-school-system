@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Domain.Entities;
 
@@ -10,6 +11,8 @@ public class SchoolClass
 
     public Guid GradeId { get; set; }
     public Grade Grade { get; set; } = null!;
+
+    public StudentLevel Level { get; set; } = StudentLevel.Level1;
 
     public Guid AcademicYearId { get; set; }
     public AcademicYear AcademicYear { get; set; } = null!;

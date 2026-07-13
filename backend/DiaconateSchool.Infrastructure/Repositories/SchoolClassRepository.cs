@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -18,12 +19,12 @@ public class SchoolClassRepository : ISchoolClassRepository
         _context = context;
     }
 
-    public async Task<List<SchoolClass>> GetByGradeAndYearAsync(Guid gradeId, Guid academicYearId)
+    public async Task<List<SchoolClass>> GetByGradeAndYearAsync(Guid gradeId, Guid academicYearId, StudentLevel level)
         => await _context.SchoolClasses
             .Include(c => c.Grade)
             .Include(c => c.AcademicYear)
             .Include(c => c.Students).ThenInclude(s => s.User)
-            .Where(c => c.GradeId == gradeId && c.AcademicYearId == academicYearId)
+            .Where(c => c.GradeId == gradeId && c.AcademicYearId == academicYearId && c.Level == level)
             .OrderBy(c => c.Name)
             .ToListAsync();
 
@@ -34,10 +35,11 @@ public class SchoolClassRepository : ISchoolClassRepository
             .Include(c => c.Students).ThenInclude(s => s.User)
             .FirstOrDefaultAsync(c => c.Id == id);
 
-    public async Task<bool> NameExistsAsync(Guid gradeId, Guid academicYearId, string name, Guid? excludeId = null)
+    public async Task<bool> NameExistsAsync(Guid gradeId, Guid academicYearId, StudentLevel level, string name, Guid? excludeId = null)
         => await _context.SchoolClasses.AnyAsync(c =>
             c.GradeId == gradeId &&
             c.AcademicYearId == academicYearId &&
+            c.Level == level &&
             c.Name == name &&
             (excludeId == null || c.Id != excludeId.Value));
 
@@ -50,10 +52,10 @@ public class SchoolClassRepository : ISchoolClassRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<Student>> GetStudentsByGradeAsync(Guid gradeId)
+    public async Task<List<Student>> GetStudentsByGradeAsync(Guid gradeId, StudentLevel level)
         => await _context.Students
             .Include(s => s.User)
-            .Where(s => s.GradeId == gradeId && s.User.IsActive)
+            .Where(s => s.GradeId == gradeId && s.Level == level && s.User.IsActive)
             .OrderBy(s => s.User.FirstName)
             .ThenBy(s => s.User.LastName)
             .ToListAsync();

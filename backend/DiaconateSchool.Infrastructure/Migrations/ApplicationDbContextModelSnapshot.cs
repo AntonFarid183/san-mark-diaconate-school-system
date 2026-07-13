@@ -472,6 +472,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int>("Subject")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -888,6 +893,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<Guid>("HomeworkId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsManualEntry")
+                        .HasColumnType("bit");
+
                     b.Property<decimal>("Score")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
@@ -1031,11 +1039,13 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<Guid>("HymnLessonId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsManualEntry")
+                        .HasColumnType("bit");
+
                     b.Property<string>("RecordingFileName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RecordingUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ReviewedAt")
@@ -1245,6 +1255,31 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.ToTable("PaymentTransactions");
                 });
 
+            modelBuilder.Entity("DiaconateSchool.Domain.Entities.PublicFeedback", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContactInfo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PublicFeedbacks");
+                });
+
             modelBuilder.Entity("DiaconateSchool.Domain.Entities.SchoolClass", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1263,6 +1298,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<bool>("IsLocked")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Level")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<int?>("MaxCapacity")
                         .HasColumnType("int");
 
@@ -1274,7 +1314,7 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
                     b.HasIndex("AcademicYearId");
 
-                    b.HasIndex("GradeId", "AcademicYearId", "Name")
+                    b.HasIndex("GradeId", "AcademicYearId", "Level", "Name")
                         .IsUnique();
 
                     b.ToTable("SchoolClasses");
@@ -1390,6 +1430,11 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<string>("Landmark")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Level")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("MotherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1444,6 +1489,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");

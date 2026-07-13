@@ -1,0 +1,1321 @@
+/*
+  Landing page styles — fully scoped under .landing-page so nothing here
+  can ever leak into the authenticated app. Reuses the existing :root
+  variables (colors, radii) defined in index.css; does not redefine them.
+*/
+
+.landing-page {
+  min-height: 100vh;
+  direction: rtl;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────── */
+
+.landing-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 2rem;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(0px);
+  transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+}
+
+.landing-navbar.landing-navbar-solid {
+  background: rgba(10, 16, 30, 0.97);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.landing-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.landing-navbar-brand-text h1 {
+  color: var(--accent-gold);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.landing-navbar-brand-text p {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.landing-navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.landing-navbar-link {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.landing-navbar-link:hover {
+  background: rgba(251, 191, 36, 0.08);
+  color: var(--accent-gold);
+}
+
+.landing-navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ── Navbar dropdown (المناهج) ─────────────────────────────────────── */
+
+.landing-navbar-dropdown {
+  position: relative;
+}
+
+.landing-navbar-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.landing-navbar-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 160px;
+  background: rgba(10, 16, 30, 0.98);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+  z-index: 210;
+}
+
+.landing-navbar-dropdown:hover .landing-navbar-dropdown-menu,
+.landing-navbar-dropdown:focus-within .landing-navbar-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.landing-navbar-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: right;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.landing-navbar-dropdown-item:hover {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--accent-gold);
+}
+
+.landing-navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.4rem;
+}
+
+.landing-navbar-mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(78vw, 300px);
+  background: rgba(10, 16, 30, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 0.4rem;
+  animation: landing-slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-navbar-mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 240;
+  animation: landing-fade-in 0.2s ease;
+}
+
+@keyframes landing-slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes landing-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (max-width: 860px) {
+  .landing-navbar-links {
+    display: none;
+  }
+  .landing-navbar-actions .btn-primary,
+  .landing-navbar-actions .btn-secondary {
+    display: none;
+  }
+  .landing-navbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────── */
+
+.landing-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 7rem 1.5rem 4rem;
+}
+
+/* Swappable background layer — today an <img>, later a <video>. Nothing
+   outside this element needs to change when that swap happens. */
+.landing-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.landing-hero-media img,
+.landing-hero-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Independent overlay — guarantees text readability regardless of what
+   sits in .landing-hero-media */
+.landing-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(10,16,30,0.55) 0%, rgba(10,16,30,0.65) 45%, rgba(10,16,30,0.92) 100%),
+    radial-gradient(ellipse at center, rgba(10,16,30,0.15) 0%, rgba(10,16,30,0.55) 75%);
+}
+
+.landing-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.landing-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-radius: 20px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0;
+  animation: landing-fade-rise 0.7s ease forwards;
+}
+
+.landing-hero-title {
+  font-size: clamp(1.9rem, 5vw, 3.4rem);
+  line-height: 1.3;
+  color: var(--text-primary);
+  text-shadow: 0 2px 24px rgba(0,0,0,0.5);
+  opacity: 0;
+  animation: landing-fade-rise 0.8s ease forwards;
+  animation-delay: 0.12s;
+}
+
+.landing-hero-title span {
+  color: var(--accent-gold);
+}
+
+.landing-hero-subtitle {
+  font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+  line-height: 1.8;
+  color: var(--text-secondary);
+  max-width: 560px;
+  opacity: 0;
+  animation: landing-fade-rise 0.8s ease forwards;
+  animation-delay: 0.24s;
+}
+
+.landing-hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+  opacity: 0;
+  animation: landing-fade-rise 0.8s ease forwards;
+  animation-delay: 0.36s;
+}
+
+.landing-hero-actions .btn-primary,
+.landing-hero-actions .btn-secondary {
+  width: auto;
+  padding: 0.85rem 2.2rem;
+  font-size: 1rem;
+}
+
+/* Reserved for a future Bible verse / spiritual quote — placeholder only */
+.landing-hero-verse {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  padding: 1rem 1.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0;
+  animation: landing-fade-rise 0.8s ease forwards;
+  animation-delay: 0.48s;
+}
+
+.landing-hero-scroll-cue {
+  position: absolute;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: var(--text-muted);
+  animation: landing-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes landing-fade-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landing-pulse {
+  0%, 100% { opacity: 0.35; transform: translate(-50%, 0); }
+  50%      { opacity: 0.9; transform: translate(-50%, 6px); }
+}
+
+@media (max-width: 480px) {
+  .landing-hero {
+    padding: 6rem 1.25rem 3rem;
+  }
+}
+
+/* ── Section heading (shared by all content sections below the Hero) ─── */
+
+.landing-section {
+  padding: clamp(3rem, 7vw, 5.5rem) 1.5rem;
+}
+
+.landing-section-heading {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto clamp(2rem, 5vw, 3rem);
+}
+
+.landing-section-eyebrow {
+  display: inline-block;
+  padding: 0.25rem 0.9rem;
+  border-radius: 20px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: var(--accent-gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+}
+
+.landing-section-title {
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+}
+
+.landing-section-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+/* ── Church Gallery — dual-row marquee ─────────────────────────────── */
+
+.landing-gallery {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.landing-gallery-rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.landing-gallery-row-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  mask-image: linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%);
+}
+
+.landing-gallery-row-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-gallery-row-track {
+  direction: ltr;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  width: max-content;
+  will-change: transform;
+  animation: landing-marquee-ltr 48s linear infinite;
+}
+
+.landing-gallery-row-track.landing-gallery-row-reverse {
+  animation-name: landing-marquee-rtl;
+  animation-duration: 55s;
+}
+
+.landing-gallery-row-track.landing-gallery-paused {
+  animation-play-state: paused;
+}
+
+.landing-gallery-item {
+  flex-shrink: 0;
+  width: clamp(160px, 22vw, 280px);
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.landing-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes landing-marquee-ltr {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes landing-marquee-rtl {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (max-width: 480px) {
+  .landing-gallery-item {
+    width: clamp(130px, 42vw, 200px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-gallery-row-track {
+    animation: none;
+  }
+}
+
+/* ── Reveal-on-scroll (shared utility — fade + small upward rise) ────── */
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.landing-reveal.landing-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── About ─────────────────────────────────────────────────────────── */
+
+/* Shared two-column split, used by About and Leader cards alike —
+   one rule, so the "collapse to one column on mobile" logic lives
+   in a single place. */
+.landing-about-grid,
+.landing-leader-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.landing-about-content {
+  text-align: right;
+}
+
+.landing-about-content .landing-section-eyebrow {
+  margin-bottom: 0.9rem;
+}
+
+.landing-about-title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.landing-about-intro {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 0.9rem;
+}
+
+.landing-about-description {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.9;
+  margin-bottom: 2rem;
+}
+
+.landing-about-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Image collage — a relative box with named absolutely-positioned slots.
+   Only "primary" is used today; accentA/accentB are ready for when a
+   second/third photo is added — no layout change required, just data. */
+.landing-about-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}
+
+.landing-about-image-glow {
+  position: absolute;
+  top: 10%;
+  left: -10%;
+  width: 70%;
+  height: 70%;
+  background: var(--accent-gold);
+  opacity: 0.16;
+  filter: blur(70px);
+  z-index: 0;
+  border-radius: 50%;
+}
+
+.landing-about-image-slot {
+  position: absolute;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.landing-about-image-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.landing-about-image-slot.landing-about-slot-primary {
+  inset: 0;
+  z-index: 1;
+}
+
+.landing-about-image-slot.landing-about-slot-accent-a {
+  width: 48%;
+  aspect-ratio: 4 / 3;
+  bottom: -1.75rem;
+  left: -1.75rem;
+  z-index: 2;
+  border: 3px solid var(--bg-primary);
+}
+
+.landing-about-image-slot.landing-about-slot-accent-b {
+  width: 42%;
+  aspect-ratio: 1 / 1;
+  top: -1.5rem;
+  right: -1.5rem;
+  z-index: 2;
+  border: 3px solid var(--bg-primary);
+}
+
+@media (max-width: 760px) {
+  .landing-about-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing-about-content {
+    order: 2;
+  }
+  .landing-about-image {
+    order: 1;
+    max-width: 420px;
+    margin: 0 auto clamp(1rem, 4vw, 2rem);
+  }
+  .landing-about-highlights {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Priest / Bishop Welcome ───────────────────────────────────────── */
+
+.landing-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.landing-leader-simple-card {
+  text-align: center;
+}
+
+.landing-leader-simple-card .landing-leader-portrait {
+  max-width: 180px;
+}
+
+.landing-leader-simple-name {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── LeaderImage — architecture ready for shape/frame/glow/watermark,
+   none enabled by default. See component props for how to turn them on. */
+.landing-leader-portrait {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.landing-leader-portrait.landing-leader-portrait-circle {
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Optional gold frame + glow — opt-in via the `framed` prop */
+.landing-leader-portrait.landing-leader-portrait-framed {
+  border: 3px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 32px rgba(251, 191, 36, 0.18);
+}
+
+.landing-leader-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.landing-leader-portrait:hover img {
+  transform: scale(1.03);
+}
+
+/* Optional decorative cross overlay — opt-in via the `crossIcon` prop */
+.landing-leader-portrait-cross {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: var(--accent-gold);
+  font-size: 22px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
+/* Optional watermark — opt-in via the `watermarkSrc` prop */
+.landing-leader-portrait-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.08;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+
+/* ── Statistics ────────────────────────────────────────────────────── */
+
+.landing-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.landing-stat-card {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-stat-icon {
+  font-size: 38px;
+  margin-bottom: 0.9rem;
+}
+
+.landing-stat-number {
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  direction: ltr;
+}
+
+.landing-stat-title {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.landing-stat-description {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Shared card grid (Ordination / Bylaws / Contact / Stage / Curriculum) ── */
+
+.landing-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.landing-grid-cards-3 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* ── Curriculum Browser ────────────────────────────────────────────── */
+
+.landing-curriculum-browser {
+  padding-top: 5.5rem;
+}
+
+.landing-curriculum-hero {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4rem) 1.5rem clamp(1.5rem, 4vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.landing-curriculum-hero .landing-hero-eyebrow {
+  position: static;
+  opacity: 1;
+  animation: none;
+}
+
+.landing-curriculum-hero-title {
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  color: var(--text-primary);
+}
+
+.landing-curriculum-hero-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 520px;
+}
+
+.landing-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 1180px;
+  margin: 0 auto clamp(1.5rem, 4vw, 2.5rem);
+  font-size: 0.85rem;
+}
+
+.landing-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.landing-breadcrumb-sep {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.landing-breadcrumb-link {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.landing-breadcrumb-link:hover {
+  color: var(--accent-gold);
+}
+
+.landing-breadcrumb-current {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+/* ── Curriculum Browser — "digital library" background ──────────────── */
+
+.landing-library-bg {
+  position: relative;
+}
+
+.landing-library-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 10%;
+  width: 40%;
+  height: 480px;
+  background: radial-gradient(ellipse, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-library-bg::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  width: 30%;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-library-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-library-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+
+.landing-library-loading-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(251, 191, 36, 0.2);
+  border-top-color: var(--accent-gold);
+  animation: landing-spin 0.8s linear infinite;
+}
+
+@keyframes landing-spin {
+  to { transform: rotate(360deg); }
+}
+
+.landing-library-empty {
+  padding: 3.5rem 2rem;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.landing-library-empty .material-symbols-outlined {
+  font-size: 44px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.landing-library-empty p {
+  margin-top: 1rem;
+  color: var(--text-muted);
+}
+
+/* ── Stage Card ───────────────────────────────────────────────────────── */
+
+.landing-stage-card {
+  position: relative;
+  overflow: hidden;
+  padding: 2rem 1.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-stage-card-glow {
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.14) 0%, transparent 72%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.landing-stage-card:hover .landing-stage-card-glow {
+  opacity: 1;
+}
+
+.landing-stage-card-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.16) 0%, rgba(251, 191, 36, 0.04) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  margin-bottom: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.landing-stage-card:hover .landing-stage-card-icon-wrap {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.landing-stage-card-icon {
+  font-size: 30px;
+  color: var(--accent-gold);
+}
+
+.landing-stage-card-name {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.landing-stage-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  margin-bottom: 1.4rem;
+}
+
+.landing-stage-card-badge .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.landing-stage-card-badge-empty {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--glass-border);
+}
+
+.landing-stage-card-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.landing-stage-card-btn .material-symbols-outlined {
+  font-size: 17px;
+  transition: transform 0.2s ease;
+}
+
+.landing-stage-card:hover .landing-stage-card-btn .material-symbols-outlined {
+  transform: translateX(-3px);
+}
+
+/* ── Curriculum Card — "book cover" tile ─────────────────────────────── */
+
+.landing-curriculum-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-curriculum-card-cover {
+  position: relative;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.16) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+.landing-curriculum-card-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 22px);
+}
+
+.landing-curriculum-card-cover-icon {
+  font-size: 46px;
+  color: var(--accent-gold);
+  opacity: 0.85;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.35s ease;
+}
+
+.landing-curriculum-card:hover .landing-curriculum-card-cover-icon {
+  transform: scale(1.1) translateY(-2px);
+}
+
+.landing-curriculum-card-ribbon {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+}
+
+.landing-curriculum-card-ribbon .material-symbols-outlined {
+  font-size: 13px;
+}
+
+.landing-curriculum-card-body {
+  padding: 1.4rem 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.landing-curriculum-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.landing-curriculum-card-year {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.landing-curriculum-card-description {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-top: 0.15rem;
+}
+
+.landing-curriculum-card-btn {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.landing-curriculum-card-btn .material-symbols-outlined {
+  font-size: 17px;
+}
+
+/* ── Curriculum Viewer ─────────────────────────────────────────────────── */
+
+.landing-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(5, 8, 16, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  animation: landing-fade-in 0.2s ease;
+}
+
+.landing-viewer-panel {
+  width: 100%;
+  max-width: 1100px;
+  height: min(88vh, 900px);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: landing-viewer-rise 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes landing-viewer-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.landing-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.landing-viewer-toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.landing-viewer-toolbar-icon {
+  font-size: 26px;
+  color: var(--accent-gold);
+  flex-shrink: 0;
+}
+
+.landing-viewer-toolbar-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.landing-viewer-toolbar-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.landing-viewer-toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.landing-viewer-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.landing-viewer-action-btn:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: var(--accent-gold);
+}
+
+.landing-viewer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.landing-viewer-frame-wrap {
+  flex: 1;
+  background: #1a1a1a;
+}
+
+.landing-viewer-frame-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+@media (max-width: 560px) {
+  .landing-viewer-toolbar-meta {
+    display: none;
+  }
+}
+
+/* ── Feedback form ─────────────────────────────────────────────────── */
+
+.landing-feedback-form {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.landing-feedback-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.landing-feedback-status {
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.landing-feedback-status-success {
+  color: var(--success);
+}
+
+.landing-feedback-status-error {
+  color: var(--danger);
+}
+
+/* ── Scroll-to-top button ──────────────────────────────────────────── */
+
+.landing-scroll-top {
+  position: fixed;
+  bottom: clamp(1.25rem, 4vw, 2rem);
+  right: clamp(1.25rem, 4vw, 2rem);
+  z-index: 190;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(10, 16, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--accent-gold);
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 rgba(251, 191, 36, 0);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, box-shadow 0.25s ease, background 0.2s ease;
+}
+
+.landing-scroll-top-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.landing-scroll-top:hover {
+  background: rgba(251, 191, 36, 0.14);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 0 24px rgba(251, 191, 36, 0.25);
+  transform: translateY(-3px) scale(1);
+}
+
+.landing-scroll-top .material-symbols-outlined {
+  font-size: 26px;
+}
+
+@media (max-width: 480px) {
+  .landing-scroll-top {
+    width: 42px;
+    height: 42px;
+  }
+  .landing-scroll-top .material-symbols-outlined {
+    font-size: 22px;
+  }
+}

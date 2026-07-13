@@ -18,7 +18,11 @@ public interface IHomeworkRepository
     Task<List<Homework>> GetPublishedForGradeAsync(Guid gradeId);
 
     Task<HomeworkSubmission?> GetSubmissionAsync(Guid homeworkId, Guid studentId);
+    Task<List<HomeworkSubmission>> GetSubmissionsByHomeworkIdAsync(Guid homeworkId);
+    Task<List<HomeworkSubmission>> GetSubmissionsByStudentIdsAsync(IEnumerable<Guid> studentIds);
+    Task<List<Homework>> GetPublishedForGradesAsync(IEnumerable<Guid> gradeIds);
     Task AddSubmissionAsync(HomeworkSubmission submission);
 
     Task<int> GetDraftCountAsync();
+    Task<Homework?> GetFirstDraftAsync();
 }

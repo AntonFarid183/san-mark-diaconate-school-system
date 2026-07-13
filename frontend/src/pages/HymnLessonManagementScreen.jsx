@@ -216,28 +216,34 @@ export default function HymnLessonManagementScreen() {
                       </div>
 
                       {/* Actions */}
-                      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
                         <button onClick={() => { setPreviewLesson(item); setPreviewPdfFs(false); }} className="btn-icon purple" title="معاينة كالطالب">
                           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>preview</span>
+                          <span className="btn-icon-label">معاينة</span>
                         </button>
                         <button onClick={() => setUploadTarget(item)} className="btn-icon" title="رفع الملفات">
                           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cloud_upload</span>
+                          <span className="btn-icon-label">رفع</span>
                         </button>
                         <button onClick={() => openEdit(item)} className="btn-icon" title="تعديل البيانات">
                           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
+                          <span className="btn-icon-label">تعديل</span>
                         </button>
                         {item.status === 0 && (
                           <button onClick={() => publish(item.id)} className="btn-icon success" title="نشر">
                             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>publish</span>
+                            <span className="btn-icon-label">نشر</span>
                           </button>
                         )}
                         {item.status === 1 && (
                           <button onClick={() => archive(item.id)} className="btn-icon" title="أرشفة">
                             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>archive</span>
+                            <span className="btn-icon-label">أرشفة</span>
                           </button>
                         )}
                         <button onClick={() => del(item.id)} className="btn-icon danger" title="حذف">
                           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                          <span className="btn-icon-label">حذف</span>
                         </button>
                       </div>
                     </div>

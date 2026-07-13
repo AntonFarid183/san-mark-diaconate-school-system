@@ -28,6 +28,16 @@ public class CurriculumRepository : ICurriculumRepository
             .OrderBy(c => c.DisplayOrder)
             .ToListAsync();
 
+    public async Task<IEnumerable<Curriculum>> GetPublishedBySubjectAsync(CurriculumSubject subject, Guid? stageId)
+    {
+        var q = _ctx.Curriculums
+            .Include(c => c.Stage)
+            .Include(c => c.Grade)
+            .Where(c => c.Subject == subject && c.Status == CurriculumStatus.Published);
+        if (stageId.HasValue) q = q.Where(c => c.StageId == stageId);
+        return await q.OrderBy(c => c.DisplayOrder).ThenBy(c => c.CreatedAt).ToListAsync();
+    }
+
     public async Task<Curriculum?> GetByIdAsync(Guid id) =>
         await _ctx.Curriculums.Include(c => c.Stage).Include(c => c.Grade).FirstOrDefaultAsync(c => c.Id == id);
 

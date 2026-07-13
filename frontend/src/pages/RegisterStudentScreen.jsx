@@ -152,7 +152,7 @@ const RegisterStudentScreen = () => {
   // --- REGISTRATION FORM VIEW ---
   return (
     <Layout title="تسجيل طالب جديد">
-      <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         أدخل بيانات الطالب الجديد بدقة لضمان دمج البيانات في نظام المدرسة والسجلات الأكاديمية.
       </p>
 

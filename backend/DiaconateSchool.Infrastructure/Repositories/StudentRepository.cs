@@ -126,6 +126,7 @@ public class StudentRepository : IStudentRepository
             .Include(s => s.User)
             .Include(s => s.Grade)
                 .ThenInclude(g => g.Stage)
+            .Include(s => s.Class)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 

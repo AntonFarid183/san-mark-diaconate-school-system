@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 export default function StudentHomeworkListScreen() {
+  usePageTitle('الواجبات');
   const navigate = useNavigate();
   const [homeworks, setHomeworks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,7 @@ export default function StudentHomeworkListScreen() {
   }, []);
 
   return (
-    <Layout title="الواجبات">
+    <>
       {loading ? (
         <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
       ) : homeworks.length === 0 ? (
@@ -42,6 +43,6 @@ export default function StudentHomeworkListScreen() {
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 }

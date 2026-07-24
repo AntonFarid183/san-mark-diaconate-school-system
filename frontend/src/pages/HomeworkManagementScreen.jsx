@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const STATUS_LABELS = {
   draft: { label: 'مسودة', color: 'var(--text-muted)' },
@@ -20,6 +20,7 @@ const emptyForm = {
 };
 
 export default function HomeworkManagementScreen() {
+  usePageTitle('إدارة الواجبات');
   const [searchParams] = useSearchParams();
 
   const [homeworks, setHomeworks] = useState([]);
@@ -189,7 +190,7 @@ export default function HomeworkManagementScreen() {
   };
 
   return (
-    <Layout title="إدارة الواجبات">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         ارفع ملف المذاكرة (يحتوي على الأسئلة والاختيارات) وحدد الإجابة الصحيحة لكل سؤال فقط.
       </p>
@@ -383,6 +384,6 @@ export default function HomeworkManagementScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }

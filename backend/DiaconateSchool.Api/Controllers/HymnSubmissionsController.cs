@@ -41,6 +41,18 @@ public class HymnSubmissionsController : ControllerBase
         return Ok(result); // null if not submitted yet
     }
 
+    // Mirrors GET homework/my — every one of the student's own hymn submissions across all
+    // lessons (all statuses), for their home dashboard. Reuses GetForStudentAsync as-is.
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMine()
+    {
+        var studentId = await GetCurrentStudentIdAsync();
+        if (studentId == null) return BadRequest(new { Message = "هذه الميزة متاحة للطلاب فقط." });
+
+        return Ok(await _service.GetForStudentAsync(studentId.Value));
+    }
+
     [Authorize(Policy = "AllAuthenticated")]
     [HttpPost("{hymnLessonId}")]
     public async Task<IActionResult> Submit(Guid hymnLessonId, [FromBody] SubmitHymnRecordingDto dto)
@@ -69,6 +81,13 @@ public class HymnSubmissionsController : ControllerBase
         if (!success) return error!.Contains("غير موجود") ? NotFound(new { Message = error }) : BadRequest(new { Message = error });
         return Ok(result);
     }
+
+    // Reuses the same Map(HymnSubmission) projection as every other endpoint here — just a
+    // broader repo query (all statuses, not score-filtered) for the Student Profile dashboard.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("student/{studentId}")]
+    public async Task<IActionResult> GetForStudent(Guid studentId)
+        => Ok(await _service.GetForStudentAsync(studentId));
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("manual")]

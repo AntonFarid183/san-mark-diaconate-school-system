@@ -74,6 +74,7 @@ public class StudentHomeworkListItemDto
     public decimal TotalMarks { get; set; }
     public bool HasSubmitted { get; set; }
     public decimal? Score { get; set; }
+    public DateTime? SubmittedAt { get; set; }
 }
 
 public class StudentHomeworkDetailDto

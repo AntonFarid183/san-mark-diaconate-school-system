@@ -65,6 +65,16 @@ public class HymnSubmissionRepository : IHymnSubmissionRepository
             .ToListAsync();
     }
 
+    // Unlike GetSubmissionsByStudentIdsAsync (used for performance scoring, scored-only),
+    // this returns every status — pending / approved / resubmission-requested — for the
+    // Student Profile dashboard's "latest hymn activity" section.
+    public async Task<List<HymnSubmission>> GetAllByStudentIdAsync(Guid studentId)
+        => await _context.HymnSubmissions
+            .Include(s => s.HymnLesson)
+            .Where(s => s.StudentId == studentId)
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+
     public async Task<int> GetPendingCountAsync()
         => await _context.HymnSubmissions.CountAsync(s => s.Status == Domain.Enums.HymnSubmissionStatus.Pending);
 

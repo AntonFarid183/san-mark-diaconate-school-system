@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL } from '../config';
 
 const STATUS_MAP = {
@@ -26,6 +26,7 @@ const STAGES_WITH_GRADES = new Set([
 ]);
 
 export default function CurriculumManagementScreen() {
+  usePageTitle('إدارة المناهج');
   const [items, setItems]             = useState([]);
   const [stages, setStages]           = useState([]);
   const [allGrades, setAllGrades]     = useState([]);
@@ -164,7 +165,7 @@ export default function CurriculumManagementScreen() {
   const fmt = (b) => b ? (b > 1e6 ? `${(b/1e6).toFixed(1)} MB` : `${Math.round(b/1024)} KB`) : null;
 
   return (
-    <Layout title="إدارة المناهج">
+    <>
 
       {/* Hidden inputs */}
       <input ref={modalFileRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={e => { setPendingFile(e.target.files[0] || null); e.target.value = ''; }} />
@@ -412,7 +413,7 @@ export default function CurriculumManagementScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

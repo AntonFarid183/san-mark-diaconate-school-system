@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 // Enum values mirror DiaconateSchool.Domain.Enums.AttendanceStatus (serialized as numbers)
 const STATUS_LABELS = ['حاضر', 'غائب'];
@@ -19,6 +19,7 @@ const SummaryCard = ({ label, value, color }) => (
 );
 
 const AttendanceDashboardScreen = () => {
+  usePageTitle('لوحة تحكم الحضور');
   const today = new Date();
   const weekAgo = new Date(today.getTime() - 7 * 86400000);
 
@@ -101,7 +102,7 @@ const AttendanceDashboardScreen = () => {
   };
 
   return (
-    <Layout title="لوحة تحكم الحضور">
+    <>
       {msg && (
         <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', borderRadius: 'var(--radius-sm)', background: msg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: msg.type === 'success' ? 'var(--success)' : 'var(--danger)', display: 'flex', justifyContent: 'space-between' }}>
           {msg.text}
@@ -227,7 +228,7 @@ const AttendanceDashboardScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

@@ -100,6 +100,14 @@ public class HomeworkController : ControllerBase
         return success ? Ok() : BadRequest(new { Message = error });
     }
 
+    // Reuses the exact same per-student aggregation used by the student's own "my homework"
+    // list (GetAvailableForStudentAsync already takes a raw studentId, not JWT-derived) —
+    // this just lets an admin call it for a student they're viewing, for the profile dashboard.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("student/{studentId}")]
+    public async Task<IActionResult> GetForStudent(Guid studentId)
+        => Ok(await _service.GetAvailableForStudentAsync(studentId));
+
     // ── Student ────────────────────────────────────────────
 
     [Authorize(Policy = "AllAuthenticated")]

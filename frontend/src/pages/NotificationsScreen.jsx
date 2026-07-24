@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { useAuth } from '../context/AuthContext';
 import { getNotificationRoute, getDynamicItemRoute, NOTIFICATION_ICONS, timeAgo } from '../utils/notifications';
 import { readDismissed, writeDismissed } from '../utils/notificationDismissal';
@@ -13,6 +13,7 @@ const TABS = [
 ];
 
 export default function NotificationsScreen() {
+  usePageTitle('الإشعارات');
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
@@ -88,7 +89,7 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <Layout title="الإشعارات">
+    <>
       {dynamicItems.length > 0 && (
         <div className="glass-card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '0.78rem', color: 'rgba(251,191,36,0.7)', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
@@ -183,6 +184,6 @@ export default function NotificationsScreen() {
           <p style={{ color: 'var(--text-muted)' }}>لا توجد إشعارات</p>
         </div>
       )}
-    </Layout>
+    </>
   );
 }

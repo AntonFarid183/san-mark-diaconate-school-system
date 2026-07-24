@@ -95,6 +95,10 @@ public class StudentDetailDto
     public string GradeName { get; set; } = string.Empty;
     public Guid StageId { get; set; }
     public string StageName { get; set; } = string.Empty;
+    public Guid? ClassId { get; set; }
+    public string? ClassName { get; set; }
+    public StudentLevel Level { get; set; }
+    public string LevelLabel { get; set; } = string.Empty;
     public bool IsDeacon { get; set; }
     public string? DeaconRank { get; set; }
     public string FatherOfConfession { get; set; } = string.Empty;

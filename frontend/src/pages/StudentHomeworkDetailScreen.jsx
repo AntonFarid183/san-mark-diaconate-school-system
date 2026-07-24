@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL as BASE } from '../config';
 
 const OPTION_LABELS = ['أ', 'ب', 'ج', 'د'];
@@ -10,6 +10,7 @@ export default function StudentHomeworkDetailScreen() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [homework, setHomework] = useState(null);
+  usePageTitle(homework?.title || 'الواجب');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({}); // questionId -> selectedOption
@@ -47,15 +48,13 @@ export default function StudentHomeworkDetailScreen() {
     }
   };
 
-  if (loading) return <Layout title="الواجب"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
   if (error || !homework) return (
-    <Layout title="الواجب">
-      <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>{error || 'الواجب غير موجود.'}</div>
-    </Layout>
+    <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>{error || 'الواجب غير موجود.'}</div>
   );
 
   return (
-    <Layout title={homework.title}>
+    <>
       <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1.25rem', fontSize: '0.9rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
         العودة
@@ -145,6 +144,6 @@ export default function StudentHomeworkDetailScreen() {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

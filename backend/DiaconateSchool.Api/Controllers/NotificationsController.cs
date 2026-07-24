@@ -48,6 +48,19 @@ public class NotificationsController : ControllerBase
         return Ok(result);
     }
 
+    // Admin-only: view a specific student's notifications for the Student Profile dashboard.
+    // Reuses GetStudentSummaryAsync exactly as the student's own "summary" call does —
+    // the service already accepted a studentId param, it just wasn't exposed for another caller.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("student/{studentId}")]
+    public async Task<IActionResult> GetForStudent(Guid studentId)
+    {
+        var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
+        if (student == null) return NotFound();
+
+        return Ok(await _service.GetStudentSummaryAsync(student.Id, student.UserId));
+    }
+
     [HttpPost("{id}/read")]
     public async Task<IActionResult> MarkRead(Guid id)
     {

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const stageLabel = (s) => s || '—';
 
 export default function PendingApprovalsScreen() {
+  usePageTitle('طلبات التسجيل الذاتي');
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ export default function PendingApprovalsScreen() {
   };
 
   return (
-    <Layout title="طلبات التسجيل الذاتي">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         الأعضاء الذين سجّلوا أنفسهم عبر نموذج التسجيل — في انتظار موافقة الإدارة على قبولهم وتفعيل حساباتهم.
       </p>
@@ -173,6 +174,6 @@ export default function PendingApprovalsScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }

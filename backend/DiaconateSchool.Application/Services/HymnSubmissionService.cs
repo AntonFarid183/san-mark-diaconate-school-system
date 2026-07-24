@@ -156,6 +156,12 @@ public class HymnSubmissionService : IHymnSubmissionService
         return (true, null, Map(saved!));
     }
 
+    public async Task<List<HymnSubmissionDto>> GetForStudentAsync(Guid studentId)
+    {
+        var submissions = await _repo.GetAllByStudentIdAsync(studentId);
+        return submissions.Select(Map).ToList();
+    }
+
     private static string StatusToString(HymnSubmissionStatus status) => status switch
     {
         HymnSubmissionStatus.Approved => "approved",

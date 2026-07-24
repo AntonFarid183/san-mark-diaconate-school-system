@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const ProgressScreen = () => {
+  usePageTitle('ملخص التقدم');
   const [progressData, setProgressData] = useState(null);
   const [expandedStage, setExpandedStage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,13 +19,13 @@ const ProgressScreen = () => {
     fetch();
   }, []);
 
-  if (loading) return <Layout title="التقدم"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
-  if (!progressData) return <Layout title="التقدم"><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>فشل تحميل البيانات</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
+  if (!progressData) return <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>فشل تحميل البيانات</p>;
 
   const { overallProgress, completedLessons, totalLessons, stages, recentActivity } = progressData;
 
   return (
-    <Layout title="ملخص التقدم">
+    <>
       {/* Overall progress card */}
       <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem' }}>
         <div style={{ position: 'relative', width: '100px', height: '100px' }}>
@@ -107,7 +108,7 @@ const ProgressScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

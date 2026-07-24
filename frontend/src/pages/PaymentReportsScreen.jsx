@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
 
 const PAYMENT_EXPORT_COLUMNS = [
@@ -50,6 +50,7 @@ const paymentBadge = (status) => {
 };
 
 export default function PaymentReportsScreen() {
+  usePageTitle('تقرير المدفوعات');
   const [searchParams] = useSearchParams();
 
   const [data, setData] = useState(null);
@@ -129,7 +130,7 @@ export default function PaymentReportsScreen() {
   );
 
   return (
-    <Layout title="تقرير المدفوعات">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>تقرير شامل بمدفوعات الطلاب والمبالغ المحصلة.</p>
 
       {/* Summary stats */}
@@ -274,7 +275,7 @@ export default function PaymentReportsScreen() {
           onClose={() => setShowExport(false)}
         />
       )}
-    </Layout>
+    </>
   );
 }
 

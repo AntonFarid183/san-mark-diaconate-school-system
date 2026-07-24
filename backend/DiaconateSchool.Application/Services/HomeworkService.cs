@@ -204,7 +204,8 @@ public class HomeworkService : IHomeworkService
                 SubjectName = hw.Subject.Name,
                 TotalMarks = hw.TotalMarks,
                 HasSubmitted = submission != null,
-                Score = submission?.Score
+                Score = submission?.Score,
+                SubmittedAt = submission?.SubmittedAt
             });
         }
 

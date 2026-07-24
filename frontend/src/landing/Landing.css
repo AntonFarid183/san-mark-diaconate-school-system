@@ -7,6 +7,7 @@
 .landing-page {
   min-height: 100vh;
   direction: rtl;
+  --landing-navbar-h: 72px;
 }
 
 /* ── Navbar ─────────────────────────────────────────────────────────── */
@@ -21,9 +22,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.9rem 2rem;
-  background: transparent;
+  background: rgba(10, 16, 30, 0.85);
   border-bottom: 1px solid transparent;
-  backdrop-filter: blur(0px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -220,10 +222,15 @@
 }
 
 /* Swappable background layer — today an <img>, later a <video>. Nothing
-   outside this element needs to change when that swap happens. */
+   outside this element needs to change when that swap happens. Starts
+   below the fixed navbar (not behind it) so the navbar strip stays on
+   the page's own dark background and the photo begins right under it. */
 .landing-hero-media {
   position: absolute;
-  inset: 0;
+  top: var(--landing-navbar-h, 76px);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 0;
 }
 
@@ -235,15 +242,42 @@
   object-position: center;
 }
 
-/* Independent overlay — guarantees text readability regardless of what
-   sits in .landing-hero-media */
+/* Slow Ken Burns drift + quick fade-in — the first thing a visitor sees,
+   so it should feel alive and read clearly right away. */
+.landing-hero-media-img {
+  opacity: 0.5;
+  transform: scale(1.05);
+  animation: landing-hero-fade-in 0.7s ease forwards, landing-hero-kenburns 22s ease-in-out infinite alternate;
+}
+
+@keyframes landing-hero-fade-in {
+  to { opacity: 1; }
+}
+
+@keyframes landing-hero-kenburns {
+  from { transform: scale(1.05) translate(0, 0); }
+  to   { transform: scale(1.13) translate(-1.5%, -1%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-media-img {
+    animation: landing-hero-fade-in 0.6s ease forwards;
+    transform: scale(1);
+  }
+}
+
+/* Independent overlay — just enough to keep the text readable, without
+   burying the photo under a heavy tint. */
 .landing-hero-overlay {
   position: absolute;
-  inset: 0;
+  top: var(--landing-navbar-h, 76px);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(10,16,30,0.55) 0%, rgba(10,16,30,0.65) 45%, rgba(10,16,30,0.92) 100%),
-    radial-gradient(ellipse at center, rgba(10,16,30,0.15) 0%, rgba(10,16,30,0.55) 75%);
+    linear-gradient(180deg, rgba(10,16,30,0.28) 0%, rgba(10,16,30,0.35) 45%, rgba(10,16,30,0.8) 100%),
+    radial-gradient(ellipse at center, rgba(10,16,30,0.05) 0%, rgba(10,16,30,0.3) 75%);
 }
 
 .landing-hero-content {
@@ -315,18 +349,63 @@
   font-size: 1rem;
 }
 
-/* Reserved for a future Bible verse / spiritual quote — placeholder only */
+/* A random Bible verse, picked fresh on every page load — see HeroSection.jsx */
 .landing-hero-verse {
   margin-top: clamp(1.5rem, 4vw, 2.5rem);
-  padding: 1rem 1.5rem;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
+  padding: 1.1rem 1.75rem;
+  max-width: 480px;
+  border: 1px solid rgba(251, 191, 36, 0.22);
   border-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-style: italic;
+  background: rgba(10, 16, 30, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
   opacity: 0;
   animation: landing-fade-rise 0.8s ease forwards;
   animation-delay: 0.48s;
+}
+
+.landing-hero-verse-icon {
+  font-size: 22px !important;
+  color: var(--accent-gold);
+  opacity: 0.8;
+  transform: scaleX(-1); /* opening quote reads correctly in RTL */
+}
+
+.landing-hero-verse-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.landing-hero-verse-ref {
+  font-size: 0.76rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.landing-typewriter-cursor {
+  display: inline-block;
+  margin-right: 2px;
+  color: var(--accent-gold);
+  animation: landing-cursor-blink 0.9s step-end infinite;
+}
+
+.landing-typewriter-cursor-done {
+  animation: landing-cursor-blink 0.9s step-end infinite, landing-cursor-fade 0.6s ease 1.8s forwards;
+}
+
+@keyframes landing-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes landing-cursor-fade {
+  to { opacity: 0; }
 }
 
 .landing-hero-scroll-cue {

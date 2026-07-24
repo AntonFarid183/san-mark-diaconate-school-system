@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const PERIOD_LABEL = { 0: 'منتصف الفصل', 1: 'نهاية الفصل', 2: 'مكمل' };
 const STATUS_LABEL = { 0: 'معلق', 1: 'مقبول', 2: 'مرفوض' };
@@ -21,6 +21,7 @@ const classify = (p) => {
 };
 
 const MyExamResultsScreen = () => {
+  usePageTitle('نتائجي');
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,10 +36,10 @@ const MyExamResultsScreen = () => {
     fetch();
   }, []);
 
-  if (loading) return <Layout title="نتائجي"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   return (
-    <Layout title="نتائجي">
+    <>
       {results.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>assignment</span>
@@ -98,7 +99,7 @@ const MyExamResultsScreen = () => {
           })}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

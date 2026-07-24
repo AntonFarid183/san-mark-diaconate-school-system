@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import StudentPaymentModal from '../components/StudentPaymentModal';
 import ExportModal from '../components/ExportModal';
 import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
@@ -112,9 +112,10 @@ const StudentListScreen = () => {
   const selectedClassName = classId ? classes.find(c => c.id === classId)?.name : '';
   const exportLabel = selectedClassName ? `${gradeName} — فصل ${selectedClassName}` : (gradeName || 'جميع الطلاب');
   const pageTitle = gradeName ? `طلاب — ${gradeName}` : 'قائمة الطلاب';
+  usePageTitle(pageTitle);
 
   return (
-    <Layout title={pageTitle}>
+    <>
       {/* Sub-header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -277,7 +278,7 @@ const StudentListScreen = () => {
           onClose={() => setShowExport(false)}
         />
       )}
-    </Layout>
+    </>
   );
 };
 

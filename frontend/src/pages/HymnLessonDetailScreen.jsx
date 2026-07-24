@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 import { BACKEND_URL as BASE } from '../config';
 const PING_INTERVAL = 10; // seconds
@@ -11,6 +11,7 @@ export default function HymnLessonDetailScreen() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lesson, setLesson]   = useState(null);
+  usePageTitle(lesson?.title || 'درس لحن');
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
@@ -215,11 +216,9 @@ export default function HymnLessonDetailScreen() {
     } catch { alert('تعذّر تنزيل الملف.'); }
   };
 
-  if (loading) return <Layout title="درس لحن"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
   if (error || !lesson) return (
-    <Layout title="درس لحن">
-      <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>{error || 'الدرس غير موجود.'}</div>
-    </Layout>
+    <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>{error || 'الدرس غير موجود.'}</div>
   );
 
   const hasPdf   = (lesson.lyricsType === 1 || lesson.lyricsType === 3) && lesson.lyricsPdfUrl;
@@ -228,7 +227,7 @@ export default function HymnLessonDetailScreen() {
   const pct      = progress?.watchedPercent ?? 0;
 
   return (
-    <Layout title={lesson.title}>
+    <>
 
       {/* Back */}
       <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1.25rem', fontSize: '0.9rem' }}>
@@ -481,7 +480,7 @@ export default function HymnLessonDetailScreen() {
           <iframe src={`${BASE}${lesson.lyricsPdfUrl}`} style={{ flex: 1, border: 'none', width: '100%' }} title="معاينة PDF" />
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

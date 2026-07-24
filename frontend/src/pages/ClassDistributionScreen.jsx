@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
 import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
 
@@ -14,6 +14,7 @@ const LEVEL_OPTIONS = [
 ];
 
 export default function ClassDistributionScreen() {
+  usePageTitle('توزيع الفصول');
   const [tab, setTab] = useState(TAB_DISTRIBUTE);
   const [grades, setGrades] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
@@ -227,7 +228,7 @@ export default function ClassDistributionScreen() {
   };
 
   return (
-    <Layout title="توزيع الفصول">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         توزيع الطلاب على الفصول الدراسية وإدارة التعيينات يدوياً.
       </p>
@@ -576,7 +577,7 @@ export default function ClassDistributionScreen() {
           onClose={() => setExportRows(null)}
         />
       )}
-    </Layout>
+    </>
   );
 }
 

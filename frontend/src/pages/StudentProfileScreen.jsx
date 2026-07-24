@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 import { BACKEND_URL as BACKEND } from '../config';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND}${url}`);
@@ -76,6 +76,7 @@ const InfoRow = ({ icon, label, value }) => (
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 const StudentProfileScreen = () => {
+  usePageTitle('الملف الشخصي');
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [profile, setProfile] = useState(null);
@@ -126,7 +127,7 @@ const StudentProfileScreen = () => {
   const isActive = profile?.status === 'Active';
 
   return (
-    <Layout title="الملف الشخصي">
+    <>
       {rawImageSrc && <CropModal imageSrc={rawImageSrc} uploading={uploading} onConfirm={handleCropConfirm} onCancel={() => setRawImageSrc(null)} />}
 
       <div style={{ maxWidth: '580px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -251,7 +252,7 @@ const StudentProfileScreen = () => {
           50% { opacity: 0.6; transform: scale(1.3); }
         }
       `}</style>
-    </Layout>
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL as BASE } from '../config';
 
 const STATUS_LABELS = {
@@ -12,6 +12,7 @@ const STATUS_LABELS = {
 };
 
 export default function HymnSubmissionsScreen() {
+  usePageTitle('مراجعة تسجيلات الألحان');
   // Deep-link target from a notification click — consumed once, then cleared
   const [searchParams] = useSearchParams();
   const initialTarget = useRef({
@@ -164,7 +165,7 @@ export default function HymnSubmissionsScreen() {
   };
 
   return (
-    <Layout title="مراجعة تسجيلات الألحان">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         استعرض تسجيلات الطلاب لكل لحن وقيّمها.
       </p>
@@ -318,7 +319,7 @@ export default function HymnSubmissionsScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

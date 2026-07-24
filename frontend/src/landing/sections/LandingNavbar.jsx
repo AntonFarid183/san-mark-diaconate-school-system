@@ -53,7 +53,7 @@ export default function LandingNavbar() {
           <span className="material-symbols-outlined" style={{ fontSize: '34px', color: 'var(--accent-gold)', flexShrink: 0 }}>church</span>
           <div className="landing-navbar-brand-text">
             <h1>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-            <p>كنيسة مارمرقس النزهة 2</p>
+            <p>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
           </div>
         </div>
 

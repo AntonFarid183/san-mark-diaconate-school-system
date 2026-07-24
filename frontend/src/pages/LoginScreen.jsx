@@ -45,7 +45,7 @@ const LoginScreen = () => {
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)', marginBottom: '1rem' }}>church</span>
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-          <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة مارمرقس النزهة 2</p>
+          <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

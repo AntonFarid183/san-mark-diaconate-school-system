@@ -1,5 +1,6 @@
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
+using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +15,12 @@ namespace DiaconateSchool.Api.Controllers;
 public class AttendanceController : ControllerBase
 {
     private readonly IAttendanceService _service;
+    private readonly IStudentRepository _studentRepo;
 
-    public AttendanceController(IAttendanceService service)
+    public AttendanceController(IAttendanceService service, IStudentRepository studentRepo)
     {
         _service = service;
+        _studentRepo = studentRepo;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -115,6 +118,19 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status)
     {
         var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status);
+        return Ok(result);
+    }
+
+    // Self-scoped mirror of the admin "records?studentId=" call, for the student's own
+    // home dashboard — reuses GetRecordsAsync exactly, just resolves the id from the JWT.
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMyRecords()
+    {
+        var student = await _studentRepo.GetByUserIdAsync(GetUserId());
+        if (student == null) return BadRequest(new { Message = "هذه الميزة متاحة للطلاب فقط." });
+
+        var result = await _service.GetRecordsAsync(null, student.Id, null, null, null);
         return Ok(result);
     }
 

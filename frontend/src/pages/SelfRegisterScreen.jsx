@@ -159,7 +159,7 @@ export default function SelfRegisterScreen() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)', marginBottom: '0.5rem', display: 'block' }}>church</span>
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.15rem', lineHeight: 1.4, marginBottom: '0.25rem' }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-          <p style={{ fontSize: '0.8rem' }}>كنيسة مارمرقس النزهة 2</p>
+          <p style={{ fontSize: '0.8rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
           <h2 style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.75rem', fontWeight: 600 }}>تسجيل عضو جديد</h2>
         </div>
 

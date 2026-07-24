@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const StudentPromotionScreen = () => {
+  usePageTitle('ترقية الطالب');
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
@@ -56,10 +57,10 @@ const StudentPromotionScreen = () => {
     } finally { setSubmitting(false); }
   };
 
-  if (loading) return <Layout title="ترقية الطالب"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   return (
-    <Layout title="ترقية الطالب">
+    <>
       <button className="btn-secondary" style={{ width: 'auto', padding: '0.4rem 1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         onClick={() => navigate(`/students/${id}`)}>
         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
@@ -136,7 +137,7 @@ const StudentPromotionScreen = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

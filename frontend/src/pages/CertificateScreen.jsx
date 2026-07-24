@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const CertificateScreen = () => {
+  usePageTitle('الشهادة');
   const { id } = useParams();
   const navigate = useNavigate();
   const [cert, setCert] = useState(null);
@@ -53,13 +54,13 @@ const CertificateScreen = () => {
     return '#dc2626';
   };
 
-  if (loading) return <Layout title="الشهادة"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
-  if (!cert) return <Layout title="الشهادة"><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>الشهادة غير موجودة</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
+  if (!cert) return <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>الشهادة غير موجودة</p>;
 
   const pct = Math.round(cert.percentage);
 
   return (
-    <Layout title="الشهادة">
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <button className="btn-secondary" style={{ width: 'auto', padding: '0.4rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           onClick={() => navigate(-1)}>
@@ -108,7 +109,7 @@ const CertificateScreen = () => {
           تاريخ الإصدار: {new Date(cert.issuedAt).toLocaleDateString('ar-EG')}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

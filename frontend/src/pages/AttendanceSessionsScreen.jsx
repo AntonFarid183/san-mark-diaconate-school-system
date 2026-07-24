@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 // Enum values mirror DiaconateSchool.Domain.Enums.AttendanceStatus (serialized as numbers)
 const STATUS_PRESENT = 0;
@@ -13,6 +13,7 @@ const SESSION_OPEN = 1;
 const SESSION_CLOSED = 2;
 
 const AttendanceSessionsScreen = () => {
+  usePageTitle('جلسات الحضور');
   // Deep-link target from a notification click — consumed once, then cleared
   const [searchParams] = useSearchParams();
   const initialTarget = useRef({
@@ -252,7 +253,7 @@ const AttendanceSessionsScreen = () => {
   };
 
   return (
-    <Layout title="جلسات الحضور">
+    <>
       {msg && (
         <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', borderRadius: 'var(--radius-sm)', background: msg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: msg.type === 'success' ? 'var(--success)' : 'var(--danger)', display: 'flex', justifyContent: 'space-between' }}>
           {msg.text}
@@ -440,7 +441,7 @@ const AttendanceSessionsScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

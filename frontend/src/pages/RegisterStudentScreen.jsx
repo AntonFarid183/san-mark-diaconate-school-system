@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const STAGE_IDS = {
   childhood:   '00000000-0000-0000-0000-000000000001',
@@ -33,6 +33,7 @@ const STAGES = [
 ];
 
 const RegisterStudentScreen = () => {
+  usePageTitle('تسجيل طالب جديد');
   const [formData, setFormData] = useState({
     fullName: '',
     gender: 1, dateOfBirth: '',
@@ -127,31 +128,29 @@ const RegisterStudentScreen = () => {
   // --- SUCCESS VIEW ---
   if (credentials) {
     return (
-      <Layout title="تسجيل طالب جديد">
-        <div className="glass-card" style={{ maxWidth: '500px', margin: '2rem auto', textAlign: 'center' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
-          <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
-          <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
-          <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
-            <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
-              اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
-            </h2>
-            <h2 style={{ letterSpacing: '2px' }}>
-              كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
-            </h2>
-          </div>
-          <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px', width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-            تسجيل طالب آخر
-          </button>
+      <div className="glass-card" style={{ maxWidth: '500px', margin: '2rem auto', textAlign: 'center' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
+        <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
+        <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
+        <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
+          <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
+            اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
+          </h2>
+          <h2 style={{ letterSpacing: '2px' }}>
+            كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
+          </h2>
         </div>
-      </Layout>
+        <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px', width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+          تسجيل طالب آخر
+        </button>
+      </div>
     );
   }
 
   // --- REGISTRATION FORM VIEW ---
   return (
-    <Layout title="تسجيل طالب جديد">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         أدخل بيانات الطالب الجديد بدقة لضمان دمج البيانات في نظام المدرسة والسجلات الأكاديمية.
       </p>
@@ -376,7 +375,7 @@ const RegisterStudentScreen = () => {
           </div>
         </div>
       </form>
-    </Layout>
+    </>
   );
 };
 

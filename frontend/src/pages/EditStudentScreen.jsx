@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const EditStudentScreen = () => {
+  usePageTitle('تعديل بيانات الطالب');
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ const EditStudentScreen = () => {
     }
   };
 
-  if (loading) return <Layout title="تعديل بيانات الطالب"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   const field = (label, key, type = 'text') => (
     <div>
@@ -84,7 +85,7 @@ const EditStudentScreen = () => {
   );
 
   return (
-    <Layout title="تعديل بيانات الطالب">
+    <>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
         <button className="btn-secondary" style={{ width: 'auto', padding: '0.4rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           onClick={() => navigate(`/students/${id}`)}>
@@ -172,7 +173,7 @@ const EditStudentScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const statusChip = (status) => {
   const styles = {
@@ -18,6 +18,7 @@ const statusChip = (status) => {
 };
 
 const LessonsScreen = () => {
+  usePageTitle('الدروس');
   const navigate = useNavigate();
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ const LessonsScreen = () => {
       });
 
   return (
-    <Layout title="الدروس">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>تصفح الدروس المتاحة للمرحلة الدراسية الخاصة بك</p>
 
       {/* Filter pills */}
@@ -123,7 +124,7 @@ const LessonsScreen = () => {
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

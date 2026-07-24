@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const ChangePasswordScreen = () => {
+  usePageTitle('تغيير كلمة المرور');
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -43,21 +44,19 @@ const ChangePasswordScreen = () => {
 
   if (success) {
     return (
-      <Layout title="تغيير كلمة المرور">
-        <div style={{ maxWidth: '420px', margin: '3rem auto', textAlign: 'center' }} className="glass-card">
-          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', display: 'block', marginBottom: '1rem' }}>check_circle</span>
-          <h2 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التغيير بنجاح</h2>
-          <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>كلمة مرورك الجديدة مفعّلة الآن.</p>
-          <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 2rem' }}>
-            العودة للرئيسية
-          </button>
-        </div>
-      </Layout>
+      <div style={{ maxWidth: '420px', margin: '3rem auto', textAlign: 'center' }} className="glass-card">
+        <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', display: 'block', marginBottom: '1rem' }}>check_circle</span>
+        <h2 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التغيير بنجاح</h2>
+        <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>كلمة مرورك الجديدة مفعّلة الآن.</p>
+        <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 2rem' }}>
+          العودة للرئيسية
+        </button>
+      </div>
     );
   }
 
   return (
-    <Layout title="تغيير كلمة المرور">
+    <>
       <div style={{ maxWidth: '420px', margin: '0 auto' }}>
         <div className="glass-card">
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -95,7 +94,7 @@ const ChangePasswordScreen = () => {
           </form>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

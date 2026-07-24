@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const StudentCheckInScreen = () => {
+  usePageTitle('تسجيل الحضور');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pins, setPins] = useState({});
@@ -37,7 +38,7 @@ const StudentCheckInScreen = () => {
   };
 
   return (
-    <Layout title="تسجيل الحضور">
+    <>
       {msg && (
         <div style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', borderRadius: 'var(--radius-sm)', background: msg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: msg.type === 'success' ? 'var(--success)' : 'var(--danger)', display: 'flex', justifyContent: 'space-between' }}>
           {msg.text}
@@ -95,7 +96,7 @@ const StudentCheckInScreen = () => {
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

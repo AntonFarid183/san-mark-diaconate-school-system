@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL } from '../config';
 
 const STAGES_WITH_GRADES = new Set([
@@ -16,6 +16,7 @@ const STATUS_MAP = {
 };
 
 export default function HymnLessonManagementScreen() {
+  usePageTitle('إدارة دروس الألحان');
   const [items, setItems]       = useState([]);
   const [stages, setStages]     = useState([]);
   const [allGrades, setAllGrades] = useState([]);
@@ -139,7 +140,7 @@ export default function HymnLessonManagementScreen() {
 
   // ── render ─────────────────────────────────────────────────────────────────
   return (
-    <Layout title="إدارة دروس الألحان">
+    <>
 
       {/* Hidden file inputs — each has its own clean handler */}
       <input ref={videoInputRef} type="file" accept="video/*"          style={{ display: 'none' }} onChange={e => { doUpload('upload-video',        e.target.files[0]); e.target.value = ''; }} />
@@ -489,7 +490,7 @@ export default function HymnLessonManagementScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

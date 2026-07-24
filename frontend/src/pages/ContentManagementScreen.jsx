@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const ContentManagementScreen = () => {
+  usePageTitle('إدارة المحتوى');
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -89,7 +90,7 @@ const ContentManagementScreen = () => {
   };
 
   return (
-    <Layout title="إدارة المحتوى">
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>إضافة وتعديل وترتيب الدروس والمحتوى التعليمي</p>
         <button onClick={() => { setEditLesson(null); setForm({ title: '', description: '', lessonNumber: 1, weekNumber: 1, stageId: '', gradeId: '' }); setShowCreate(true); }} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -234,7 +235,7 @@ const ContentManagementScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

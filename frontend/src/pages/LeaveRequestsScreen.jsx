@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { useAuth } from '../context/AuthContext';
 
 // Enum values mirror DiaconateSchool.Domain.Enums.LeaveStatus (serialized as numbers by the API)
@@ -10,6 +10,7 @@ const STATUS_QUERY_NAMES = ['Pending', 'Approved', 'Rejected']; // for query-str
 const STATUS_PENDING = 0;
 
 const LeaveRequestsScreen = () => {
+  usePageTitle('طلبات الإجازة');
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const [leaves, setLeaves] = useState([]);
@@ -52,7 +53,7 @@ const LeaveRequestsScreen = () => {
   };
 
   return (
-    <Layout title="طلبات الإجازة">
+    <>
       {msg && (
         <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', borderRadius: 'var(--radius-sm)', background: msg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: msg.type === 'success' ? 'var(--success)' : 'var(--danger)', display: 'flex', justifyContent: 'space-between' }}>
           {msg.text}
@@ -120,7 +121,7 @@ const LeaveRequestsScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

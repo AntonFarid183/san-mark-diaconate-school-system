@@ -296,6 +296,19 @@ a {
   background: rgba(251, 191, 36, 0.08) !important;
   color: var(--accent-gold) !important;
 }
+
+/* Student sidebar — larger, warmer, always-visible nav (see Layout.jsx) */
+.student-nav-item {
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+.student-nav-item:active {
+  transform: scale(0.98);
+}
+.student-nav-item:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
 .nav-logout {
   transition: background 0.18s ease;
 }
@@ -303,11 +316,70 @@ a {
   background: rgba(239, 68, 68, 0.1) !important;
 }
 
-/* Auth pages background (no sidebar) */
+/* Auth pages background (no sidebar) — same warm wallpaper as the landing hero,
+   softly blurred and dimmed behind the card, with a slow ambient drift so the
+   login/register screens feel like a continuation of the landing page rather
+   than a bare form. */
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  overflow: hidden;
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: -5%;
+  background-image: url('/landing wallpaper.png');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.8);
+  opacity: 0.55;
+  transform: scale(1.06);
+  animation: auth-bg-fade-in 0.6s ease forwards, auth-bg-drift 26s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+.auth-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10,16,30,0.25) 0%, rgba(10,16,30,0.4) 60%, rgba(10,16,30,0.72) 100%),
+    radial-gradient(ellipse at center, rgba(10,16,30,0.02) 0%, rgba(10,16,30,0.22) 80%);
+  z-index: 1;
+}
+
+.auth-page > * {
+  position: relative;
+  z-index: 2;
+  animation: auth-card-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes auth-bg-fade-in {
+  to { opacity: 1; }
+}
+
+@keyframes auth-bg-drift {
+  from { transform: scale(1.06) translate(0, 0); }
+  to   { transform: scale(1.12) translate(-1.5%, -1%); }
+}
+
+@keyframes auth-card-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page::before {
+    animation: auth-bg-fade-in 0.6s ease forwards;
+    transform: scale(1);
+  }
+  .auth-page > * {
+    animation: none;
+  }
 }

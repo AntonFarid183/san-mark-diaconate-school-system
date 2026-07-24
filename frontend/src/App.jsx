@@ -40,6 +40,7 @@ import NotificationsScreen from './pages/NotificationsScreen';
 import LandingPage from './pages/LandingPage';
 import StudentPerformanceScreen from './pages/StudentPerformanceScreen';
 import CurriculumBrowserPage from './pages/CurriculumBrowserPage';
+import Layout from './Layout';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
     const { user, loading } = useAuth();
@@ -64,47 +65,52 @@ function AppRoutes() {
             <Route path="/self-register" element={<SelfRegisterScreen />} />
             <Route path="/curriculum/:subject" element={<CurriculumBrowserPage />} />
             <Route path="/curriculum/:subject/:stageId" element={<CurriculumBrowserPage />} />
-            <Route path="/change-password" element={<ProtectedRoute><ChangePasswordScreen /></ProtectedRoute>} />
+            {/* Every route below shares one persistent Layout (sidebar/topbar) via
+                <Outlet/> — mounted once, so navigating between pages no longer
+                unmounts/remounts the chrome (no more full-page flash/scroll-reset). */}
+            <Route element={<Layout />}>
+                <Route path="/change-password" element={<ProtectedRoute><ChangePasswordScreen /></ProtectedRoute>} />
 
-            {/* Admin only */}
-            <Route path="/register-student" element={<ProtectedRoute adminOnly><RegisterStudentScreen /></ProtectedRoute>} />
-            <Route path="/pending-approvals" element={<ProtectedRoute adminOnly><PendingApprovalsScreen /></ProtectedRoute>} />
-            <Route path="/payment-reports" element={<ProtectedRoute adminOnly><PaymentReportsScreen /></ProtectedRoute>} />
-            <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
-            <Route path="/student-performance" element={<ProtectedRoute adminOnly><StudentPerformanceScreen /></ProtectedRoute>} />
-            <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
-            <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
-            <Route path="/students/:id/promote" element={<ProtectedRoute adminOnly><StudentPromotionScreen /></ProtectedRoute>} />
-            <Route path="/content" element={<ProtectedRoute adminOnly><ContentManagementScreen /></ProtectedRoute>} />
-            <Route path="/curriculum-management" element={<ProtectedRoute adminOnly><CurriculumManagementScreen /></ProtectedRoute>} />
-            <Route path="/hymn-lessons-management" element={<ProtectedRoute adminOnly><HymnLessonManagementScreen /></ProtectedRoute>} />
-            <Route path="/attendance/sessions" element={<ProtectedRoute adminOnly><AttendanceSessionsScreen /></ProtectedRoute>} />
-            <Route path="/attendance/dashboard" element={<ProtectedRoute adminOnly><AttendanceDashboardScreen /></ProtectedRoute>} />
-            <Route path="/academic-years" element={<ProtectedRoute adminOnly><AcademicYearsScreen /></ProtectedRoute>} />
-            <Route path="/class-distribution" element={<ProtectedRoute adminOnly><ClassDistributionScreen /></ProtectedRoute>} />
-            <Route path="/hymn-submissions" element={<ProtectedRoute adminOnly><HymnSubmissionsScreen /></ProtectedRoute>} />
-            <Route path="/homework-management" element={<ProtectedRoute adminOnly><HomeworkManagementScreen /></ProtectedRoute>} />
+                {/* Admin only */}
+                <Route path="/register-student" element={<ProtectedRoute adminOnly><RegisterStudentScreen /></ProtectedRoute>} />
+                <Route path="/pending-approvals" element={<ProtectedRoute adminOnly><PendingApprovalsScreen /></ProtectedRoute>} />
+                <Route path="/payment-reports" element={<ProtectedRoute adminOnly><PaymentReportsScreen /></ProtectedRoute>} />
+                <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
+                <Route path="/student-performance" element={<ProtectedRoute adminOnly><StudentPerformanceScreen /></ProtectedRoute>} />
+                <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
+                <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
+                <Route path="/students/:id/promote" element={<ProtectedRoute adminOnly><StudentPromotionScreen /></ProtectedRoute>} />
+                <Route path="/content" element={<ProtectedRoute adminOnly><ContentManagementScreen /></ProtectedRoute>} />
+                <Route path="/curriculum-management" element={<ProtectedRoute adminOnly><CurriculumManagementScreen /></ProtectedRoute>} />
+                <Route path="/hymn-lessons-management" element={<ProtectedRoute adminOnly><HymnLessonManagementScreen /></ProtectedRoute>} />
+                <Route path="/attendance/sessions" element={<ProtectedRoute adminOnly><AttendanceSessionsScreen /></ProtectedRoute>} />
+                <Route path="/attendance/dashboard" element={<ProtectedRoute adminOnly><AttendanceDashboardScreen /></ProtectedRoute>} />
+                <Route path="/academic-years" element={<ProtectedRoute adminOnly><AcademicYearsScreen /></ProtectedRoute>} />
+                <Route path="/class-distribution" element={<ProtectedRoute adminOnly><ClassDistributionScreen /></ProtectedRoute>} />
+                <Route path="/hymn-submissions" element={<ProtectedRoute adminOnly><HymnSubmissionsScreen /></ProtectedRoute>} />
+                <Route path="/homework-management" element={<ProtectedRoute adminOnly><HomeworkManagementScreen /></ProtectedRoute>} />
 
-            {/* Shared */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-            <Route path="/lessons" element={<ProtectedRoute><LessonsScreen /></ProtectedRoute>} />
-            <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailScreen /></ProtectedRoute>} />
-            <Route path="/progress" element={<ProtectedRoute><ProgressScreen /></ProtectedRoute>} />
-            <Route path="/curriculum" element={<ProtectedRoute><StudentCurriculumScreen /></ProtectedRoute>} />
-            <Route path="/hymn-lessons" element={<ProtectedRoute><StudentHymnLessonsScreen /></ProtectedRoute>} />
-            <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
-            <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
-            <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
-            <Route path="/attendance/leaves" element={<ProtectedRoute><LeaveRequestsScreen /></ProtectedRoute>} />
+                {/* Shared */}
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
+                <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
+                <Route path="/lessons" element={<ProtectedRoute><LessonsScreen /></ProtectedRoute>} />
+                <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailScreen /></ProtectedRoute>} />
+                <Route path="/progress" element={<ProtectedRoute><ProgressScreen /></ProtectedRoute>} />
+                <Route path="/curriculum" element={<ProtectedRoute><StudentCurriculumScreen /></ProtectedRoute>} />
+                <Route path="/hymn-lessons" element={<ProtectedRoute><StudentHymnLessonsScreen /></ProtectedRoute>} />
+                <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
+                <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
+                <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
+                <Route path="/attendance/leaves" element={<ProtectedRoute><LeaveRequestsScreen /></ProtectedRoute>} />
 
-            {/* Student only */}
-            <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />
-            <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
-            <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
-            <Route path="/attendance/checkin" element={<ProtectedRoute><StudentCheckInScreen /></ProtectedRoute>} />
-            <Route path="/homework" element={<ProtectedRoute><StudentHomeworkListScreen /></ProtectedRoute>} />
-            <Route path="/homework/:id" element={<ProtectedRoute><StudentHomeworkDetailScreen /></ProtectedRoute>} />
+                {/* Student only */}
+                <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />
+                <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
+                <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
+                <Route path="/attendance/checkin" element={<ProtectedRoute><StudentCheckInScreen /></ProtectedRoute>} />
+                <Route path="/homework" element={<ProtectedRoute><StudentHomeworkListScreen /></ProtectedRoute>} />
+                <Route path="/homework/:id" element={<ProtectedRoute><StudentHomeworkDetailScreen /></ProtectedRoute>} />
+            </Route>
         </Routes>
     );
 }

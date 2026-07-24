@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 export default function StudentHymnLessonsScreen() {
+  usePageTitle('دروس الألحان');
   const [items, setItems]         = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const [loading, setLoading]     = useState(true);
@@ -27,10 +28,10 @@ export default function StudentHymnLessonsScreen() {
     load();
   }, []);
 
-  if (loading) return <Layout title="دروس الألحان"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   return (
-    <Layout title="دروس الألحان">
+    <>
       {items.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>music_note</span>
@@ -102,6 +103,6 @@ export default function StudentHymnLessonsScreen() {
           })}
         </div>
       )}
-    </Layout>
+    </>
   );
 }

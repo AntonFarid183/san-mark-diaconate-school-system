@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { useAuth } from '../context/AuthContext';
 
 const AnnouncementsScreen = () => {
+  usePageTitle('الإعلانات');
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const [items, setItems] = useState([]);
@@ -52,7 +53,7 @@ const AnnouncementsScreen = () => {
   };
 
   return (
-    <Layout title="الإعلانات">
+    <>
       {msg && (
         <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', borderRadius: 'var(--radius-sm)', background: msg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: msg.type === 'success' ? 'var(--success)' : 'var(--danger)', display: 'flex', justifyContent: 'space-between' }}>
           {msg.text}
@@ -123,7 +124,7 @@ const AnnouncementsScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

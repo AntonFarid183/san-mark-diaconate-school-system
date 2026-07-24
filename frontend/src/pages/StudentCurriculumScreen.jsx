@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL } from '../config';
 
 export default function StudentCurriculumScreen() {
+  usePageTitle('المناهج الدراسية');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewing, setViewing] = useState(null);
@@ -30,10 +31,10 @@ export default function StudentCurriculumScreen() {
     } catch { alert('تعذّر تنزيل الملف.'); }
   };
 
-  if (loading) return <Layout title="المناهج الدراسية"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   return (
-    <Layout title="المناهج الدراسية">
+    <>
       {items.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>menu_book</span>
@@ -100,6 +101,6 @@ export default function StudentCurriculumScreen() {
           />
         </div>
       )}
-    </Layout>
+    </>
   );
 }

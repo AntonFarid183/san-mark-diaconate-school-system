@@ -12,6 +12,7 @@ public interface IHymnSubmissionService
         Guid studentId, Guid hymnLessonId, SubmitHymnRecordingDto dto);
 
     Task<List<HymnSubmissionRosterItemDto>> GetRosterAsync(Guid hymnLessonId, Guid gradeId, Guid? classId);
+    Task<List<HymnSubmissionDto>> GetForStudentAsync(Guid studentId);
     Task<(bool Success, string? Error, HymnSubmissionDto? Result)> ReviewAsync(
         Guid submissionId, ReviewHymnSubmissionDto dto, Guid reviewedByUserId);
 

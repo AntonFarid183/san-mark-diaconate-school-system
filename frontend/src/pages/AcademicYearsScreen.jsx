@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const empty = { name: '', startDate: '', endDate: '', setAsCurrent: false };
 
 export default function AcademicYearsScreen() {
+  usePageTitle('السنوات الدراسية');
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
@@ -97,7 +98,7 @@ export default function AcademicYearsScreen() {
   const fmt = (d) => new Date(d).toLocaleDateString('ar-EG');
 
   return (
-    <Layout title="السنوات الدراسية">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         إدارة السنوات الدراسية. السنة الحالية تُستخدم كمرجع افتراضي لجميع العمليات.
       </p>
@@ -236,7 +237,7 @@ export default function AcademicYearsScreen() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

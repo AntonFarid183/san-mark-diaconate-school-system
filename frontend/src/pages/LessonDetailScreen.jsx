@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 
 const ContentPlayer = ({ item }) => {
   const [progress, setProgress] = useState(item.studentProgress || 0);
@@ -106,6 +106,7 @@ const LessonDetailScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
+  usePageTitle(lesson?.title || 'عرض الدرس');
   const [loading, setLoading] = useState(true);
   const [activeItem, setActiveItem] = useState(null);
 
@@ -126,14 +127,14 @@ const LessonDetailScreen = () => {
     fetch();
   }, [id]);
 
-  if (loading) return <Layout title="عرض الدرس"><p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p></Layout>;
-  if (!lesson) return <Layout title="عرض الدرس"><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>الدرس غير موجود</p></Layout>;
+  if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
+  if (!lesson) return <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--danger)' }}>الدرس غير موجود</p>;
 
   const completedCount = lesson.contentItems?.filter(ci => ci.isCompleted).length || 0;
   const totalCount = lesson.contentItems?.length || 0;
 
   return (
-    <Layout title={lesson.title}>
+    <>
       {/* Back button */}
       <button onClick={() => navigate('/lessons')} className="btn-secondary" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
@@ -241,7 +242,7 @@ const LessonDetailScreen = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
-import Layout from '../Layout';
+import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
 
 const LEVEL_OPTIONS = [
@@ -22,6 +22,7 @@ const formatPct = (pct) => (pct == null ? '—' : `${pct.toFixed(0)}%`);
 const formatScore = (score, max) => (score == null ? 'لم يُسلّم' : `${score.toFixed(1)} / ${max}`);
 
 export default function StudentPerformanceScreen() {
+  usePageTitle('لوحة أداء الطلاب');
   const navigate = useNavigate();
 
   const [stages, setStages] = useState([]);
@@ -184,7 +185,7 @@ export default function StudentPerformanceScreen() {
   };
 
   return (
-    <Layout title="لوحة أداء الطلاب">
+    <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         نظرة شاملة وسريعة على أداء الطلاب في الألحان والواجبات والحضور.
       </p>
@@ -388,7 +389,7 @@ export default function StudentPerformanceScreen() {
           onClose={() => setExportConfig(null)}
         />
       )}
-    </Layout>
+    </>
   );
 }
 

@@ -1,20 +1,24 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getRandomVerse } from '../data/bibleVerses';
+import Typewriter from '../components/Typewriter';
 
 export default function HeroSection() {
   const navigate = useNavigate();
+  const [verse] = useState(getRandomVerse);
 
   return (
     <section className="landing-hero" id="hero">
       {/* Swappable background — replace this <img> with a <video> later, no other changes needed */}
       <div className="landing-hero-media">
-        <img src="/san-mark-wide.png" alt="" />
+        <img src="/landing wallpaper.png" alt="" className="landing-hero-media-img" />
       </div>
       <div className="landing-hero-overlay" />
 
       <div className="landing-hero-content">
         <span className="landing-hero-eyebrow">
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>church</span>
-          كنيسة قبطية أرثوذكسية
+          كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2
         </span>
 
         <h1 className="landing-hero-title">
@@ -34,9 +38,13 @@ export default function HeroSection() {
           </button>
         </div>
 
-        {/* Reserved for a future Bible verse / spiritual quote — layout only, no content yet */}
+        {/* A different verse each page load — see landing/data/bibleVerses.js */}
         <div className="landing-hero-verse">
-          (مساحة محجوزة لآية كتابية أو كلمة روحية)
+          <span className="material-symbols-outlined landing-hero-verse-icon">format_quote</span>
+          <p className="landing-hero-verse-text">
+            <Typewriter text={verse.text} />
+          </p>
+          <span className="landing-hero-verse-ref">{verse.reference}</span>
         </div>
       </div>
 

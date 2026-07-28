@@ -13,6 +13,8 @@ export default function AcademicYearsScreen() {
   const [editing, setEditing] = useState(null); // AcademicYearDto | null
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // AcademicYearDto | null
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -84,14 +86,18 @@ export default function AcademicYearsScreen() {
     }
   };
 
-  const del = async (year) => {
-    if (!window.confirm(`حذف السنة الدراسية "${year.name}"؟`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await apiClient.delete(`/academic-years/${year.id}`);
-      setMsg({ type: 'success', text: 'تم الحذف.' });
+      await apiClient.delete(`/academic-years/${deleteTarget.id}`);
+      setMsg({ type: 'success', text: 'تم حذف السنة الدراسية وكل الفصول والحصص المرتبطة بها.' });
+      setDeleteTarget(null);
       load();
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل الحذف.' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -163,7 +169,7 @@ export default function AcademicYearsScreen() {
                 </button>
                 {!y.isCurrent && (
                   <button
-                    onClick={() => del(y)}
+                    onClick={() => setDeleteTarget(y)}
                     style={{ padding: '0.4rem 0.9rem', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.4)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit' }}
                   >
                     حذف
@@ -233,6 +239,35 @@ export default function AcademicYearsScreen() {
                 {saving ? 'جاري الحفظ...' : 'حفظ'}
               </button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Warning Modal */}
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '440px', direction: 'rtl', border: '1px solid rgba(239,68,68,0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--danger)' }}>warning</span>
+              <h3 style={{ color: 'var(--danger)' }}>حذف السنة الدراسية "{deleteTarget.name}"</h3>
+            </div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '1rem' }}>
+              سيتم حذف <strong style={{ color: 'var(--text-primary)' }}>كل الفصول الدراسية</strong> التابعة لهذه السنة، وكل{' '}
+              <strong style={{ color: 'var(--text-primary)' }}>سجلات وجلسات الحضور</strong> المرتبطة بها، بشكل نهائي ولا يمكن التراجع عنه.
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              طلاب هذه الفصول لن يُحذفوا — سيتم فقط إخراجهم من فصولهم الحالية.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'var(--danger)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                disabled={deleting}
+                onClick={confirmDelete}
+              >
+                {deleting ? 'جاري الحذف...' : 'نعم، احذف كل شيء'}
+              </button>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setDeleteTarget(null)} disabled={deleting}>إلغاء</button>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import AboutImageCollage from '../components/AboutImageCollage';
 // classroom/activity photo (accentA / accentB). Swapping to a 3-photo
 // collage is purely adding entries here.
 const ABOUT_IMAGES = [
-  { src: '/san-mark-wide.png', alt: '', slot: 'primary' },
+  { src: '/Avva Markos Church.jpg', alt: 'كنيسة أنبا مرقس', slot: 'primary' },
 ];
 
 const HIGHLIGHTS = [

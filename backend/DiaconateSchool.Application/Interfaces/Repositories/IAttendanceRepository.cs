@@ -13,6 +13,7 @@ public interface IAttendanceRepository
     Task<AttendanceSession?> GetSessionByClassAndDateAsync(Guid classId, DateOnly date);
     Task AddSessionAsync(AttendanceSession session);
     Task UpdateSessionAsync(AttendanceSession session);
+    Task DeleteSessionsByClassIdsAsync(IEnumerable<Guid> classIds);
 
     Task<List<AttendanceRecord>> GetRecordsBySessionAsync(Guid sessionId);
     Task<AttendanceRecord?> GetRecordAsync(Guid sessionId, Guid studentId);
@@ -28,10 +29,4 @@ public interface IAttendanceRepository
     Task<List<Student>> GetActiveStudentsByClassAsync(Guid classId);
     Task<int> GetOpenSessionsCountAsync();
     Task<AttendanceSession?> GetFirstOpenSessionAsync();
-
-    Task<LeaveRequest?> GetLeaveByIdAsync(Guid id);
-    Task<List<LeaveRequest>> GetLeavesAsync(Guid? studentId, LeaveStatus? status);
-    Task AddLeaveAsync(LeaveRequest leave);
-    Task UpdateLeaveAsync(LeaveRequest leave);
-    Task<bool> HasApprovedLeaveAsync(Guid studentId, DateOnly date);
 }

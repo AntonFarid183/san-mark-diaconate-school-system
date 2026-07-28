@@ -227,9 +227,8 @@ const Layout = () => {
     {
       key: 'attendance', icon: 'how_to_reg', label: 'الحضور',
       items: [
-        { path: '/attendance/sessions', label: 'جلسات الحضور', icon: 'how_to_reg' },
+        { path: '/attendance/sessions', label: 'تسجيل الحضور', icon: 'how_to_reg' },
         { path: '/attendance/dashboard', label: 'لوحة الحضور', icon: 'fact_check' },
-        { path: '/attendance/leaves', label: 'طلبات الإجازة', icon: 'event_note' },
       ],
     },
   ];

@@ -68,6 +68,28 @@ public class PinCheckInDto
     public string Pin { get; set; } = string.Empty;
 }
 
+// ── Simplified secretary flow: no sessions/PIN in the UI, just "this class, this day, who was here" ──
+public class ClassRosterEntryDto
+{
+    public Guid StudentId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public AttendanceStatus? Status { get; set; } // null = not marked yet
+}
+
+public class RecordClassAttendanceEntryDto
+{
+    public Guid StudentId { get; set; }
+    public AttendanceStatus Status { get; set; }
+}
+
+public class RecordClassAttendanceDto
+{
+    public Guid ClassId { get; set; }
+    public DateOnly Date { get; set; }
+    public List<RecordClassAttendanceEntryDto> Entries { get; set; } = new();
+}
+
 public class UpdateAttendanceRecordDto
 {
     public AttendanceStatus Status { get; set; }
@@ -104,27 +126,3 @@ public class StudentAttendanceSummaryDto
     public int ConsecutiveAbsences { get; set; }
 }
 
-public class LeaveRequestDto
-{
-    public Guid Id { get; set; }
-    public Guid StudentId { get; set; }
-    public string StudentName { get; set; } = string.Empty;
-    public DateOnly FromDate { get; set; }
-    public DateOnly ToDate { get; set; }
-    public string Reason { get; set; } = string.Empty;
-    public LeaveStatus Status { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class CreateLeaveRequestDto
-{
-    public Guid? StudentId { get; set; }
-    public DateOnly FromDate { get; set; }
-    public DateOnly ToDate { get; set; }
-    public string Reason { get; set; } = string.Empty;
-}
-
-public class LeaveDecisionDto
-{
-    public bool Approve { get; set; }
-}

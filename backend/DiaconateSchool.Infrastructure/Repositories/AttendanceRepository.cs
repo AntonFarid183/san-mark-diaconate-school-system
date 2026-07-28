@@ -67,6 +67,16 @@ public class AttendanceRepository : IAttendanceRepository
         return Task.CompletedTask;
     }
 
+    public async Task DeleteSessionsByClassIdsAsync(IEnumerable<Guid> classIds)
+    {
+        var ids = classIds.ToList();
+        var sessions = await _context.AttendanceSessions
+            .Where(s => ids.Contains(s.ClassId))
+            .ToListAsync();
+        // AttendanceRecords/AuditLogs cascade off Session on delete — configured in ApplicationDbContext.
+        _context.AttendanceSessions.RemoveRange(sessions);
+    }
+
     public async Task<List<AttendanceRecord>> GetRecordsBySessionAsync(Guid sessionId)
     {
         return await _context.AttendanceRecords
@@ -160,41 +170,4 @@ public class AttendanceRepository : IAttendanceRepository
             .OrderBy(s => s.StartsAt)
             .FirstOrDefaultAsync();
 
-    public async Task<LeaveRequest?> GetLeaveByIdAsync(Guid id)
-    {
-        return await _context.LeaveRequests
-            .Include(l => l.Student).ThenInclude(s => s.User)
-            .FirstOrDefaultAsync(l => l.Id == id);
-    }
-
-    public async Task<List<LeaveRequest>> GetLeavesAsync(Guid? studentId, LeaveStatus? status)
-    {
-        var query = _context.LeaveRequests
-            .Include(l => l.Student).ThenInclude(s => s.User)
-            .AsQueryable();
-
-        if (studentId.HasValue) query = query.Where(l => l.StudentId == studentId.Value);
-        if (status.HasValue) query = query.Where(l => l.Status == status.Value);
-
-        return await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
-    }
-
-    public async Task AddLeaveAsync(LeaveRequest leave)
-    {
-        await _context.LeaveRequests.AddAsync(leave);
-    }
-
-    public Task UpdateLeaveAsync(LeaveRequest leave)
-    {
-        _context.LeaveRequests.Update(leave);
-        return Task.CompletedTask;
-    }
-
-    public async Task<bool> HasApprovedLeaveAsync(Guid studentId, DateOnly date)
-    {
-        return await _context.LeaveRequests.AnyAsync(l =>
-            l.StudentId == studentId &&
-            l.Status == LeaveStatus.Approved &&
-            l.FromDate <= date && l.ToDate >= date);
-    }
 }

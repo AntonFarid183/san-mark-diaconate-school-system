@@ -113,6 +113,30 @@ public class AttendanceController : ControllerBase
         return Ok(result);
     }
 
+    // Simplified secretary flow — pick a class + day, see the roster, mark present/absent, save.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("class-roster")]
+    public async Task<IActionResult> GetClassRoster([FromQuery] Guid classId, [FromQuery] DateOnly date)
+    {
+        var result = await _service.GetClassRosterAsync(classId, date);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("record-class")]
+    public async Task<IActionResult> RecordClassAttendance([FromBody] RecordClassAttendanceDto dto)
+    {
+        try
+        {
+            var result = await _service.RecordClassAttendanceAsync(dto, GetUserId());
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("records")]
     public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status)
@@ -158,27 +182,4 @@ public class AttendanceController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Policy = "AllAuthenticated")]
-    [HttpGet("leaves")]
-    public async Task<IActionResult> GetLeaves([FromQuery] Guid? studentId, [FromQuery] LeaveStatus? status)
-    {
-        var result = await _service.GetLeavesAsync(studentId, status, GetUserId(), IsAdmin());
-        return Ok(result);
-    }
-
-    [Authorize(Policy = "AllAuthenticated")]
-    [HttpPost("leaves")]
-    public async Task<IActionResult> CreateLeave([FromBody] CreateLeaveRequestDto dto)
-    {
-        var result = await _service.CreateLeaveAsync(dto, GetUserId(), IsAdmin());
-        return Ok(result);
-    }
-
-    [Authorize(Policy = "AdminOnly")]
-    [HttpPut("leaves/{id}/decision")]
-    public async Task<IActionResult> DecideLeave(Guid id, [FromBody] LeaveDecisionDto dto)
-    {
-        var result = await _service.DecideLeaveAsync(id, dto, GetUserId());
-        return result == null ? NotFound() : Ok(result);
-    }
 }

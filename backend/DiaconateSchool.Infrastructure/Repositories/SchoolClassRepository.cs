@@ -28,6 +28,11 @@ public class SchoolClassRepository : ISchoolClassRepository
             .OrderBy(c => c.Name)
             .ToListAsync();
 
+    public async Task<List<SchoolClass>> GetByAcademicYearIdAsync(Guid academicYearId)
+        => await _context.SchoolClasses
+            .Where(c => c.AcademicYearId == academicYearId)
+            .ToListAsync();
+
     public async Task<SchoolClass?> GetByIdAsync(Guid id)
         => await _context.SchoolClasses
             .Include(c => c.Grade)

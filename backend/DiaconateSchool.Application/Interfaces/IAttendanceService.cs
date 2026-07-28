@@ -20,13 +20,13 @@ public interface IAttendanceService
     Task<(bool Success, string? Error, AttendanceRecordDto? Record)> PinCheckInAsync(Guid sessionId, string pin, Guid currentUserId);
     Task<List<AttendanceRecordDto>> BulkMarkAsync(Guid sessionId, BulkManualAttendanceDto dto, Guid recordedByUserId);
 
+    // Simplified secretary flow — no session open/close or PIN concepts exposed.
+    Task<List<ClassRosterEntryDto>> GetClassRosterAsync(Guid classId, DateOnly date);
+    Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId);
+
     Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status);
     Task<AttendanceRecordDto?> OverrideRecordAsync(Guid recordId, UpdateAttendanceRecordDto dto, Guid changedByUserId);
     Task<List<AttendanceAuditLogDto>> GetAuditLogAsync(Guid recordId);
 
     Task<AttendanceSummaryDto> GetSummaryAsync(Guid? gradeId, DateTime from, DateTime to);
-
-    Task<List<LeaveRequestDto>> GetLeavesAsync(Guid? studentId, LeaveStatus? status, Guid currentUserId, bool isAdmin);
-    Task<LeaveRequestDto> CreateLeaveAsync(CreateLeaveRequestDto dto, Guid requestedByUserId, bool isAdmin);
-    Task<LeaveRequestDto?> DecideLeaveAsync(Guid id, LeaveDecisionDto dto, Guid decidedByUserId);
 }

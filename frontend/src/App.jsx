@@ -29,7 +29,6 @@ import StudentProfileScreen from './pages/StudentProfileScreen';
 import AttendanceSessionsScreen from './pages/AttendanceSessionsScreen';
 import AttendanceDashboardScreen from './pages/AttendanceDashboardScreen';
 import StudentCheckInScreen from './pages/StudentCheckInScreen';
-import LeaveRequestsScreen from './pages/LeaveRequestsScreen';
 import AcademicYearsScreen from './pages/AcademicYearsScreen';
 import ClassDistributionScreen from './pages/ClassDistributionScreen';
 import HymnSubmissionsScreen from './pages/HymnSubmissionsScreen';
@@ -101,7 +100,6 @@ function AppRoutes() {
                 <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
                 <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
                 <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
-                <Route path="/attendance/leaves" element={<ProtectedRoute><LeaveRequestsScreen /></ProtectedRoute>} />
 
                 {/* Student only */}
                 <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />

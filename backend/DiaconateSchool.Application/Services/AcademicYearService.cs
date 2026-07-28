@@ -12,11 +12,15 @@ namespace DiaconateSchool.Application.Services;
 public class AcademicYearService : IAcademicYearService
 {
     private readonly IAcademicYearRepository _repo;
+    private readonly ISchoolClassRepository _classRepo;
+    private readonly IAttendanceRepository _attendanceRepo;
     private readonly IUnitOfWork _uow;
 
-    public AcademicYearService(IAcademicYearRepository repo, IUnitOfWork uow)
+    public AcademicYearService(IAcademicYearRepository repo, ISchoolClassRepository classRepo, IAttendanceRepository attendanceRepo, IUnitOfWork uow)
     {
         _repo = repo;
+        _classRepo = classRepo;
+        _attendanceRepo = attendanceRepo;
         _uow = uow;
     }
 
@@ -102,6 +106,17 @@ public class AcademicYearService : IAcademicYearService
 
         if (year.IsCurrent)
             return (false, "لا يمكن حذف السنة الدراسية الحالية.");
+
+        // Cascade: attendance sessions/records for this year's classes, then the classes
+        // themselves, then the year. Grades just lose their AcademicYearId (SetNull) — they're
+        // shared across years and aren't touched.
+        var classes = await _classRepo.GetByAcademicYearIdAsync(id);
+        var classIds = classes.Select(c => c.Id).ToList();
+        if (classIds.Count > 0)
+        {
+            await _attendanceRepo.DeleteSessionsByClassIdsAsync(classIds);
+            await _classRepo.DeleteRangeAsync(classes);
+        }
 
         await _repo.DeleteAsync(year);
         await _uow.SaveChangesAsync();

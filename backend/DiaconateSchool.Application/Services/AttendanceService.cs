@@ -245,6 +245,87 @@ public class AttendanceService : IAttendanceService
             .ToList();
     }
 
+    public async Task<List<ClassRosterEntryDto>> GetClassRosterAsync(Guid classId, DateOnly date)
+    {
+        var students = await _repo.GetActiveStudentsByClassAsync(classId);
+        var session = await _repo.GetSessionByClassAndDateAsync(classId, date);
+        var statusByStudent = session?.Records.ToDictionary(r => r.StudentId, r => r.Status) ?? new Dictionary<Guid, AttendanceStatus>();
+
+        return students
+            .Select(s => new ClassRosterEntryDto
+            {
+                StudentId = s.Id,
+                StudentName = s.User.FirstName + " " + s.User.LastName,
+                StudentCode = s.StudentCode,
+                Status = statusByStudent.TryGetValue(s.Id, out var st) ? st : null
+            })
+            .OrderBy(s => s.StudentName)
+            .ToList();
+    }
+
+    public async Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId)
+    {
+        var session = await _repo.GetSessionByClassAndDateAsync(dto.ClassId, dto.Date);
+        if (session == null)
+        {
+            var schoolClass = await _classRepo.GetByIdAsync(dto.ClassId)
+                ?? throw new InvalidOperationException("الفصل غير موجود.");
+
+            var dayStart = dto.Date.ToDateTime(TimeOnly.MinValue);
+            session = new AttendanceSession
+            {
+                Id = Guid.NewGuid(),
+                Title = $"حضور {schoolClass.Name} - {dto.Date:yyyy-MM-dd}",
+                GradeId = schoolClass.GradeId,
+                ClassId = dto.ClassId,
+                StartsAt = dayStart,
+                EndsAt = dayStart.AddHours(1),
+                LateAfterMinutes = 0,
+                Pin = GeneratePin(),
+                Status = AttendanceSessionStatus.Closed,
+                CreatedByUserId = recordedByUserId,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.AddSessionAsync(session);
+            await _uow.SaveChangesAsync();
+            session = await _repo.GetSessionByIdAsync(session.Id);
+        }
+
+        var existingMap = session!.Records.ToDictionary(r => r.StudentId);
+
+        foreach (var entry in dto.Entries)
+        {
+            if (existingMap.TryGetValue(entry.StudentId, out var existing))
+            {
+                existing.Status = entry.Status;
+                existing.Method = AttendanceMethod.Manual;
+                existing.RecordedByUserId = recordedByUserId;
+                existing.RecordedAt = DateTime.UtcNow;
+                await _repo.UpdateRecordAsync(existing);
+            }
+            else
+            {
+                var record = new AttendanceRecord
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = session.Id,
+                    StudentId = entry.StudentId,
+                    Status = entry.Status,
+                    Method = AttendanceMethod.Manual,
+                    RecordedByUserId = recordedByUserId,
+                    RecordedAt = DateTime.UtcNow
+                };
+                await _repo.AddRecordAsync(record);
+            }
+        }
+
+        await _uow.SaveChangesAsync();
+
+        var studentIds = dto.Entries.Select(e => e.StudentId).ToHashSet();
+        var allRecords = await _repo.GetRecordsBySessionAsync(session.Id);
+        return allRecords.Where(r => studentIds.Contains(r.StudentId)).Select(MapToRecordDto).ToList();
+    }
+
     public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status)
     {
         var records = await _repo.GetRecordsAsync(gradeId, studentId, from, to, status);
@@ -333,66 +414,6 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<List<LeaveRequestDto>> GetLeavesAsync(Guid? studentId, LeaveStatus? status, Guid currentUserId, bool isAdmin)
-    {
-        Guid? effectiveStudentId = studentId;
-        if (!isAdmin)
-        {
-            var student = await _studentRepo.GetByUserIdAsync(currentUserId);
-            effectiveStudentId = student?.Id ?? Guid.Empty;
-        }
-
-        var leaves = await _repo.GetLeavesAsync(effectiveStudentId, status);
-        return leaves.Select(MapToLeaveDto).ToList();
-    }
-
-    public async Task<LeaveRequestDto> CreateLeaveAsync(CreateLeaveRequestDto dto, Guid requestedByUserId, bool isAdmin)
-    {
-        Guid studentId;
-        if (isAdmin && dto.StudentId.HasValue)
-        {
-            studentId = dto.StudentId.Value;
-        }
-        else
-        {
-            var student = await _studentRepo.GetByUserIdAsync(requestedByUserId)
-                ?? throw new InvalidOperationException("Student record not found.");
-            studentId = student.Id;
-        }
-
-        var leave = new LeaveRequest
-        {
-            Id = Guid.NewGuid(),
-            StudentId = studentId,
-            FromDate = dto.FromDate,
-            ToDate = dto.ToDate,
-            Reason = dto.Reason,
-            Status = LeaveStatus.Pending,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _repo.AddLeaveAsync(leave);
-        await _uow.SaveChangesAsync();
-
-        var saved = await _repo.GetLeaveByIdAsync(leave.Id);
-        return MapToLeaveDto(saved!);
-    }
-
-    public async Task<LeaveRequestDto?> DecideLeaveAsync(Guid id, LeaveDecisionDto dto, Guid decidedByUserId)
-    {
-        var leave = await _repo.GetLeaveByIdAsync(id);
-        if (leave == null) return null;
-
-        leave.Status = dto.Approve ? LeaveStatus.Approved : LeaveStatus.Rejected;
-        leave.DecidedByUserId = decidedByUserId;
-        leave.DecidedAt = DateTime.UtcNow;
-
-        await _repo.UpdateLeaveAsync(leave);
-        await _uow.SaveChangesAsync();
-
-        return MapToLeaveDto(leave);
-    }
-
     private static string GeneratePin() => _random.Next(0, 1000000).ToString("D6");
 
     private static AttendanceSessionDto MapToSessionDto(AttendanceSession s) => new()
@@ -447,17 +468,5 @@ public class AttendanceService : IAttendanceService
         Notes = r.Notes,
         RecordedAt = r.RecordedAt,
         RecordedByName = r.RecordedByUser != null ? r.RecordedByUser.FirstName + " " + r.RecordedByUser.LastName : null
-    };
-
-    private static LeaveRequestDto MapToLeaveDto(LeaveRequest l) => new()
-    {
-        Id = l.Id,
-        StudentId = l.StudentId,
-        StudentName = l.Student.User.FirstName + " " + l.Student.User.LastName,
-        FromDate = l.FromDate,
-        ToDate = l.ToDate,
-        Reason = l.Reason,
-        Status = l.Status,
-        CreatedAt = l.CreatedAt
     };
 }

@@ -535,16 +535,12 @@ a {
   }
 }
 
-/* Church crest on the auth screens. The source art is a JPG on cream, so it is
-   masked to a circle with a gold ring — that reads as a deliberate seal rather
-   than a photo pasted onto the card, and works on both themes. */
+/* Church crest on the auth screens — transparent PNG, so it needs no plate.
+   A soft drop-shadow keeps the gold edge from dissolving into a light card. */
 .auth-logo {
   display: block;
   margin: 0 auto 1rem;
-  border-radius: 50%;
-  background: #fff;
-  padding: 6px;
-  box-shadow: 0 0 0 1px var(--gold-tint-strong), 0 6px 18px var(--shadow-tint);
+  filter: drop-shadow(0 4px 12px var(--shadow-tint));
 }
 
 /* Theme cross-fade. The class is added only for the duration of a toggle, so

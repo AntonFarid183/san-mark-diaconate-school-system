@@ -161,7 +161,7 @@ export default function SelfRegisterScreen() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <ChurchLogo size={84} tile={false} className="auth-logo" />
+          <ChurchLogo size={84} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.15rem', lineHeight: 1.4, marginBottom: '0.25rem' }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
           <p style={{ fontSize: '0.8rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
           <h2 style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.75rem', fontWeight: 600 }}>تسجيل عضو جديد</h2>

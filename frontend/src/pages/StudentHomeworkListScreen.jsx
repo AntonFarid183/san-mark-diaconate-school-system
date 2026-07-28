@@ -21,11 +21,11 @@ const paletteFor = (name) => {
 };
 
 const scoreTone = (score, total) => {
-  if (total <= 0) return { color: 'var(--success)', bg: 'rgba(16,185,129,0.15)' };
+  if (total <= 0) return { color: 'var(--success)', bg: 'var(--success-tint)' };
   const pct = score / total;
-  if (pct >= 0.85) return { color: 'var(--success)', bg: 'rgba(16,185,129,0.15)' };
-  if (pct >= 0.5) return { color: 'var(--accent-gold)', bg: 'rgba(251,191,36,0.15)' };
-  return { color: 'var(--danger)', bg: 'rgba(239,68,68,0.15)' };
+  if (pct >= 0.85) return { color: 'var(--success)', bg: 'var(--success-tint)' };
+  if (pct >= 0.5) return { color: 'var(--accent-gold)', bg: 'var(--gold-tint)' };
+  return { color: 'var(--danger)', bg: 'var(--danger-tint)' };
 };
 
 const motivationFor = (donePct, pendingCount) => {

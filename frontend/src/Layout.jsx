@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import apiClient from './apiClient';
 import NotificationBell from './components/NotificationBell';
 import ThemeToggle from './components/ThemeToggle';
+import ChurchLogo from './components/ChurchLogo';
 import { PageTitleProvider } from './context/PageTitleContext';
 
 const COLLAPSED_WIDTH = '64px';
@@ -87,7 +88,7 @@ const StudentNavButton = ({ icon, label, subtitle, color, isActive, onClick, bad
       {subtitle && <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{subtitle}</span>}
     </span>
     {badge > 0 && (
-      <span style={{ fontSize: '0.75rem', minWidth: '22px', height: '22px', padding: '0 0.4rem', background: 'var(--danger)', color: '#fff', borderRadius: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: '0.75rem', minWidth: '22px', height: '22px', padding: '0 0.4rem', background: 'var(--danger-solid)', color: '#fff', borderRadius: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {badge}
       </span>
     )}
@@ -292,7 +293,7 @@ const Layout = () => {
               </button>
             )}
             <div onClick={() => navigate('/dashboard')} style={{ padding: open ? '1.25rem 1rem' : '1rem 0', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--accent-gold)' }}>church</span>
+              <ChurchLogo size={open ? 52 : 36} />
               {open && (
                 <>
                   <h2 style={{ color: 'var(--accent-gold)', marginTop: '0.4rem', fontSize: '0.88rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h2>

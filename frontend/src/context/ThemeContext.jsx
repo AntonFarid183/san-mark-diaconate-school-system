@@ -30,7 +30,15 @@ export function ThemeProvider({ children }) {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+  // Cross-fade only while switching. Leaving the transition on permanently
+  // would make every ordinary hover feel laggy.
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    window.clearTimeout(toggleTheme._t);
+    toggleTheme._t = window.setTimeout(() => root.classList.remove('theme-transition'), 300);
+    setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from '../../components/ThemeToggle';
+import ChurchLogo from '../../components/ChurchLogo';
 
 const CURRICULUM_SUBJECTS = [
   { slug: 'rites', label: 'الطقس' },
@@ -51,7 +52,7 @@ export default function LandingNavbar() {
     <>
       <header className={`landing-navbar ${solid ? 'landing-navbar-solid' : ''}`}>
         <div className="landing-navbar-brand" onClick={() => navigate('/')}>
-          <span className="material-symbols-outlined" style={{ fontSize: '34px', color: 'var(--accent-gold)', flexShrink: 0 }}>church</span>
+          <ChurchLogo size={40} />
           <div className="landing-navbar-brand-text">
             <h1>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
             <p>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>

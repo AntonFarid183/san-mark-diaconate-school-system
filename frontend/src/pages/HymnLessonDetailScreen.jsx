@@ -435,7 +435,7 @@ export default function HymnLessonDetailScreen() {
                     بدء التسجيل
                   </button>
                 ) : (
-                  <button onClick={stopRecording} style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button onClick={stopRecording} style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>stop</span>
                     إيقاف ({recordSeconds}ث)
                   </button>

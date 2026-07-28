@@ -261,7 +261,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                           onKeyDown={e => e.key === 'Enter' && confirmVoid()}
                           style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.85rem', marginBottom: '0.5rem' }} />
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={confirmVoid} disabled={savingVoid || !voidReason.trim()} style={{ flex: 1, padding: '0.4rem', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                          <button onClick={confirmVoid} disabled={savingVoid || !voidReason.trim()} style={{ flex: 1, padding: '0.4rem', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                             {savingVoid ? 'جاري الإلغاء...' : 'تأكيد الإلغاء'}
                           </button>
                           <button onClick={() => { setVoidingTxId(null); setVoidReason(''); }} className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.82rem' }}>تراجع</button>

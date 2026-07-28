@@ -28,8 +28,13 @@
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --danger: #ef4444;
+  /* Foreground reds/greens: tuned for TEXT on dark surfaces. Solid fills that
+     carry white text use the -solid pair instead — a colour bright enough to
+     read as text is never dark enough to sit under white. */
+  --danger: #f87171;
+  --danger-solid: #dc2626;
   --success: #10b981;
+  --success-solid: #047857;
   --warning: #f59e0b;
 
   --glass-bg: rgba(30, 41, 59, 0.88);
@@ -61,6 +66,8 @@
   /* Inset track behind segmented controls / table headers */
   --track-inset: rgba(15, 23, 42, 0.5);
   --media-chrome: rgba(15, 23, 42, 0.98);
+  --popover-bg: rgba(10, 16, 30, 0.98);
+  --panel-gradient: linear-gradient(135deg, rgba(30,41,59,0.97) 0%, rgba(15,23,42,0.97) 100%);
   /* Chart/status palette. These are tuned for dark backgrounds; the light
      block re-tunes each one so the same semantic colour stays AA-legible. */
   --c-emerald: #34d399;
@@ -114,7 +121,9 @@
   --text-secondary: #475569;
   --text-muted: #5d6b80;         /* 4.91:1 on the page gradient — still AA */
   --danger: #b91c1c;
+  --danger-solid: #b91c1c;
   --success: #047857;
+  --success-solid: #047857;
   --warning: #b45309;
 
   --glass-bg: rgba(255, 255, 255, 0.92);
@@ -151,6 +160,8 @@
   --on-accent: #ffffff;
   --track-inset: rgba(15, 23, 42, 0.06);
   --media-chrome: rgba(255, 255, 255, 0.98);
+  --popover-bg: rgba(255, 255, 255, 0.98);
+  --panel-gradient: linear-gradient(135deg, #ffffff 0%, #f4f7fc 100%);
   --c-emerald: #047857;
   --c-green: #166534;
   --c-blue: #1d4ed8;
@@ -522,4 +533,51 @@ a {
   .auth-page > * {
     animation: none;
   }
+}
+
+/* Church crest on the auth screens. The source art is a JPG on cream, so it is
+   masked to a circle with a gold ring — that reads as a deliberate seal rather
+   than a photo pasted onto the card, and works on both themes. */
+.auth-logo {
+  display: block;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 0 0 1px var(--gold-tint-strong), 0 6px 18px var(--shadow-tint);
+}
+
+/* Theme cross-fade. The class is added only for the duration of a toggle, so
+   colours ease across instead of snapping — without leaving a permanent
+   transition on every element (which would make ordinary hovers feel laggy). */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 260ms ease,
+              background-image 260ms ease,
+              border-color 260ms ease,
+              color 260ms ease,
+              box-shadow 260ms ease,
+              fill 260ms ease !important;
+  transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition: none !important;
+  }
+}
+
+/* Auth screens sit outside the app shell, so they carry their own toggle —
+   otherwise someone landing straight on /login is stuck in whichever theme
+   their OS picked. */
+.auth-theme-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
 }

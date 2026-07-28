@@ -300,14 +300,14 @@ export default function HymnSubmissionsScreen() {
 
             {reviewItem.isManual ? (
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button onClick={submitManualScore} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                <button onClick={submitManualScore} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
                   {saving ? '...' : 'حفظ الدرجة'}
                 </button>
                 <button onClick={() => setReviewItem(null)} className="btn-secondary" style={{ flex: 1 }}>إلغاء</button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button onClick={() => submitReview(true)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                <button onClick={() => submitReview(true)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
                   {saving ? '...' : 'موافقة'}
                 </button>
                 <button onClick={() => submitReview(false)} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>

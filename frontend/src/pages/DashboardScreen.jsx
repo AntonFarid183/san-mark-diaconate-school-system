@@ -291,7 +291,7 @@ const AdminDashboard = () => {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>how_to_reg</span>
               {pendingCount > 0 && (
-                <span style={{ position: 'absolute', top: '-6px', left: '-6px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ position: 'absolute', top: '-6px', left: '-6px', background: 'var(--danger-solid)', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {pendingCount}
                 </span>
               )}

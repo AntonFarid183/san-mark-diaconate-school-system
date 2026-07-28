@@ -135,13 +135,13 @@ const StudentProfileScreen = () => {
         {/* ── Hero Card ── */}
         <div style={{
           borderRadius: 'var(--radius-md)', overflow: 'hidden',
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.97) 0%, rgba(15,23,42,0.97) 100%)',
-          border: '1px solid rgba(251,191,36,0.35)',
+          background: 'var(--panel-gradient)',
+          border: '1px solid var(--gold-tint-strong)',
           boxShadow: '0 12px 48px var(--overlay)',
           backdropFilter: 'blur(20px)',
         }}>
           {/* Decorative top strip */}
-          <div style={{ height: '6px', background: 'linear-gradient(90deg, var(--accent-gold), rgba(251,191,36,0.3), transparent)' }} />
+          <div style={{ height: '6px', background: 'linear-gradient(90deg, var(--accent-gold-fill), var(--gold-tint-strong), transparent)' }} />
 
           <div style={{ padding: '2rem 1.5rem 1.5rem', textAlign: 'center' }}>
             {/* Photo */}
@@ -167,7 +167,7 @@ const StudentProfileScreen = () => {
 
               {/* Red dot if no photo */}
               {!hasPhoto && (
-                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-primary)', animation: 'pulse 2s infinite' }} />
+                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', background: 'var(--danger-solid)', borderRadius: '50%', border: '2px solid var(--bg-primary)', animation: 'pulse 2s infinite' }} />
               )}
             </div>
 

@@ -83,7 +83,7 @@ export default function StudentCurriculumScreen() {
       {/* PDF Viewer Modal */}
       {viewing && (
         <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-media)', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid var(--glass-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', background: 'var(--media-chrome)', borderBottom: '1px solid var(--glass-border)' }}>
             <span style={{ fontWeight: 600, color: 'var(--accent-gold)' }}>{viewing.title}</span>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button onClick={() => downloadFile(viewing.pdfUrl, viewing.pdfFileName)}

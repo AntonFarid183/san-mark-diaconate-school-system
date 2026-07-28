@@ -261,7 +261,7 @@ export default function AcademicYearsScreen() {
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'var(--danger)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'var(--danger-solid)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 disabled={deleting}
                 onClick={confirmDelete}
               >

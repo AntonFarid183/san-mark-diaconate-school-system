@@ -91,7 +91,7 @@ export default function NotificationBell() {
         <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>notifications</span>
         {totalBadge > 0 && (
           <span style={{
-            position: 'absolute', top: '-4px', left: '-4px', background: 'var(--danger)', color: '#fff',
+            position: 'absolute', top: '-4px', left: '-4px', background: 'var(--danger-solid)', color: '#fff',
             borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '0.68rem', fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
           }}>
@@ -103,7 +103,7 @@ export default function NotificationBell() {
       {open && (
         <div style={{
           position: 'absolute', top: '48px', left: 0, width: '340px', maxHeight: '480px', overflowY: 'auto',
-          background: 'rgba(10,16,30,0.98)', backdropFilter: 'blur(20px)', border: '1px solid var(--glass-border)',
+          background: 'var(--popover-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--glass-border)',
           borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px var(--shadow-tint)', zIndex: 500, direction: 'rtl',
         }}>
           <div style={{ padding: '0.9rem 1rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -120,12 +120,12 @@ export default function NotificationBell() {
             <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', borderBottom: '1px solid var(--glass-border)' }}>
               {summary.dynamicItems.map(item => (
                 <div key={item.key} onClick={() => openDynamicItem(item)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(251,191,36,0.08)', cursor: 'pointer' }}>
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--gold-tint-weak)', cursor: 'pointer' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{item.title}</div>
                     {item.message && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{item.message}</div>}
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-gold)', background: 'rgba(251,191,36,0.15)', borderRadius: '10px', padding: '0.1rem 0.5rem', flexShrink: 0, marginRight: '0.5rem' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-gold)', background: 'var(--gold-tint)', borderRadius: '10px', padding: '0.1rem 0.5rem', flexShrink: 0, marginRight: '0.5rem' }}>
                     {item.count}
                   </span>
                 </div>
@@ -143,7 +143,7 @@ export default function NotificationBell() {
             <div>
               {summary.recentPersistent?.map(n => (
                 <div key={n.id} onClick={() => openNotification(n)}
-                  style={{ display: 'flex', gap: '0.7rem', padding: '0.75rem 1rem', cursor: 'pointer', background: n.isRead ? 'transparent' : 'rgba(251,191,36,0.04)', borderBottom: '1px solid var(--surface-1)' }}>
+                  style={{ display: 'flex', gap: '0.7rem', padding: '0.75rem 1rem', cursor: 'pointer', background: n.isRead ? 'transparent' : 'var(--gold-tint-weak)', borderBottom: '1px solid var(--surface-1)' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '20px', color: n.isRead ? 'var(--text-muted)' : 'var(--accent-gold)', flexShrink: 0, marginTop: '0.1rem' }}>
                     {NOTIFICATION_ICONS[n.type] || 'notifications'}
                   </span>

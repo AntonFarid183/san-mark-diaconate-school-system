@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
+import ChurchLogo from '../components/ChurchLogo';
+import ThemeToggle from '../components/ThemeToggle';
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -40,10 +42,11 @@ const LoginScreen = () => {
 
   return (
     <div className="auth-page">
+      <div className="auth-theme-toggle"><ThemeToggle size={36} /></div>
       <div className="glass-card" style={{ maxWidth: '420px', width: '100%' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)', marginBottom: '1rem' }}>church</span>
+          <ChurchLogo size={96} tile={false} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
           <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
         </div>

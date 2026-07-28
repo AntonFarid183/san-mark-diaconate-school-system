@@ -4,9 +4,9 @@ import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL } from '../config';
 
 const STATUS_MAP = {
-  0: { label: 'تحت الإنشاء', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.08)' },
+  0: { label: 'تحت الإنشاء', color: 'var(--text-muted)', bg: 'var(--surface-3)' },
   1: { label: 'منشور',  color: 'var(--success)',    bg: 'rgba(16,185,129,0.12)' },
-  2: { label: 'مؤرشف', color: '#94a3b8',            bg: 'rgba(148,163,184,0.12)' },
+  2: { label: 'مؤرشف', color: 'var(--text-muted)',            bg: 'rgba(148,163,184,0.12)' },
 };
 
 const CURRENT_YEAR = `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`;
@@ -179,7 +179,7 @@ export default function CurriculumManagementScreen() {
           padding: '0.85rem 1.25rem', borderRadius: '10px',
           background: msg.type === 'success' ? 'rgba(16,185,129,0.92)' : 'rgba(239,68,68,0.92)',
           color: '#fff', fontWeight: 600, fontSize: '0.9rem',
-          backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px var(--shadow-tint)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
           animation: 'fadeInUp 0.25s ease',
         }}>
@@ -242,7 +242,7 @@ export default function CurriculumManagementScreen() {
                       <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', whiteSpace: 'nowrap' }}>{subjectLabel(item.subject)}</span>
                       <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{st.label}</span>
                       {item.pdfUrl && (
-                        <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: '#f87171', whiteSpace: 'nowrap' }}>PDF ✓</span>
+                        <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: 'var(--c-red)', whiteSpace: 'nowrap' }}>PDF ✓</span>
                       )}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -295,16 +295,16 @@ export default function CurriculumManagementScreen() {
 
       {/* ── PDF Upload Modal ───────────────────────────────────────────────── */}
       {uploadTarget && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '460px', padding: '2rem', direction: 'rtl' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ color: 'var(--accent-gold)', fontSize: '1.1rem' }}>ملف PDF — {uploadTarget.title}</h3>
               <button onClick={() => setUploadTarget(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.3rem', lineHeight: 1 }}>✕</button>
             </div>
 
-            <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', marginBottom: '1.25rem' }}>
+            <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-1)', border: '1px solid var(--glass-border)', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#f87171' }}>picture_as_pdf</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '24px', color: 'var(--c-red)' }}>picture_as_pdf</span>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>ملف المنهج</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -315,14 +315,14 @@ export default function CurriculumManagementScreen() {
                 </div>
                 {uploadTarget.pdfUrl && (
                   <a href={`${BACKEND_URL}${uploadTarget.pdfUrl}`} target="_blank" rel="noopener noreferrer"
-                    style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#60a5fa', textDecoration: 'none' }}>
+                    style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--c-blue)', textDecoration: 'none' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>open_in_new</span>
                     معاينة
                   </a>
                 )}
               </div>
               <button onClick={() => replaceRef.current.click()} disabled={uploading}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(248,113,113,0.35)', background: 'rgba(248,113,113,0.1)', color: '#f87171', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600 }}>
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(248,113,113,0.35)', background: 'rgba(248,113,113,0.1)', color: 'var(--c-red)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 600 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
                 {uploading ? 'جاري الرفع...' : uploadTarget.pdfUrl ? 'استبدال الملف' : 'رفع ملف PDF'}
               </button>
@@ -335,7 +335,7 @@ export default function CurriculumManagementScreen() {
 
       {/* ── Create / Edit Modal ────────────────────────────────────────────── */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '520px', padding: '2rem', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
               {editing ? 'تعديل بيانات المنهج' : 'إضافة منهج جديد'}
@@ -394,7 +394,7 @@ export default function CurriculumManagementScreen() {
                 <label style={lbl}>ملف PDF {editing?.pdfUrl ? '(استبدال الحالي)' : '(اختياري)'}</label>
                 <button type="button" onClick={() => modalFileRef.current.click()}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', borderRadius: 'var(--radius-sm)', border: `1px dashed ${pendingFile ? 'var(--success)' : 'var(--glass-border)'}`, background: 'var(--input-bg)', color: pendingFile ? 'var(--success)' : 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: pendingFile ? 'var(--success)' : '#f87171' }}>upload_file</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: pendingFile ? 'var(--success)' : 'var(--c-red)' }}>upload_file</span>
                   <span style={{ flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {pendingFile ? pendingFile.name : (editing?.pdfFileName || 'انقر لاختيار ملف PDF...')}
                   </span>

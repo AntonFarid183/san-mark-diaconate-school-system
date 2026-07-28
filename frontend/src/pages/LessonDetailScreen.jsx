@@ -168,7 +168,7 @@ const LessonDetailScreen = () => {
             <span>تم إكمال {completedCount} من {totalCount}</span>
             <span style={{ color: 'var(--accent-gold)' }}>{totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%</span>
           </div>
-          <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', background: 'var(--surface-3)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent-gold), var(--accent-gold-hover))', borderRadius: '3px', transition: 'width 0.5s ease' }} />
           </div>
         </div>
@@ -216,7 +216,7 @@ const LessonDetailScreen = () => {
               }}>
                 <span style={{
                   width: '28px', height: '28px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.08)', display: 'flex',
+                  background: 'var(--surface-3)', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
                   fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)',
                 }}>{i + 1}</span>

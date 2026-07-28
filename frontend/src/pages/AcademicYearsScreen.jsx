@@ -183,7 +183,7 @@ export default function AcademicYearsScreen() {
 
       {/* Modal */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '420px', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>
               {editing ? 'تعديل السنة الدراسية' : 'سنة دراسية جديدة'}
@@ -246,7 +246,7 @@ export default function AcademicYearsScreen() {
 
       {/* Delete Warning Modal */}
       {deleteTarget && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '440px', direction: 'rtl', border: '1px solid rgba(239,68,68,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--danger)' }}>warning</span>
@@ -261,7 +261,7 @@ export default function AcademicYearsScreen() {
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'var(--danger)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'var(--danger-solid)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 disabled={deleting}
                 onClick={confirmDelete}
               >

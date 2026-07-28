@@ -32,7 +32,7 @@ const CropModal = ({ imageSrc, onConfirm, onCancel, uploading }) => {
   const onCropComplete = useCallback((_, pixels) => setCroppedAreaPixels(pixels), []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay-media)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
         <h3 style={{ color: 'var(--accent-gold)', textAlign: 'center', marginBottom: '1rem' }}>اضبط الصورة</h3>
         <div style={{ position: 'relative', width: '100%', height: '340px', borderRadius: '12px', overflow: 'hidden', background: '#111' }}>
@@ -67,7 +67,7 @@ const StatPill = ({ icon, label, value, color = 'var(--accent-gold)' }) => (
 
 // ── Info Row ──────────────────────────────────────────────────────────────────
 const InfoRow = ({ icon, label, value }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.7rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.7rem 0', borderBottom: '1px solid var(--surface-3)' }}>
     <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)', flexShrink: 0 }}>{icon}</span>
     <span style={{ fontSize: '0.82rem', color: 'var(--text-primary)', minWidth: '110px', opacity: 0.75 }}>{label}</span>
     <span style={{ fontSize: '0.88rem', fontWeight: 600, marginRight: 'auto' }}>{value || '—'}</span>
@@ -135,13 +135,13 @@ const StudentProfileScreen = () => {
         {/* ── Hero Card ── */}
         <div style={{
           borderRadius: 'var(--radius-md)', overflow: 'hidden',
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.97) 0%, rgba(15,23,42,0.97) 100%)',
-          border: '1px solid rgba(251,191,36,0.35)',
-          boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
+          background: 'var(--panel-gradient)',
+          border: '1px solid var(--gold-tint-strong)',
+          boxShadow: '0 12px 48px var(--overlay)',
           backdropFilter: 'blur(20px)',
         }}>
           {/* Decorative top strip */}
-          <div style={{ height: '6px', background: 'linear-gradient(90deg, var(--accent-gold), rgba(251,191,36,0.3), transparent)' }} />
+          <div style={{ height: '6px', background: 'linear-gradient(90deg, var(--accent-gold-fill), var(--gold-tint-strong), transparent)' }} />
 
           <div style={{ padding: '2rem 1.5rem 1.5rem', textAlign: 'center' }}>
             {/* Photo */}
@@ -149,7 +149,7 @@ const StudentProfileScreen = () => {
               {hasPhoto ? (
                 <img src={photoUrl} alt="" style={{ width: '110px', height: '110px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent-gold)', boxShadow: '0 0 24px rgba(251,191,36,0.35)' }} />
               ) : (
-                <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '3px dashed rgba(251,191,36,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'var(--surface-2)', border: '3px dashed rgba(251,191,36,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '54px', color: 'rgba(251,191,36,0.4)' }}>account_circle</span>
                 </div>
               )}
@@ -162,12 +162,12 @@ const StudentProfileScreen = () => {
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#000' }}>photo_camera</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--on-accent)' }}>photo_camera</span>
               </button>
 
               {/* Red dot if no photo */}
               {!hasPhoto && (
-                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-primary)', animation: 'pulse 2s infinite' }} />
+                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', background: 'var(--danger-solid)', borderRadius: '50%', border: '2px solid var(--bg-primary)', animation: 'pulse 2s infinite' }} />
               )}
             </div>
 
@@ -192,12 +192,12 @@ const StudentProfileScreen = () => {
             {uploadError && <div className="error-box" style={{ margin: '0.75rem 0' }}>{uploadError}</div>}
 
             {/* Stat pills */}
-            <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'var(--surface-1)', borderRadius: 'var(--radius-sm)', marginTop: '0.5rem' }}>
               <StatPill icon="school" label="السنة الدراسية" value={profile?.gradeName} />
-              <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
-              <StatPill icon="check_circle" label="الحالة" value={isActive ? 'نشط' : 'موقوف'} color={isActive ? '#4ade80' : '#f87171'} />
-              <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
-              <StatPill icon="payments" label="الاشتراك" value={feesPaid ? 'مسدد' : 'غير مسدد'} color={feesPaid ? '#4ade80' : '#fb923c'} />
+              <div style={{ width: '1px', background: 'var(--surface-3)' }} />
+              <StatPill icon="check_circle" label="الحالة" value={isActive ? 'نشط' : 'موقوف'} color={isActive ? 'var(--c-green)' : 'var(--c-red)'} />
+              <div style={{ width: '1px', background: 'var(--surface-3)' }} />
+              <StatPill icon="payments" label="الاشتراك" value={feesPaid ? 'مسدد' : 'غير مسدد'} color={feesPaid ? 'var(--c-green)' : 'var(--c-orange)'} />
             </div>
           </div>
         </div>
@@ -230,8 +230,8 @@ const StudentProfileScreen = () => {
           {/* Change password — danger style */}
           <button
             onClick={() => navigate('/change-password')}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', width: '100%', padding: '0.8rem 1.5rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.7)', color: '#f87171', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.38)'; e.currentTarget.style.borderColor = '#ef4444'; }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', width: '100%', padding: '0.8rem 1.5rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.7)', color: 'var(--c-red)', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.38)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.7)'; }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>lock_reset</span>

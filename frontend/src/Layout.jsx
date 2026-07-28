@@ -3,6 +3,8 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import apiClient from './apiClient';
 import NotificationBell from './components/NotificationBell';
+import ThemeToggle from './components/ThemeToggle';
+import ChurchLogo from './components/ChurchLogo';
 import { PageTitleProvider } from './context/PageTitleContext';
 
 const COLLAPSED_WIDTH = '64px';
@@ -59,13 +61,13 @@ const StudentNavButton = ({ icon, label, subtitle, color, isActive, onClick, bad
       padding: '0.85rem 0.9rem',
       minHeight: '52px',
       borderRadius: 'var(--radius-md)', border: 'none',
-      background: isActive ? `${color}1a` : 'transparent',
+      background: isActive ? `color-mix(in srgb, ${color} 12%, transparent)` : 'transparent',
       color: 'var(--text-primary)',
       fontFamily: 'inherit',
       cursor: 'pointer', width: '100%', textAlign: 'right',
       position: 'relative', marginBottom: '0.3rem',
     }}
-    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--surface-2)'; }}
     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
   >
     {isActive && (
@@ -78,7 +80,7 @@ const StudentNavButton = ({ icon, label, subtitle, color, isActive, onClick, bad
         fontSize: '24px', flexShrink: 0, color,
         width: '38px', height: '38px', borderRadius: '10px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `${color}1a`,
+        background: `color-mix(in srgb, ${color} 12%, transparent)`,
       }}
     >{icon}</span>
     <span style={{ flex: 1, minWidth: 0 }}>
@@ -86,7 +88,7 @@ const StudentNavButton = ({ icon, label, subtitle, color, isActive, onClick, bad
       {subtitle && <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{subtitle}</span>}
     </span>
     {badge > 0 && (
-      <span style={{ fontSize: '0.75rem', minWidth: '22px', height: '22px', padding: '0 0.4rem', background: 'var(--danger)', color: '#fff', borderRadius: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: '0.75rem', minWidth: '22px', height: '22px', padding: '0 0.4rem', background: 'var(--danger-solid)', color: '#fff', borderRadius: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {badge}
       </span>
     )}
@@ -236,7 +238,7 @@ const Layout = () => {
   // One color per life-area (not per item) so the sidebar reads as a small
   // number of "places" rather than a long uniform list — helps orientation
   // for both a young student and an adult skimming quickly.
-  const STUDENT_COLORS = { home: 'var(--accent-gold)', learn: 'var(--accent-blue)', tasks: '#f59e0b', progress: '#a78bfa', account: 'var(--text-muted)' };
+  const STUDENT_COLORS = { home: 'var(--accent-gold)', learn: 'var(--accent-blue)', tasks: 'var(--accent-amber)', progress: 'var(--accent-violet)', account: 'var(--text-muted)' };
 
   // Trimmed to only the features that are actually wired up end-to-end —
   // no dead links to pages without real backing logic yet. Just four items
@@ -262,17 +264,17 @@ const Layout = () => {
       {(title) => (
     <div style={{
       display: 'flex', minHeight: '100vh', direction: 'rtl',
-      backgroundImage: 'linear-gradient(rgba(10,16,30,0.35), rgba(10,16,30,0.35)), url(/san-mark-wide.png)',
+      backgroundImage: 'linear-gradient(var(--app-wash), var(--app-wash)), url(/san-mark-wide.png)',
       backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed',
     }}>
 
       {/* Sidebar */}
       <aside style={{
         width: sidebarWidth,
-        background: 'rgba(10, 16, 30, 0.97)',
+        background: 'var(--app-sidebar-bg)',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        borderLeft: '1px solid rgba(251,191,36,0.12)',
-        boxShadow: '-4px 0 32px rgba(0,0,0,0.5)',
+        borderLeft: '1px solid var(--gold-tint)',
+        boxShadow: '-4px 0 32px var(--shadow-tint)',
         display: 'flex', flexDirection: 'column',
         position: 'fixed', top: 0, right: 0,
         height: '100vh', zIndex: 100,
@@ -282,7 +284,7 @@ const Layout = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
           {/* Logo */}
-          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', position: 'relative' }}>
+          <div style={{ borderBottom: '1px solid var(--surface-2)', position: 'relative' }}>
             {!isStudent && (
               <button onClick={() => setOpen(o => !o)} style={{ position: 'absolute', top: '0.75rem', left: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-gold)'}
@@ -291,7 +293,7 @@ const Layout = () => {
               </button>
             )}
             <div onClick={() => navigate('/dashboard')} style={{ padding: open ? '1.25rem 1rem' : '1rem 0', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--accent-gold)' }}>church</span>
+              <ChurchLogo size={open ? 52 : 36} />
               {open && (
                 <>
                   <h2 style={{ color: 'var(--accent-gold)', marginTop: '0.4rem', fontSize: '0.88rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h2>
@@ -378,7 +380,7 @@ const Layout = () => {
                         if (stage.hasSubGrades && subGrades.length > 0) {
                           return (
                             <div key={stage.id}>
-                              <div style={{ padding: '0.25rem 1rem 0.1rem 2rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>{stage.label}</div>
+                              <div style={{ padding: '0.25rem 1rem 0.1rem 2rem', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>{stage.label}</div>
                               {subGrades.map(grade => (
                                 <NavButton
                                   key={grade.id}
@@ -434,7 +436,7 @@ const Layout = () => {
           </nav>
 
           {/* Logout */}
-          <div style={{ padding: open ? '1rem' : '0.75rem 0.5rem', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ padding: open ? '1rem' : '0.75rem 0.5rem', borderTop: '1px solid var(--surface-2)' }}>
             <button onClick={() => {
               logout();
               // Deferred: logging out flips ProtectedRoute's redirect-to-/login for the
@@ -465,7 +467,7 @@ const Layout = () => {
           <div style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem',
             padding: '0.9rem 1.25rem', borderRadius: 'var(--radius-md)',
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171',
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: 'var(--c-red)',
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '22px', flexShrink: 0 }}>account_circle</span>
             <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
@@ -477,6 +479,7 @@ const Layout = () => {
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.5rem' }}>{title || ''}</h1>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <ThemeToggle />
               <NotificationBell />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', background: 'var(--glass-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>account_circle</span>

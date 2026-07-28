@@ -179,7 +179,7 @@ export default function PaymentReportsScreen() {
           <div>
             <button onClick={fetchReport} disabled={loading} style={{
               padding: '0.55rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none',
-              background: 'var(--accent-gold)', color: '#1e293b', cursor: 'pointer',
+              background: 'var(--accent-gold)', color: 'var(--on-accent)', cursor: 'pointer',
               fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 700,
               display: 'flex', alignItems: 'center', gap: '0.4rem',
             }}>
@@ -191,7 +191,7 @@ export default function PaymentReportsScreen() {
             <button onClick={() => setShowExport(true)} disabled={!data || data.items.length === 0} style={{
               padding: '0.55rem 1.5rem', borderRadius: 'var(--radius-sm)',
               background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
-              color: '#4ade80', cursor: (!data || data.items.length === 0) ? 'not-allowed' : 'pointer',
+              color: 'var(--c-green)', cursor: (!data || data.items.length === 0) ? 'not-allowed' : 'pointer',
               opacity: (!data || data.items.length === 0) ? 0.5 : 1,
               fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: 700,
               display: 'flex', alignItems: 'center', gap: '0.4rem',
@@ -217,7 +217,7 @@ export default function PaymentReportsScreen() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(15,23,42,0.4)' }}>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'var(--track-inset)' }}>
                   <th style={thStyle}>#</th>
                   <th style={thStyle}>الكود</th>
                   <th style={thStyle}>الاسم</th>
@@ -232,7 +232,7 @@ export default function PaymentReportsScreen() {
                 {data.items.map((item, i) => {
                   const badge = paymentBadge(item.paymentStatus);
                   return (
-                    <tr key={item.id} className="table-row-hover" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <tr key={item.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--surface-2)' }}>
                       <td style={tdStyle}>{i + 1}</td>
                       <td style={{ ...tdStyle, direction: 'ltr', textAlign: 'right', fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{item.studentCode}</td>
                       <td style={{ ...tdStyle, fontWeight: 600 }}>{item.fullName}</td>

@@ -122,7 +122,7 @@ const ContentManagementScreen = () => {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lesson.gradeName}</div>
                   </td>
                   <td style={{ textAlign: 'center', padding: '0.75rem 1rem' }}>
-                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '20px', background: lesson.isPublished ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.08)', color: lesson.isPublished ? '#10b981' : 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '20px', background: lesson.isPublished ? 'rgba(16, 185, 129, 0.15)' : 'var(--surface-3)', color: lesson.isPublished ? 'var(--success)' : 'var(--text-secondary)' }}>
                       {lesson.isPublished ? 'منشور' : 'مسودة'}
                     </span>
                   </td>
@@ -155,7 +155,7 @@ const ContentManagementScreen = () => {
 
       {/* Create/Edit modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowCreate(false); setEditLesson(null); } }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '1.5rem' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>{editLesson ? 'تعديل الدرس' : 'درس جديد'}</h3>
@@ -205,7 +205,7 @@ const ContentManagementScreen = () => {
 
       {/* Upload modal */}
       {showUpload && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowUpload(null); } }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '450px', padding: '1.5rem' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>رفع ملف للدرس: {showUpload.title}</h3>

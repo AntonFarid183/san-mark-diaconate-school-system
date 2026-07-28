@@ -115,12 +115,12 @@ export default function NotificationsScreen() {
       {!isAdmin && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(15,23,42,0.5)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--track-inset)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
               {TABS.map(t => (
                 <button key={t.key} onClick={() => setTab(t.key)} style={{
                   padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none',
                   background: tab === t.key ? 'var(--accent-gold)' : 'transparent',
-                  color: tab === t.key ? '#1e293b' : 'var(--text-secondary)',
+                  color: tab === t.key ? 'var(--on-accent)' : 'var(--text-secondary)',
                   fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: tab === t.key ? 700 : 500, cursor: 'pointer',
                 }}>
                   {t.label}

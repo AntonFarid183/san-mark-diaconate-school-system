@@ -248,7 +248,7 @@ export default function HymnLessonDetailScreen() {
           {hasVideo && (pct > 0 || progress?.isCompleted) && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
               <svg width="72" height="72" viewBox="0 0 72 72">
-                <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface-3)" strokeWidth="6" />
                 <circle cx="36" cy="36" r="30" fill="none"
                   stroke={progress?.isCompleted ? 'var(--success)' : 'var(--accent-gold)'}
                   strokeWidth="6"
@@ -268,7 +268,7 @@ export default function HymnLessonDetailScreen() {
         {/* Progress bar */}
         {hasVideo && pct > 0 && (
           <div style={{ marginTop: '1rem' }}>
-            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '4px', background: 'var(--surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: progress?.isCompleted ? 'var(--success)' : 'var(--accent-gold)', borderRadius: '2px', transition: 'width 0.6s ease' }} />
             </div>
             {progress && !progress.isCompleted && (
@@ -291,10 +291,10 @@ export default function HymnLessonDetailScreen() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={resumeFromLast} style={{ padding: '0.4rem 1rem', borderRadius: '8px', border: 'none', background: 'var(--accent-gold)', color: '#1e293b', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700 }}>
+            <button onClick={resumeFromLast} style={{ padding: '0.4rem 1rem', borderRadius: '8px', border: 'none', background: 'var(--accent-gold)', color: 'var(--on-accent)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700 }}>
               استكمال من {fmtTime(progress.lastPosition)}
             </button>
-            <button onClick={() => setShowResume(false)} style={{ padding: '0.4rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 600 }}>
+            <button onClick={() => setShowResume(false)} style={{ padding: '0.4rem 0.85rem', borderRadius: '8px', border: '1px solid var(--divider-strong)', background: 'var(--track-bg)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 600 }}>
               من البداية
             </button>
           </div>
@@ -308,7 +308,7 @@ export default function HymnLessonDetailScreen() {
             <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>videocam</span>
             <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>الفيديو التعليمي</span>
             {!progress?.isCompleted && (
-              <span style={{ marginRight: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)' }}>
+              <span style={{ marginRight: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'var(--surface-3)', border: '1px solid var(--glass-border)' }}>
                 لا يمكن التخطي إلى أجزاء لم تُشاهد بعد
               </span>
             )}
@@ -355,11 +355,11 @@ export default function HymnLessonDetailScreen() {
               <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>ملف كلمات اللحن</span>
             </div>
             <div style={{ display: 'flex', gap: '0.6rem' }}>
-              <button onClick={() => setPdfFullscreen(true)} style={pdfBtn('#60a5fa')}>
+              <button onClick={() => setPdfFullscreen(true)} style={pdfBtn('var(--c-blue)')}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen</span>
                 تكبير
               </button>
-              <button onClick={() => downloadFile(lesson.lyricsPdfUrl, lesson.lyricsPdfFileName)} style={pdfBtn('#f87171')}>
+              <button onClick={() => downloadFile(lesson.lyricsPdfUrl, lesson.lyricsPdfFileName)} style={pdfBtn('var(--c-red)')}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>download</span>
                 تنزيل
               </button>
@@ -435,7 +435,7 @@ export default function HymnLessonDetailScreen() {
                     بدء التسجيل
                   </button>
                 ) : (
-                  <button onClick={stopRecording} style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button onClick={stopRecording} style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>stop</span>
                     إيقاف ({recordSeconds}ث)
                   </button>
@@ -466,8 +466,8 @@ export default function HymnLessonDetailScreen() {
 
       {/* PDF Fullscreen */}
       {pdfFullscreen && hasPdf && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 500, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', background: 'rgba(15,23,42,0.98)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-media)', zIndex: 500, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', background: 'var(--media-chrome)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
             <span style={{ fontWeight: 600, color: 'var(--accent-gold)', fontSize: '0.95rem' }}>{lesson.lyricsPdfFileName || 'كلمات اللحن'}</span>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button onClick={() => downloadFile(lesson.lyricsPdfUrl, lesson.lyricsPdfFileName)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', fontFamily: 'inherit' }}>

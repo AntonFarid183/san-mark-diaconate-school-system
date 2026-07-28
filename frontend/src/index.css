@@ -1,22 +1,99 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
 
+/* ──────────────────────────────────────────────────────────────────────
+   THEME TOKENS
+
+   Dark is the default (:root). Light overrides live in [data-theme="light"]
+   further down — the attribute is set on <html> by ThemeContext.
+
+   Rules that keep both themes honest:
+   - `--accent-gold` is the *foreground-safe* gold. Bright #fbbf24 only clears
+     ~1.8:1 on white, so light mode swaps it for a deep amber. Anything that
+     needs the bright brand colour as a FILL (button gradients, progress bars)
+     uses `--accent-gold-fill`, which stays bright in both themes.
+   - Surface/divider tints are tokens, never raw rgba(255,255,255,…): a white
+     tint over a light background is invisible, so these must flip.
+   - Modal scrims stay dark in both themes — dimming the page behind a dialog
+     is correct regardless of theme.
+   ────────────────────────────────────────────────────────────────────── */
 :root {
   --bg-primary: #0f172a;
+  --bg-gradient-end: #020617;
   --bg-secondary: #1e293b;
-  --accent-gold: #fbbf24;
+
+  --accent-gold: #fbbf24;         /* safe as foreground on dark */
+  --accent-gold-fill: #fbbf24;    /* bright brand fill, both themes */
   --accent-gold-hover: #f59e0b;
   --accent-blue: #3b82f6;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --danger: #ef4444;
+  /* Foreground reds/greens: tuned for TEXT on dark surfaces. Solid fills that
+     carry white text use the -solid pair instead — a colour bright enough to
+     read as text is never dark enough to sit under white. */
+  --danger: #f87171;
+  --danger-solid: #dc2626;
   --success: #10b981;
+  --success-solid: #047857;
   --warning: #f59e0b;
 
   --glass-bg: rgba(30, 41, 59, 0.88);
   --glass-border: rgba(255, 255, 255, 0.22);
   --glass-highlight: rgba(255, 255, 255, 0.05);
   --input-bg: rgba(15, 23, 42, 0.6);
+
+  /* Layered surfaces above the page background */
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.08);
+  --track-bg: rgba(255, 255, 255, 0.1);
+  --divider: rgba(255, 255, 255, 0.15);
+  --divider-strong: rgba(255, 255, 255, 0.3);
+
+  /* Gold tints used as backgrounds/borders */
+  --gold-tint-weak: rgba(251, 191, 36, 0.06);
+  --gold-tint: rgba(251, 191, 36, 0.12);
+  --gold-tint-strong: rgba(251, 191, 36, 0.25);
+
+  /* Status tints */
+  --success-tint: rgba(16, 185, 129, 0.15);
+  --danger-tint: rgba(239, 68, 68, 0.15);
+  --info-tint: rgba(59, 130, 246, 0.12);
+  --accent-amber: #f59e0b;
+  --accent-violet: #a78bfa;
+  /* Text/icon colour placed ON a solid --accent-gold fill. */
+  --on-accent: #1e293b;
+  /* Inset track behind segmented controls / table headers */
+  --track-inset: rgba(15, 23, 42, 0.5);
+  --media-chrome: rgba(15, 23, 42, 0.98);
+  --popover-bg: rgba(10, 16, 30, 0.98);
+  --panel-gradient: linear-gradient(135deg, rgba(30,41,59,0.97) 0%, rgba(15,23,42,0.97) 100%);
+  /* Chart/status palette. These are tuned for dark backgrounds; the light
+     block re-tunes each one so the same semantic colour stays AA-legible. */
+  --c-emerald: #34d399;
+  --c-green: #4ade80;
+  --c-blue: #60a5fa;
+  --c-red: #f87171;
+  --c-orange: #fb923c;
+  --c-pink: #f472b6;
+  --c-cyan: #06b6d4;
+  --purple: #a855f7;
+  --purple-tint: rgba(168, 85, 247, 0.12);
+  --auth-scrim: linear-gradient(180deg, rgba(10,16,30,0.25) 0%, rgba(10,16,30,0.4) 60%, rgba(10,16,30,0.72) 100%),
+    radial-gradient(ellipse at center, rgba(10,16,30,0.02) 0%, rgba(10,16,30,0.22) 80%);
+  --auth-bg-brightness: 0.8;
+  --auth-bg-opacity: 0.55;
+
+  /* Scrims + elevation */
+  --shadow-tint: rgba(0, 0, 0, 0.45);
+  /* Authenticated app shell — the sidebar and the wash over the backdrop photo */
+  --app-wash: rgba(10, 16, 30, 0.35);
+  --app-sidebar-bg: rgba(10, 16, 30, 0.97);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-media: rgba(0, 0, 0, 0.9);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.6);
 
   --sidebar-width: 260px;
   --topbar-height: 64px;
@@ -26,10 +103,86 @@
   --radius-xl: 24px;
 }
 
+[data-theme='light'] {
+  /* Soft off-white rather than pure #fff — cuts glare on long admin sessions
+     and lets white cards read as raised surfaces. */
+  --bg-primary: #f1f4f9;
+  --bg-gradient-end: #e6eaf2;
+  --bg-secondary: #ffffff;
+
+  /* Solved against the three light backgrounds this sits on — white cards
+     (5.65:1), the page gradient (5.12:1) and the pale gold tint (4.86:1) —
+     so gold text clears AA everywhere while staying on-brand. */
+  --accent-gold: #8a5f05;
+  --accent-gold-fill: #f59e0b;    /* fills stay bright */
+  --accent-gold-hover: #b45309;
+  --accent-blue: #1d4ed8;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #5d6b80;         /* 4.91:1 on the page gradient — still AA */
+  --danger: #b91c1c;
+  --danger-solid: #b91c1c;
+  --success: #047857;
+  --success-solid: #047857;
+  --warning: #b45309;
+
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(15, 23, 42, 0.12);
+  --glass-highlight: rgba(15, 23, 42, 0.03);
+  --input-bg: #ffffff;
+
+  --surface-1: rgba(15, 23, 42, 0.03);
+  --surface-2: rgba(15, 23, 42, 0.05);
+  --surface-3: rgba(15, 23, 42, 0.08);
+  --track-bg: rgba(15, 23, 42, 0.1);
+  --divider: rgba(15, 23, 42, 0.14);
+  --divider-strong: rgba(15, 23, 42, 0.26);
+
+  --gold-tint-weak: rgba(245, 158, 11, 0.09);
+  --gold-tint: rgba(245, 158, 11, 0.16);
+  --gold-tint-strong: rgba(245, 158, 11, 0.32);
+
+  --success-tint: rgba(4, 120, 87, 0.13);
+  --danger-tint: rgba(220, 38, 38, 0.11);
+  --info-tint: rgba(29, 78, 216, 0.11);
+
+  --shadow-tint: rgba(15, 23, 42, 0.14);
+  /* Same backdrop photo, washed to near-white so dark text stays legible. */
+  --app-wash: rgba(244, 246, 251, 0.9);
+  --app-sidebar-bg: rgba(255, 255, 255, 0.97);
+  --overlay: rgba(15, 23, 42, 0.45);
+  --overlay-media: rgba(15, 23, 42, 0.88);
+  --shadow-card: 0 6px 20px rgba(15, 23, 42, 0.08);
+  --shadow-pop: 0 10px 28px rgba(15, 23, 42, 0.12);
+  --shadow-modal: 0 24px 60px rgba(15, 23, 42, 0.2);
+  --accent-amber: #92500a;
+  --accent-violet: #6d28d9;
+  --on-accent: #ffffff;
+  --track-inset: rgba(15, 23, 42, 0.06);
+  --media-chrome: rgba(255, 255, 255, 0.98);
+  --popover-bg: rgba(255, 255, 255, 0.98);
+  --panel-gradient: linear-gradient(135deg, #ffffff 0%, #f4f7fc 100%);
+  --c-emerald: #047857;
+  --c-green: #166534;
+  --c-blue: #1d4ed8;
+  --c-red: #991b1b;
+  --c-orange: #b45309;
+  --c-pink: #be185d;
+  --c-cyan: #0e7490;
+  --purple: #7e22ce;
+  --purple-tint: rgba(126, 34, 206, 0.11);
+  /* Light auth screen: keep the wallpaper but wash it out so the white card
+     sits on a bright, airy backdrop instead of a dark one. */
+  --auth-scrim: linear-gradient(180deg, rgba(241,244,249,0.62) 0%, rgba(241,244,249,0.74) 60%, rgba(241,244,249,0.88) 100%),
+    radial-gradient(ellipse at center, rgba(241,244,249,0.28) 0%, rgba(241,244,249,0.6) 80%);
+  --auth-bg-brightness: 1.06;
+  --auth-bg-opacity: 0.5;
+}
+
 body {
   margin: 0;
   font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, #020617 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-gradient-end) 100%);
   color: var(--text-primary);
   min-height: 100vh;
   direction: rtl;
@@ -60,7 +213,7 @@ a {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card);
   padding: 2rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -71,8 +224,8 @@ a {
 }
 .card-hover:hover {
   transform: translateY(-3px);
-  border-color: rgba(251, 191, 36, 0.35);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0.15);
+  border-color: var(--gold-tint-strong);
+  box-shadow: var(--shadow-pop), 0 0 0 1px var(--gold-tint);
 }
 .card-hover:active {
   transform: translateY(-1px);
@@ -90,7 +243,7 @@ a {
   padding: 5px 6px 4px;
   border-radius: 8px;
   border: none;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-1);
   cursor: pointer;
   transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
   color: var(--text-secondary);
@@ -107,34 +260,34 @@ a {
   cursor: not-allowed;
 }
 .btn-icon:hover {
-  background: rgba(251, 191, 36, 0.12);
+  background: var(--gold-tint);
   color: var(--accent-gold);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+  box-shadow: 0 2px 8px var(--gold-tint);
 }
 .btn-icon:active {
   transform: translateY(0);
   box-shadow: none;
 }
 .btn-icon.danger:hover {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--danger-tint);
   color: var(--danger);
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 2px 8px var(--danger-tint);
 }
 .btn-icon.success:hover {
-  background: rgba(16, 185, 129, 0.12);
+  background: var(--success-tint);
   color: var(--success);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 2px 8px var(--success-tint);
 }
 .btn-icon.info:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--info-tint);
   color: var(--accent-blue);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 2px 8px var(--info-tint);
 }
 .btn-icon.purple:hover {
-  background: rgba(168, 85, 247, 0.12);
-  color: #a855f7;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);
+  background: var(--purple-tint);
+  color: var(--purple);
+  box-shadow: 0 2px 8px var(--purple-tint);
 }
 
 .premium-input {
@@ -152,7 +305,7 @@ a {
 
 .premium-input:focus {
   border-color: var(--accent-gold);
-  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+  box-shadow: 0 0 0 2px var(--gold-tint-strong);
 }
 
 .premium-input::placeholder {
@@ -162,7 +315,7 @@ a {
 .btn-primary {
   width: 100%;
   padding: 0.8rem;
-  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-hover) 100%);
+  background: linear-gradient(135deg, var(--accent-gold-fill) 0%, var(--accent-gold-hover) 100%);
   color: #1e293b;
   border: none;
   border-radius: var(--radius-sm);
@@ -175,7 +328,7 @@ a {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 4px 20px var(--gold-tint-strong);
 }
 
 .btn-primary:active {
@@ -202,12 +355,12 @@ a {
 }
 
 .btn-secondary:hover {
-  background: rgba(251, 191, 36, 0.1);
+  background: var(--gold-tint);
 }
 
 .error-box {
   color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger-tint);
   padding: 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--danger);
@@ -245,7 +398,7 @@ a {
 .payment-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -261,7 +414,7 @@ a {
   padding: 2rem;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-modal);
   animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -273,11 +426,11 @@ a {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--divider);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--divider-strong);
 }
 
 /* Table row hover */
@@ -285,7 +438,7 @@ a {
   transition: background 0.18s ease;
 }
 .table-row-hover:hover {
-  background: rgba(251, 191, 36, 0.04);
+  background: var(--gold-tint-weak);
 }
 
 /* Sidebar nav item hover — defined globally so Layout uses it */
@@ -293,7 +446,7 @@ a {
   transition: background 0.18s ease, color 0.18s ease;
 }
 .nav-item:hover {
-  background: rgba(251, 191, 36, 0.08) !important;
+  background: var(--gold-tint) !important;
   color: var(--accent-gold) !important;
 }
 
@@ -313,7 +466,7 @@ a {
   transition: background 0.18s ease;
 }
 .nav-logout:hover {
-  background: rgba(239, 68, 68, 0.1) !important;
+  background: var(--danger-tint) !important;
 }
 
 /* Auth pages background (no sidebar) — same warm wallpaper as the landing hero,
@@ -337,8 +490,8 @@ a {
   background-image: url('/landing wallpaper.png');
   background-size: cover;
   background-position: center;
-  filter: brightness(0.8);
-  opacity: 0.55;
+  filter: brightness(var(--auth-bg-brightness));
+  opacity: var(--auth-bg-opacity);
   transform: scale(1.06);
   animation: auth-bg-fade-in 0.6s ease forwards, auth-bg-drift 26s ease-in-out infinite alternate;
   z-index: 0;
@@ -348,9 +501,7 @@ a {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(10,16,30,0.25) 0%, rgba(10,16,30,0.4) 60%, rgba(10,16,30,0.72) 100%),
-    radial-gradient(ellipse at center, rgba(10,16,30,0.02) 0%, rgba(10,16,30,0.22) 80%);
+  background: var(--auth-scrim);
   z-index: 1;
 }
 
@@ -382,4 +533,47 @@ a {
   .auth-page > * {
     animation: none;
   }
+}
+
+/* Church crest on the auth screens — transparent PNG, so it needs no plate.
+   A soft drop-shadow keeps the gold edge from dissolving into a light card. */
+.auth-logo {
+  display: block;
+  margin: 0 auto 1rem;
+  filter: drop-shadow(0 4px 12px var(--shadow-tint));
+}
+
+/* Theme cross-fade. The class is added only for the duration of a toggle, so
+   colours ease across instead of snapping — without leaving a permanent
+   transition on every element (which would make ordinary hovers feel laggy). */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 260ms ease,
+              background-image 260ms ease,
+              border-color 260ms ease,
+              color 260ms ease,
+              box-shadow 260ms ease,
+              fill 260ms ease !important;
+  transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition: none !important;
+  }
+}
+
+/* Auth screens sit outside the app shell, so they carry their own toggle —
+   otherwise someone landing straight on /login is stuck in whichever theme
+   their OS picked. */
+.auth-theme-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
 }

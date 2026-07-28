@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>مدرسة بي ثيؤريموس للألحان والتسبحة</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <script>
+      // Runs before first paint so the page never flashes the wrong theme.
+      // ThemeContext owns the value from here on; this just mirrors it early.
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          var theme = (saved === 'light' || saved === 'dark')
+            ? saved
+            : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -167,7 +167,7 @@ export default function PendingApprovalsScreen() {
               </button>
               <button
                 onClick={confirmPayment}
-                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 700 }}>
+                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 700 }}>
                 تأكيد الدفع
               </button>
             </div>

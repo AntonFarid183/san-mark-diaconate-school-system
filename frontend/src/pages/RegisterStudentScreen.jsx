@@ -132,7 +132,7 @@ const RegisterStudentScreen = () => {
         <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
         <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
         <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
-        <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
+        <div style={{ padding: '20px', background: 'var(--surface-2)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
           <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
             اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
           </h2>
@@ -161,7 +161,7 @@ const RegisterStudentScreen = () => {
           <div key={section.key} onClick={() => setCurrentStep(i)} style={{
             flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
             background: i === currentStep ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.55)',
-            border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.3)',
+            border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '20px', display: 'block', marginBottom: '0.25rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
               {i < currentStep ? 'check_circle' : section.icon}
@@ -216,8 +216,8 @@ const RegisterStudentScreen = () => {
                     <button key={s.id} type="button" onClick={() => setFormData(prev => ({ ...prev, stage: s.id }))}
                       style={{
                         padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', transition: 'all 0.2s',
-                        background: formData.stage === s.id ? 'rgba(251,191,36,0.12)' : 'rgba(15,23,42,0.5)',
-                        border: formData.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.25)',
+                        background: formData.stage === s.id ? 'rgba(251,191,36,0.12)' : 'var(--track-inset)',
+                        border: formData.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
                         color: formData.stage === s.id ? 'var(--accent-gold)' : 'var(--text-secondary)',
                         fontWeight: formData.stage === s.id ? 700 : 400,
                       }}>

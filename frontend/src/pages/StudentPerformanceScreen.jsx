@@ -282,7 +282,7 @@ export default function StudentPerformanceScreen() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(15,23,42,0.4)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'var(--track-inset)' }}>
                     <th style={{ ...thStyle, textAlign: 'right' }}>الطالب</th>
                     {subjects.map(s => <th key={s.key} style={thStyle}>{s.name}</th>)}
                     <th style={thStyle}>الحضور</th>
@@ -291,7 +291,7 @@ export default function StudentPerformanceScreen() {
                 </thead>
                 <tbody>
                   {students.map(student => (
-                    <tr key={student.studentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <tr key={student.studentId} style={{ borderBottom: '1px solid var(--surface-2)' }}>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>
                         <div onClick={() => navigate(`/students/${student.studentId}`)} style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--text-primary)' }}
                           onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-gold)'}
@@ -352,7 +352,7 @@ export default function StudentPerformanceScreen() {
 
       {/* Subject detail modal */}
       {detailModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={() => setDetailModal(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={() => setDetailModal(null)}>
           <div className="glass-card" style={{ padding: '2rem', width: '440px', maxWidth: '92vw', maxHeight: '80vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
               <h3 style={{ color: 'var(--accent-gold)' }}>{detailModal.subjectName}</h3>
@@ -365,7 +365,7 @@ export default function StudentPerformanceScreen() {
                 const pct = (item.score / item.maxScore) * 100;
                 const colors = performanceColor(pct);
                 return (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.9rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.9rem', borderRadius: '8px', background: 'var(--surface-1)' }}>
                     <div>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{item.title}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{new Date(item.date).toLocaleDateString('ar-EG')}</div>

@@ -5,9 +5,9 @@ import { usePageTitle } from '../context/PageTitleContext';
 
 const classifyColor = (p) => {
   if (p >= 90) return 'var(--success)';
-  if (p >= 80) return '#60a5fa';
+  if (p >= 80) return 'var(--c-blue)';
   if (p >= 70) return 'var(--warning)';
-  if (p >= 60) return '#a78bfa';
+  if (p >= 60) return 'var(--accent-violet)';
   return 'var(--danger)';
 };
 

@@ -66,7 +66,7 @@ export default function StudentCurriculumScreen() {
                       عرض
                     </button>
                     <button onClick={() => downloadFile(item.pdfUrl, item.pdfFileName)}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.5rem', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.5rem', borderRadius: '8px', background: 'var(--surface-3)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>download</span>
                       تنزيل
                     </button>
@@ -82,8 +82,8 @@ export default function StudentCurriculumScreen() {
 
       {/* PDF Viewer Modal */}
       {viewing && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid var(--glass-border)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-media)', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', background: 'var(--media-chrome)', borderBottom: '1px solid var(--glass-border)' }}>
             <span style={{ fontWeight: 600, color: 'var(--accent-gold)' }}>{viewing.title}</span>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button onClick={() => downloadFile(viewing.pdfUrl, viewing.pdfFileName)}

@@ -345,7 +345,7 @@ export default function StudentDetailScreen() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {attendance.slice(0, 5).map(a => (
-                <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '0.85rem' }}>
+                <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--surface-1)', fontSize: '0.85rem' }}>
                   <span>{a.sessionTitle}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{formatDate(a.recordedAt)}</span>
@@ -381,7 +381,7 @@ export default function StudentDetailScreen() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   {account.transactions.filter(t => !t.isVoided).slice(0, 5).map(t => (
-                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '0.85rem' }}>
+                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--surface-1)', fontSize: '0.85rem' }}>
                       <span>{t.description}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{formatDate(t.transactionDate)}</span>
@@ -410,7 +410,7 @@ export default function StudentDetailScreen() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {homework.slice(0, 5).map(h => (
-                <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '0.85rem' }}>
+                <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--surface-1)', fontSize: '0.85rem' }}>
                   <span>{h.title} <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>({h.subjectName})</span></span>
                   <span style={{ padding: '0.15rem 0.6rem', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700, ...(!h.hasSubmitted ? { background: 'rgba(239,68,68,0.14)', color: 'var(--danger)' } : h.score == null ? { background: 'rgba(251,191,36,0.14)', color: 'var(--accent-gold)' } : { background: 'rgba(16,185,129,0.14)', color: 'var(--success)' }) }}>
                     {!h.hasSubmitted ? 'لم يُسلَّم' : h.score == null ? 'بانتظار التصحيح' : `${h.score} / ${h.totalMarks}`}
@@ -434,7 +434,7 @@ export default function StudentDetailScreen() {
               {hymns.slice(0, 5).map(h => {
                 const st = HYMN_STATUS_LABELS[h.status] || { label: h.status, color: 'var(--text-muted)' };
                 return (
-                  <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '0.85rem' }}>
+                  <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--surface-1)', fontSize: '0.85rem' }}>
                     <span>{h.hymnTitle}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       {h.score != null && <span style={{ fontWeight: 700 }}>{h.score}/10</span>}
@@ -463,7 +463,7 @@ export default function StudentDetailScreen() {
                 </div>
               ))}
               {notifications.recentPersistent.slice(0, 5).map(n => (
-                <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 0.9rem', borderRadius: '8px', background: n.isRead ? 'rgba(255,255,255,0.02)' : 'rgba(59,130,246,0.08)', border: n.isRead ? 'none' : '1px solid rgba(59,130,246,0.25)', fontSize: '0.85rem' }}>
+                <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 0.9rem', borderRadius: '8px', background: n.isRead ? 'var(--surface-1)' : 'rgba(59,130,246,0.08)', border: n.isRead ? 'none' : '1px solid rgba(59,130,246,0.25)', fontSize: '0.85rem' }}>
                   <div>
                     <div style={{ fontWeight: n.isRead ? 500 : 700 }}>{n.title}</div>
                     {n.message && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{n.message}</div>}
@@ -483,7 +483,7 @@ export default function StudentDetailScreen() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {timeline.map((e, i) => (
-                <div key={i} style={{ display: 'flex', gap: '0.75rem', padding: '0.6rem 0', borderBottom: i < timeline.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div key={i} style={{ display: 'flex', gap: '0.75rem', padding: '0.6rem 0', borderBottom: i < timeline.length - 1 ? '1px solid var(--surface-2)' : 'none' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: e.color, flexShrink: 0, marginTop: '0.1rem' }}>{e.icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.85rem' }}>{e.label}</div>

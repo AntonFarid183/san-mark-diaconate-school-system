@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
+import ChurchLogo from '../components/ChurchLogo';
+import ThemeToggle from '../components/ThemeToggle';
 
 const STAGE_IDS = {
   childhood:   '00000000-0000-0000-0000-000000000001',
@@ -122,12 +124,13 @@ export default function SelfRegisterScreen() {
   if (credentials) {
     return (
       <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
+        <div className="auth-theme-toggle"><ThemeToggle size={36} /></div>
         <div className="glass-card" style={{ maxWidth: '480px', width: '100%', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem', display: 'block' }}>check_circle</span>
           <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>تم التسجيل بنجاح!</h1>
           <p style={{ marginBottom: '1.5rem' }}>احتفظ ببيانات الدخول الخاصة بك</p>
 
-          <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)', marginBottom: '1.5rem' }}>
+          <div style={{ padding: '1.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)', marginBottom: '1.5rem' }}>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>اسم المستخدم</div>
               <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</div>
@@ -153,11 +156,12 @@ export default function SelfRegisterScreen() {
   // --- FORM VIEW ---
   return (
     <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: '2rem', paddingBottom: '2rem' }}>
+      <div className="auth-theme-toggle"><ThemeToggle size={36} /></div>
       <div style={{ maxWidth: '700px', width: '100%' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent-gold)', marginBottom: '0.5rem', display: 'block' }}>church</span>
+          <ChurchLogo size={84} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.15rem', lineHeight: 1.4, marginBottom: '0.25rem' }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
           <p style={{ fontSize: '0.8rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
           <h2 style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.75rem', fontWeight: 600 }}>تسجيل عضو جديد</h2>
@@ -169,7 +173,7 @@ export default function SelfRegisterScreen() {
             <div key={section.key} onClick={() => setCurrentStep(i)} style={{
               flex: 1, padding: '0.6rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
               background: i === currentStep ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.55)',
-              border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.3)',
+              border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px', display: 'block', marginBottom: '0.2rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
                 {i < currentStep ? 'check_circle' : section.icon}
@@ -221,8 +225,8 @@ export default function SelfRegisterScreen() {
                       <button key={s.id} type="button" onClick={() => setFormData(prev => ({ ...prev, stage: s.id }))}
                         style={{
                           padding: '0.45rem 0.9rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', transition: 'all 0.2s',
-                          background: formData.stage === s.id ? 'rgba(251,191,36,0.12)' : 'rgba(15,23,42,0.5)',
-                          border: formData.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.25)',
+                          background: formData.stage === s.id ? 'rgba(251,191,36,0.12)' : 'var(--track-inset)',
+                          border: formData.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
                           color: formData.stage === s.id ? 'var(--accent-gold)' : 'var(--text-secondary)',
                           fontWeight: formData.stage === s.id ? 700 : 400,
                         }}>

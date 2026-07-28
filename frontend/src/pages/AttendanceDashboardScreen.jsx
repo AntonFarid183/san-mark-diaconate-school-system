@@ -185,7 +185,7 @@ const AttendanceDashboardScreen = () => {
             </thead>
             <tbody>
               {records.map(r => (
-                <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <tr key={r.id} style={{ borderBottom: '1px solid var(--surface-2)' }}>
                   <td style={{ padding: '0.6rem' }}>{r.studentName} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({r.studentCode})</span></td>
                   <td style={{ padding: '0.6rem' }}>{r.sessionTitle}</td>
                   <td style={{ padding: '0.6rem', color: STATUS_COLORS[r.status], fontWeight: 600 }}>{STATUS_LABELS[r.status]}</td>
@@ -203,7 +203,7 @@ const AttendanceDashboardScreen = () => {
 
       {/* Override Modal */}
       {editing && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '420px', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>تعديل حالة الحضور</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{editing.studentName} — {editing.sessionTitle}</p>

@@ -115,7 +115,7 @@ const StudentPromotionScreen = () => {
             <div className="glass-card" style={{ overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'var(--surface-1)' }}>
                     {['من', 'إلى', 'العام الدراسي', 'التاريخ', 'ملاحظات'].map(h => (
                       <th key={h} style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{h}</th>
                     ))}

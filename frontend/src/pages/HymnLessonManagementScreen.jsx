@@ -10,9 +10,9 @@ const STAGES_WITH_GRADES = new Set([
 ]);
 
 const STATUS_MAP = {
-  0: { label: 'تحت الإنشاء', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.08)' },
+  0: { label: 'تحت الإنشاء', color: 'var(--text-muted)', bg: 'var(--surface-3)' },
   1: { label: 'منشور',  color: 'var(--success)',    bg: 'rgba(16,185,129,0.12)' },
-  2: { label: 'مؤرشف', color: '#94a3b8',            bg: 'rgba(148,163,184,0.12)' },
+  2: { label: 'مؤرشف', color: 'var(--text-muted)',            bg: 'rgba(148,163,184,0.12)' },
 };
 
 export default function HymnLessonManagementScreen() {
@@ -156,7 +156,7 @@ export default function HymnLessonManagementScreen() {
           background: msg.type === 'success' ? 'rgba(16,185,129,0.92)' : 'rgba(239,68,68,0.92)',
           color: '#fff', fontWeight: 600, fontSize: '0.9rem',
           backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          boxShadow: '0 8px 32px var(--shadow-tint)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
           animation: 'fadeInUp 0.25s ease',
         }}>
@@ -256,7 +256,7 @@ export default function HymnLessonManagementScreen() {
 
       {/* ── Upload Modal ───────────────────────────────────────────────────── */}
       {uploadTarget && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '520px', padding: '2rem', direction: 'rtl' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ color: 'var(--accent-gold)', fontSize: '1.1rem' }}>رفع ملفات — {uploadTarget.title}</h3>
@@ -268,7 +268,7 @@ export default function HymnLessonManagementScreen() {
               {/* Video */}
               <div style={uploadSection}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#60a5fa' }}>videocam</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--c-blue)' }}>videocam</span>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>الفيديو التعليمي</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -276,7 +276,7 @@ export default function HymnLessonManagementScreen() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => videoInputRef.current.click()} disabled={uploading === 'upload-video'} style={uploadBtn('#60a5fa')}>
+                <button onClick={() => videoInputRef.current.click()} disabled={uploading === 'upload-video'} style={uploadBtn('var(--c-blue)')}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
                   {uploading === 'upload-video' ? 'جاري الرفع...' : uploadTarget.videoType === 1 ? 'استبدال الفيديو' : 'رفع فيديو (MP4 / WebM)'}
                 </button>
@@ -285,7 +285,7 @@ export default function HymnLessonManagementScreen() {
               {/* Lyrics PDF */}
               <div style={uploadSection}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#f87171' }}>picture_as_pdf</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--c-red)' }}>picture_as_pdf</span>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>كلمات اللحن — PDF</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -293,7 +293,7 @@ export default function HymnLessonManagementScreen() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => pdfInputRef.current.click()} disabled={uploading === 'upload-lyrics-pdf'} style={uploadBtn('#f87171')}>
+                <button onClick={() => pdfInputRef.current.click()} disabled={uploading === 'upload-lyrics-pdf'} style={uploadBtn('var(--c-red)')}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
                   {uploading === 'upload-lyrics-pdf' ? 'جاري الرفع...' : 'رفع ملف PDF للكلمات'}
                 </button>
@@ -302,7 +302,7 @@ export default function HymnLessonManagementScreen() {
               {/* Lyrics Image */}
               <div style={uploadSection}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#34d399' }}>image</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--c-emerald)' }}>image</span>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>كلمات اللحن — صورة</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -310,7 +310,7 @@ export default function HymnLessonManagementScreen() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => imgInputRef.current.click()} disabled={uploading === 'upload-lyrics-image'} style={uploadBtn('#34d399')}>
+                <button onClick={() => imgInputRef.current.click()} disabled={uploading === 'upload-lyrics-image'} style={uploadBtn('var(--c-emerald)')}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
                   {uploading === 'upload-lyrics-image' ? 'جاري الرفع...' : 'رفع صورة الكلمات'}
                 </button>
@@ -327,14 +327,14 @@ export default function HymnLessonManagementScreen() {
 
       {/* ── Student Preview Modal ─────────────────────────────────────────── */}
       {previewLesson && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-media)', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
 
           {/* Preview top-bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', background: 'rgba(88,28,235,0.25)', borderBottom: '1px solid rgba(167,139,250,0.3)', flexShrink: 0, backdropFilter: 'blur(12px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#a78bfa' }}>preview</span>
-              <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.95rem' }}>معاينة كالطالب</span>
-              <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.6rem', borderRadius: '20px', background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-violet)' }}>preview</span>
+              <span style={{ color: 'var(--accent-violet)', fontWeight: 700, fontSize: '0.95rem' }}>معاينة كالطالب</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.6rem', borderRadius: '20px', background: 'rgba(167,139,250,0.15)', color: 'var(--accent-violet)', border: '1px solid rgba(167,139,250,0.3)' }}>
                 {STATUS_MAP[previewLesson.status]?.label || 'تحت الإنشاء'}
               </span>
             </div>
@@ -391,7 +391,7 @@ export default function HymnLessonManagementScreen() {
                     <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>ملف كلمات اللحن</span>
                   </div>
                   <button onClick={() => setPreviewPdfFs(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(96,165,250,0.35)', background: 'rgba(96,165,250,0.08)', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(96,165,250,0.35)', background: 'rgba(96,165,250,0.08)', color: 'var(--c-blue)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600 }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen</span>
                     تكبير
                   </button>
@@ -413,8 +413,8 @@ export default function HymnLessonManagementScreen() {
 
           {/* PDF fullscreen inside preview */}
           {previewPdfFs && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', background: 'rgba(15,23,42,0.98)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'var(--overlay-media)', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', background: 'var(--media-chrome)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
                 <span style={{ fontWeight: 600, color: 'var(--accent-gold)', fontSize: '0.95rem' }}>{previewLesson.lyricsPdfFileName || 'كلمات اللحن'}</span>
                 <button onClick={() => setPreviewPdfFs(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}>✕</button>
               </div>
@@ -426,7 +426,7 @@ export default function HymnLessonManagementScreen() {
 
       {/* ── Create / Edit Modal ────────────────────────────────────────────── */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '520px', padding: '2rem', direction: 'rtl', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
               {editing ? 'تعديل بيانات الدرس' : 'إضافة درس لحن جديد'}
@@ -497,7 +497,7 @@ export default function HymnLessonManagementScreen() {
 // ── shared styles ─────────────────────────────────────────────────────────────
 const uploadSection = {
   padding: '1rem', borderRadius: 'var(--radius-sm)',
-  background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
+  background: 'var(--surface-1)', border: '1px solid var(--glass-border)',
 };
 const uploadBtn = (color) => ({
   width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',

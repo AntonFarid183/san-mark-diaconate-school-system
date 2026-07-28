@@ -135,7 +135,7 @@ const EditStudentScreen = () => {
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>lock_reset</span>
                 إعادة تعيين كلمة المرور
               </button>
-              <button onClick={() => navigate(`/students/${id}/promote`)} style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid #60a5fa', color: '#60a5fa', borderRadius: '8px', padding: '0.6rem 1rem', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <button onClick={() => navigate(`/students/${id}/promote`)} style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid var(--c-blue)', color: 'var(--c-blue)', borderRadius: '8px', padding: '0.6rem 1rem', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upgrade</span>
                 ترقية الطالب
               </button>
@@ -162,7 +162,7 @@ const EditStudentScreen = () => {
       </div>
 
       {showReset && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '400px', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>إعادة تعيين كلمة المرور</h3>
             <input className="input-field" type="password" placeholder="كلمة المرور الجديدة (8 أحرف على الأقل)" value={newPassword} onChange={e => setNewPassword(e.target.value)} />

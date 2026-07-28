@@ -255,7 +255,7 @@ export default function HomeworkManagementScreen() {
 
       {/* Create modal */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }}>
           <div className="glass-card" style={{ padding: '2rem', width: '640px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>واجب جديد</h3>
 
@@ -307,13 +307,13 @@ export default function HomeworkManagementScreen() {
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>حدد الإجابة الصحيحة لكل سؤال كما تظهر في الملف المرفوع.</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.6rem', marginBottom: '1.5rem' }}>
               {form.answerKey.map((correct, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-1)', border: '1px solid var(--glass-border)' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, minWidth: '20px' }}>{idx + 1}.</span>
                   <div style={{ display: 'flex', gap: '0.3rem' }}>
                     {OPTION_LABELS.map((label, i) => (
                       <button key={i} type="button" onClick={() => setAnswer(idx, i)} style={{
                         width: '26px', height: '26px', borderRadius: '50%', border: `1px solid ${correct === i ? 'var(--accent-gold)' : 'var(--glass-border)'}`,
-                        background: correct === i ? 'var(--accent-gold)' : 'transparent', color: correct === i ? '#1e293b' : 'var(--text-secondary)',
+                        background: correct === i ? 'var(--accent-gold)' : 'transparent', color: correct === i ? 'var(--on-accent)' : 'var(--text-secondary)',
                         cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'inherit',
                       }}>
                         {label}
@@ -336,7 +336,7 @@ export default function HomeworkManagementScreen() {
 
       {/* Manual grade entry modal */}
       {gradingHomework && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }} onClick={() => setGradingHomework(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }} onClick={() => setGradingHomework(null)}>
           <div className="glass-card" style={{ padding: '2rem', width: '560px', maxWidth: '95vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <h3 style={{ color: 'var(--accent-gold)' }}>إدخال درجات — {gradingHomework.title}</h3>
@@ -351,7 +351,7 @@ export default function HomeworkManagementScreen() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
                 {roster.map(item => (
-                  <div key={item.studentId} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)' }}>
+                  <div key={item.studentId} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '8px', background: 'var(--surface-1)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.studentName}</div>
                       {item.hasSubmitted && (

@@ -227,7 +227,7 @@ export default function HymnSubmissionsScreen() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(15,23,42,0.4)' }}>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'var(--track-inset)' }}>
                   <th style={thStyle}>الطالب</th>
                   <th style={thStyle}>الفصل</th>
                   <th style={thStyle}>الحالة</th>
@@ -240,7 +240,7 @@ export default function HymnSubmissionsScreen() {
                 {roster.map(item => {
                   const status = STATUS_LABELS[item.status];
                   return (
-                    <tr key={item.studentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <tr key={item.studentId} style={{ borderBottom: '1px solid var(--surface-2)' }}>
                       <td style={tdStyle}>
                         <div style={{ fontWeight: 600 }}>{item.studentName}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.studentCode}</div>
@@ -277,7 +277,7 @@ export default function HymnSubmissionsScreen() {
 
       {/* Review modal */}
       {reviewItem && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={() => setReviewItem(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={() => setReviewItem(null)}>
           <div className="glass-card" style={{ padding: '2rem', width: '480px', maxWidth: '92vw', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.25rem' }}>{reviewItem.studentName}</h3>
 

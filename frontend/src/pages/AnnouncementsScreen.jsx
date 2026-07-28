@@ -106,7 +106,7 @@ const AnnouncementsScreen = () => {
       )}
 
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '540px', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>{editing ? 'تعديل إعلان' : 'إعلان جديد'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

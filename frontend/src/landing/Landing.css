@@ -8,6 +8,35 @@
   min-height: 100vh;
   direction: rtl;
   --landing-navbar-h: 72px;
+
+  /* Landing-only chrome. The hero keeps its photograph in both themes; only
+     the wash over it flips, so light mode reads as a bright, airy version of
+     the same page rather than a different design. */
+  --landing-chrome: rgba(10, 16, 30, 0.85);
+  --landing-chrome-solid: rgba(10, 16, 30, 0.97);
+  --landing-chrome-panel: rgba(10, 16, 30, 0.98);
+  --landing-veil: rgba(10, 16, 30, 0.35);
+  --landing-hero-scrim:
+    linear-gradient(180deg, rgba(10,16,30,0.28) 0%, rgba(10,16,30,0.35) 45%, rgba(10,16,30,0.8) 100%),
+    radial-gradient(ellipse at center, rgba(10,16,30,0.05) 0%, rgba(10,16,30,0.3) 75%);
+  --landing-hero-brightness: 1;
+  --landing-surface: rgba(5, 8, 16, 0.88);
+  --landing-surface-2: rgba(15, 23, 42, 0.9);
+  --landing-media-bg: #1a1a1a;
+}
+
+[data-theme='light'] .landing-page {
+  --landing-chrome: rgba(255, 255, 255, 0.86);
+  --landing-chrome-solid: rgba(255, 255, 255, 0.97);
+  --landing-chrome-panel: rgba(255, 255, 255, 0.98);
+  --landing-veil: rgba(241, 244, 249, 0.55);
+  --landing-hero-scrim:
+    linear-gradient(180deg, rgba(246,248,252,0.55) 0%, rgba(246,248,252,0.62) 45%, rgba(246,248,252,0.9) 100%),
+    radial-gradient(ellipse at center, rgba(246,248,252,0.22) 0%, rgba(246,248,252,0.58) 75%);
+  --landing-hero-brightness: 1.1;
+  --landing-surface: rgba(255, 255, 255, 0.94);
+  --landing-surface-2: rgba(255, 255, 255, 0.96);
+  --landing-media-bg: #e2e8f0;
 }
 
 /* ── Navbar ─────────────────────────────────────────────────────────── */
@@ -22,7 +51,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.9rem 2rem;
-  background: rgba(10, 16, 30, 0.85);
+  background: var(--landing-chrome);
   border-bottom: 1px solid transparent;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -30,7 +59,7 @@
 }
 
 .landing-navbar.landing-navbar-solid {
-  background: rgba(10, 16, 30, 0.97);
+  background: var(--landing-chrome-solid);
   border-bottom: 1px solid rgba(251, 191, 36, 0.12);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -105,7 +134,7 @@
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 160px;
-  background: rgba(10, 16, 30, 0.98);
+  background: var(--landing-chrome-panel);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
@@ -163,7 +192,7 @@
   right: 0;
   bottom: 0;
   width: min(78vw, 300px);
-  background: rgba(10, 16, 30, 0.98);
+  background: var(--landing-chrome-panel);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid var(--glass-border);
@@ -276,8 +305,7 @@
   bottom: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(10,16,30,0.28) 0%, rgba(10,16,30,0.35) 45%, rgba(10,16,30,0.8) 100%),
-    radial-gradient(ellipse at center, rgba(10,16,30,0.05) 0%, rgba(10,16,30,0.3) 75%);
+    var(--landing-hero-scrim);
 }
 
 .landing-hero-content {
@@ -356,7 +384,7 @@
   max-width: 480px;
   border: 1px solid rgba(251, 191, 36, 0.22);
   border-radius: var(--radius-md);
-  background: rgba(10, 16, 30, 0.35);
+  background: var(--landing-veil);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   display: flex;
@@ -1071,7 +1099,7 @@
 
 .landing-stage-card-badge-empty {
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-2);
   border-color: var(--glass-border);
 }
 
@@ -1117,7 +1145,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 22px);
+  background-image: repeating-linear-gradient(115deg, var(--surface-1) 0 2px, transparent 2px 22px);
 }
 
 .landing-curriculum-card-cover-icon {
@@ -1199,7 +1227,7 @@
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(5, 8, 16, 0.88);
+  background: var(--landing-surface);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   display: flex;
@@ -1234,7 +1262,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.9rem 1.25rem;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--landing-surface-2);
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
@@ -1281,7 +1309,7 @@
   height: 38px;
   border-radius: 10px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-2);
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
@@ -1301,7 +1329,7 @@
 
 .landing-viewer-frame-wrap {
   flex: 1;
-  background: #1a1a1a;
+  background: var(--landing-media-bg);
 }
 
 .landing-viewer-frame-wrap iframe {
@@ -1361,7 +1389,7 @@
   justify-content: center;
   border-radius: 50%;
   border: 1px solid rgba(251, 191, 36, 0.3);
-  background: rgba(10, 16, 30, 0.85);
+  background: var(--landing-chrome);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: var(--accent-gold);

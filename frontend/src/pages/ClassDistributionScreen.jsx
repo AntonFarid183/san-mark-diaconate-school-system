@@ -241,9 +241,9 @@ export default function ClassDistributionScreen() {
       )}
 
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'rgba(15,23,42,0.5)', borderRadius: 'var(--radius-sm)', padding: '0.25rem', width: 'fit-content', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'var(--track-inset)', borderRadius: 'var(--radius-sm)', padding: '0.25rem', width: 'fit-content', flexWrap: 'wrap' }}>
         {[{ id: TAB_DISTRIBUTE, label: 'توزيع ذكي', icon: 'auto_awesome' }, { id: TAB_MANAGE, label: 'إدارة يدوية', icon: 'manage_accounts' }, { id: TAB_LEVELS, label: 'إدارة المستويات', icon: 'stairs' }].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: tab === t.id ? 'var(--accent-gold)' : 'transparent', color: tab === t.id ? '#1e293b' : 'var(--text-secondary)', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: tab === t.id ? 700 : 500, cursor: 'pointer', transition: 'all 0.2s' }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: tab === t.id ? 'var(--accent-gold)' : 'transparent', color: tab === t.id ? 'var(--on-accent)' : 'var(--text-secondary)', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: tab === t.id ? 700 : 500, cursor: 'pointer', transition: 'all 0.2s' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{t.icon}</span>
             {t.label}
           </button>
@@ -308,7 +308,7 @@ export default function ClassDistributionScreen() {
                   const sizes = opt.classes.map(c => c.students.length);
                   const min = Math.min(...sizes), max = Math.max(...sizes);
                   return (
-                    <button key={opt.classCount} onClick={() => setSelectedOption(opt)} style={{ flex: 1, minWidth: '140px', padding: '1rem', borderRadius: 'var(--radius-sm)', border: `2px solid ${isSelected ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: isSelected ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.4)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', fontFamily: 'inherit' }}>
+                    <button key={opt.classCount} onClick={() => setSelectedOption(opt)} style={{ flex: 1, minWidth: '140px', padding: '1rem', borderRadius: 'var(--radius-sm)', border: `2px solid ${isSelected ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: isSelected ? 'rgba(251,191,36,0.1)' : 'var(--track-inset)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', fontFamily: 'inherit' }}>
                       <div style={{ fontSize: '2rem', fontWeight: 800, color: isSelected ? 'var(--accent-gold)' : 'var(--text-primary)', lineHeight: 1 }}>{opt.classCount}</div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>فصول</div>
                       <div style={{ fontSize: '0.82rem', color: isSelected ? 'var(--accent-gold)' : 'var(--text-secondary)', marginTop: '0.5rem', fontWeight: 600 }}>
@@ -350,7 +350,7 @@ export default function ClassDistributionScreen() {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: '200px', overflowY: 'auto' }}>
                           {cls.students.map((s, i) => (
-                            <div key={s.id} style={{ fontSize: '0.8rem', padding: '0.2rem 0', borderBottom: i < cls.students.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'flex', gap: '0.5rem' }}>
+                            <div key={s.id} style={{ fontSize: '0.8rem', padding: '0.2rem 0', borderBottom: i < cls.students.length - 1 ? '1px solid var(--surface-2)' : 'none', display: 'flex', gap: '0.5rem' }}>
                               <span style={{ color: 'var(--text-muted)', minWidth: '20px' }}>{i + 1}</span>
                               <span>{s.fullName}</span>
                             </div>
@@ -450,7 +450,7 @@ export default function ClassDistributionScreen() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.3rem' }}>
-                      <button onClick={() => exportClass(cls)} disabled={exportingClassId === cls.id || cls.studentCount === 0} title="تصدير Excel" style={{ ...iconBtnStyle, color: '#4ade80', opacity: cls.studentCount === 0 ? 0.4 : 1 }}>
+                      <button onClick={() => exportClass(cls)} disabled={exportingClassId === cls.id || cls.studentCount === 0} title="تصدير Excel" style={{ ...iconBtnStyle, color: 'var(--c-green)', opacity: cls.studentCount === 0 ? 0.4 : 1 }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{exportingClassId === cls.id ? 'hourglass_top' : 'download'}</span>
                         <span style={iconBtnLabelStyle}>تصدير</span>
                       </button>
@@ -586,7 +586,7 @@ const labelStyle = {
 };
 
 const iconBtnStyle = {
-  background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '6px',
+  background: 'var(--surface-1)', border: '1px solid var(--glass-border)', borderRadius: '6px',
   padding: '0.3rem 0.4rem', cursor: 'pointer', color: 'var(--text-muted)',
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', minWidth: '46px',
 };

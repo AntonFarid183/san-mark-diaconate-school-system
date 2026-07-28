@@ -74,7 +74,7 @@ export default function StudentHymnLessonsScreen() {
                 {/* Progress bar */}
                 {item.videoType !== 0 && pct > 0 && (
                   <div style={{ marginBottom: '0.75rem' }}>
-                    <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '3px', background: 'var(--surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: done ? 'var(--success)' : 'var(--accent-gold)', borderRadius: '2px' }} />
                     </div>
                   </div>
@@ -83,15 +83,15 @@ export default function StudentHymnLessonsScreen() {
                 {/* Content tags + action label */}
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   {item.videoType !== 0 && (
-                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>
+                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(96,165,250,0.12)', color: 'var(--c-blue)' }}>
                       {item.videoType === 2 ? 'يوتيوب' : 'فيديو'}
                     </span>
                   )}
                   {(item.lyricsType === 1 || item.lyricsType === 3) && (
-                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: '#f87171' }}>PDF</span>
+                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: 'var(--c-red)' }}>PDF</span>
                   )}
                   {(item.lyricsType === 2 || item.lyricsType === 3) && (
-                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(52,211,153,0.12)', color: '#34d399' }}>صورة</span>
+                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(52,211,153,0.12)', color: 'var(--c-emerald)' }}>صورة</span>
                   )}
                   <span style={{ marginRight: 'auto', fontSize: '0.78rem', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     {done ? 'مراجعة' : pct > 0 ? 'استكمال' : 'ابدأ'}

@@ -179,7 +179,7 @@ const StudentDashboard = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {todoItems.map((t, i) => (
-              <div key={i} onClick={t.onClick} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.9rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', cursor: t.onClick ? 'pointer' : 'default', fontSize: '0.88rem' }}>
+              <div key={i} onClick={t.onClick} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.9rem', borderRadius: '8px', background: 'var(--surface-1)', cursor: t.onClick ? 'pointer' : 'default', fontSize: '0.88rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: t.color }}>{t.icon}</span>
                   <span>{t.label}</span>
@@ -233,7 +233,7 @@ const StudentDashboard = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {activity.map((e, i) => (
-              <div key={i} style={{ display: 'flex', gap: '0.75rem', padding: '0.55rem 0', borderBottom: i < activity.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+              <div key={i} style={{ display: 'flex', gap: '0.75rem', padding: '0.55rem 0', borderBottom: i < activity.length - 1 ? '1px solid var(--surface-2)' : 'none' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px', color: e.color, flexShrink: 0, marginTop: '0.15rem' }}>{e.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.83rem' }}>{e.label}</div>

@@ -87,7 +87,7 @@ export default function ExportModal({ columns, rows, storageKey, fileName, sheet
   const previewRows = rows.slice(0, 5);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: '2rem' }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: '2rem' }} onClick={onClose}>
       <div className="glass-card" style={{ padding: '2rem', width: '760px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ color: 'var(--accent-gold)' }}>تصدير Excel</h3>
@@ -118,7 +118,7 @@ export default function ExportModal({ columns, rows, storageKey, fileName, sheet
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>تم اختيار جميع الأعمدة</p>
               ) : availableKeys.map(key => (
                 <div key={key} onClick={() => addColumn(key)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <span>{colByKey[key].label}</span>
                   <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--text-muted)' }}>add</span>
@@ -165,7 +165,7 @@ export default function ExportModal({ columns, rows, storageKey, fileName, sheet
             <div style={{ overflowX: 'auto', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(15,23,42,0.4)' }}>
+                  <tr style={{ background: 'var(--track-inset)' }}>
                     {selected.map(key => (
                       <th key={key} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{colByKey[key]?.label}</th>
                     ))}
@@ -173,7 +173,7 @@ export default function ExportModal({ columns, rows, storageKey, fileName, sheet
                 </thead>
                 <tbody>
                   {previewRows.map((row, i) => (
-                    <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <tr key={i} style={{ borderTop: '1px solid var(--surface-2)' }}>
                       {selected.map(key => (
                         <td key={key} style={{ padding: '0.4rem 0.75rem', whiteSpace: 'nowrap' }}>{String(row[key] ?? '')}</td>
                       ))}

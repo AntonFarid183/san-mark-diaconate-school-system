@@ -143,7 +143,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
   const status = account ? STATUS_LABELS[account.status] : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }} onClick={onClose}>
       <div className="glass-card" style={{ padding: '2rem', width: '560px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ color: 'var(--accent-gold)' }}>مدفوعات {studentName}</h3>
@@ -163,7 +163,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
           <>
             {/* Summary cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(15,23,42,0.5)', textAlign: 'center' }}>
+              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--track-inset)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المبلغ المطلوب</div>
                 {!editingTotal && (
                   <div onClick={openEditTotal} style={{ fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
@@ -175,11 +175,11 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{account.description}</div>
                 )}
               </div>
-              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(15,23,42,0.5)', textAlign: 'center' }}>
+              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--track-inset)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المدفوع</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--success)' }}>{formatAmount(account.amountPaid)}</div>
               </div>
-              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(15,23,42,0.5)', textAlign: 'center' }}>
+              <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--track-inset)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المتبقي</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: account.remainingBalance > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{formatAmount(account.remainingBalance)}</div>
               </div>
@@ -238,7 +238,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {account.transactions.map(t => (
-                  <div key={t.id} style={{ padding: '0.65rem 0.9rem', borderRadius: '8px', background: t.isVoided ? 'rgba(239,68,68,0.04)' : 'rgba(255,255,255,0.02)', opacity: t.isVoided ? 0.65 : 1 }}>
+                  <div key={t.id} style={{ padding: '0.65rem 0.9rem', borderRadius: '8px', background: t.isVoided ? 'rgba(239,68,68,0.04)' : 'var(--surface-1)', opacity: t.isVoided ? 0.65 : 1 }}>
                     {editingTxId === t.id ? (
                       <div>
                         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>

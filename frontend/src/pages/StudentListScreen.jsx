@@ -133,7 +133,7 @@ const StudentListScreen = () => {
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             padding: '0.55rem 1.25rem', borderRadius: 'var(--radius-sm)',
             background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
-            color: '#4ade80', fontWeight: 700, fontSize: '0.88rem',
+            color: 'var(--c-green)', fontWeight: 700, fontSize: '0.88rem',
             cursor: exportLoading || totalCount === 0 ? 'not-allowed' : 'pointer',
             opacity: totalCount === 0 ? 0.5 : 1, transition: 'all 0.2s',
             fontFamily: 'inherit',
@@ -186,7 +186,7 @@ const StudentListScreen = () => {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--glass-border)', background: 'var(--surface-1)' }}>
                     {['الاسم الكامل', 'المرحلة', 'السنة الدراسية', 'الفصل', 'تاريخ الميلاد', 'الإجراءات'].map((h, i) => (
                       <th key={i} style={{ padding: '1rem', textAlign: i === 5 ? 'center' : 'right', color: 'var(--accent-gold)', fontSize: '0.85rem', fontWeight: 700 }}>{h}</th>
                     ))}
@@ -246,7 +246,7 @@ const StudentListScreen = () => {
                   width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
                   border: p === page ? 'none' : '1px solid var(--glass-border)',
                   background: p === page ? 'var(--accent-gold)' : 'transparent',
-                  color: p === page ? '#1e293b' : 'var(--text-secondary)',
+                  color: p === page ? 'var(--on-accent)' : 'var(--text-secondary)',
                   fontWeight: p === page ? 700 : 400, cursor: 'pointer',
                   fontFamily: 'inherit', fontSize: '0.85rem', transition: 'all 0.2s',
                 }}>{p}</button>

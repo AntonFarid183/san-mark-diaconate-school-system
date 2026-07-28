@@ -104,7 +104,7 @@ export default function NotificationBell() {
         <div style={{
           position: 'absolute', top: '48px', left: 0, width: '340px', maxHeight: '480px', overflowY: 'auto',
           background: 'rgba(10,16,30,0.98)', backdropFilter: 'blur(20px)', border: '1px solid var(--glass-border)',
-          borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 500, direction: 'rtl',
+          borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px var(--shadow-tint)', zIndex: 500, direction: 'rtl',
         }}>
           <div style={{ padding: '0.9rem 1rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--accent-gold)' }}>الإشعارات</span>
@@ -143,7 +143,7 @@ export default function NotificationBell() {
             <div>
               {summary.recentPersistent?.map(n => (
                 <div key={n.id} onClick={() => openNotification(n)}
-                  style={{ display: 'flex', gap: '0.7rem', padding: '0.75rem 1rem', cursor: 'pointer', background: n.isRead ? 'transparent' : 'rgba(251,191,36,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  style={{ display: 'flex', gap: '0.7rem', padding: '0.75rem 1rem', cursor: 'pointer', background: n.isRead ? 'transparent' : 'rgba(251,191,36,0.04)', borderBottom: '1px solid var(--surface-1)' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '20px', color: n.isRead ? 'var(--text-muted)' : 'var(--accent-gold)', flexShrink: 0, marginTop: '0.1rem' }}>
                     {NOTIFICATION_ICONS[n.type] || 'notifications'}
                   </span>

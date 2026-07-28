@@ -6,12 +6,12 @@ import { usePageTitle } from '../context/PageTitleContext';
 // Cycled deterministically per subject name so the palette stays consistent
 // across visits without needing a hardcoded subject → color map.
 const SUBJECT_PALETTE = [
-  { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: 'menu_book' },
-  { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', icon: 'auto_stories' },
-  { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', icon: 'church' },
-  { color: '#22c55e', bg: 'rgba(34,197,94,0.12)', icon: 'history_edu' },
-  { color: '#f472b6', bg: 'rgba(244,114,182,0.12)', icon: 'psychology' },
-  { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)', icon: 'diversity_3' },
+  { color: 'var(--accent-amber)', bg: 'rgba(245,158,11,0.12)', icon: 'menu_book' },
+  { color: 'var(--accent-blue)', bg: 'rgba(59,130,246,0.12)', icon: 'auto_stories' },
+  { color: 'var(--accent-violet)', bg: 'rgba(167,139,250,0.12)', icon: 'church' },
+  { color: 'var(--c-green)', bg: 'rgba(34,197,94,0.12)', icon: 'history_edu' },
+  { color: 'var(--c-pink)', bg: 'rgba(244,114,182,0.12)', icon: 'psychology' },
+  { color: 'var(--c-cyan)', bg: 'rgba(6,182,212,0.12)', icon: 'diversity_3' },
 ];
 
 const paletteFor = (name) => {
@@ -103,10 +103,10 @@ export default function StudentHomeworkListScreen() {
               <span>نسبة الإنجاز</span>
               <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>{donePct}%</span>
             </div>
-            <div style={{ height: '10px', borderRadius: '20px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div style={{ height: '10px', borderRadius: '20px', background: 'var(--surface-3)', overflow: 'hidden' }}>
               <div style={{
                 height: '100%', width: `${donePct}%`, borderRadius: '20px',
-                background: 'linear-gradient(90deg, var(--accent-gold), #f59e0b)',
+                background: 'linear-gradient(90deg, var(--accent-gold), var(--accent-amber))',
                 transition: 'width 0.6s ease',
               }} />
             </div>
@@ -148,7 +148,7 @@ export default function StudentHomeworkListScreen() {
                         transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                       }}
                       onClick={() => navigate(`/homework/${hw.id}`)}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 30px var(--shadow-tint)'; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{ fontWeight: 700, marginBottom: '0.6rem', lineHeight: 1.4 }}>{hw.title}</div>

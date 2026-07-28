@@ -68,7 +68,7 @@ const ExamTakingScreen = () => {
   const q = questions[currentQuestion];
   const answeredCount = questions.filter(q => answers[q.id] && answers[q.id] !== 'FLAGGED').length;
   const flaggedCount = questions.filter(q => answers[q.id] === 'FLAGGED').length;
-  const timerColor = timeLeft < 300 ? '#ef4444' : timeLeft < 600 ? '#fbbf24' : '#fff';
+  const timerColor = timeLeft < 300 ? 'var(--danger)' : timeLeft < 600 ? 'var(--accent-gold)' : '#fff';
 
   if (submitted) return null;
 
@@ -81,7 +81,7 @@ const ExamTakingScreen = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>تمت الإجابة: {answeredCount}/{questions.length}</span>
-          {flaggedCount > 0 && <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>{flaggedCount} معلّم</span>}
+          {flaggedCount > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)' }}>{flaggedCount} معلّم</span>}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '20px', color: timerColor }}>timer</span>
             <span style={{ fontSize: '1.2rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: timerColor }}>{formatTime(timeLeft)}</span>
@@ -96,15 +96,15 @@ const ExamTakingScreen = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem' }}>
             {questions.map((question, i) => {
               const ans = answers[question.id];
-              let bg = 'rgba(255,255,255,0.08)';
+              let bg = 'var(--surface-3)';
               let color = 'var(--text-secondary)';
-              if (ans === 'FLAGGED') { bg = 'rgba(251,191,36,0.2)'; color = '#fbbf24'; }
-              else if (ans !== undefined) { bg = 'rgba(16,185,129,0.2)'; color = '#10b981'; }
+              if (ans === 'FLAGGED') { bg = 'rgba(251,191,36,0.2)'; color = 'var(--accent-gold)'; }
+              else if (ans !== undefined) { bg = 'rgba(16,185,129,0.2)'; color = 'var(--success)'; }
               return (
                 <button key={question.id} onClick={() => setCurrentQuestion(i)} style={{
                   width: '32px', height: '32px', borderRadius: '50%', border: 'none',
                   background: currentQuestion === i ? 'var(--accent-gold)' : bg,
-                  color: currentQuestion === i ? '#1e293b' : color,
+                  color: currentQuestion === i ? 'var(--on-accent)' : color,
                   fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
                 }}>{i + 1}</button>
               );
@@ -118,7 +118,7 @@ const ExamTakingScreen = () => {
               <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: 'rgba(251,191,36,0.3)' }} /> معلَّم
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: 'rgba(255,255,255,0.08)' }} /> لم تجب
+              <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: 'var(--surface-3)' }} /> لم تجب
             </div>
           </div>
         </div>
@@ -127,11 +127,11 @@ const ExamTakingScreen = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>السؤال {currentQuestion + 1} من {questions.length}</span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button onClick={() => handleFlagQuestion(q.id)} className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: answers[q.id] === 'FLAGGED' ? '#fbbf24' : '#fff' }}>
+              <button onClick={() => handleFlagQuestion(q.id)} className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: answers[q.id] === 'FLAGGED' ? 'var(--accent-gold)' : '#fff' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>flag</span>
                 {answers[q.id] === 'FLAGGED' ? 'إزالة العلم' : 'علم للسؤال'}
               </button>
-              <span className="badge" style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem' }}>
+              <span className="badge" style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--c-blue)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem' }}>
                 {q.points} نقطة
               </span>
             </div>
@@ -145,7 +145,7 @@ const ExamTakingScreen = () => {
                 <label key={i} style={{
                   display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
                   borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                  background: answers[q.id] === i ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)',
+                  background: answers[q.id] === i ? 'rgba(251,191,36,0.1)' : 'var(--surface-1)',
                   border: answers[q.id] === i ? '1px solid rgba(251,191,36,0.3)' : '1px solid var(--glass-border)',
                 }}>
                   <input type="radio" name={`q_${q.id}`} checked={answers[q.id] === i} onChange={() => handleAnswer(q.id, i)}

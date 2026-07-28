@@ -5,11 +5,11 @@ import { usePageTitle } from '../context/PageTitleContext';
 
 const statusChip = (status) => {
   const styles = {
-    NEW: { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', label: 'جديد' },
-    'In Progress': { bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', label: 'قيد التقدم' },
-    Completed: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: 'مكتمل' },
+    NEW: { bg: 'rgba(59, 130, 246, 0.15)', color: 'var(--c-blue)', label: 'جديد' },
+    'In Progress': { bg: 'rgba(251, 191, 36, 0.15)', color: 'var(--accent-gold)', label: 'قيد التقدم' },
+    Completed: { bg: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)', label: 'مكتمل' },
   };
-  const s = styles[status] || { bg: 'rgba(255,255,255,0.08)', color: 'var(--text-secondary)', label: status };
+  const s = styles[status] || { bg: 'var(--surface-3)', color: 'var(--text-secondary)', label: status };
   return (
     <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', borderRadius: '20px', background: s.bg, color: s.color, fontWeight: 600 }}>
       {s.label}
@@ -66,7 +66,7 @@ const LessonsScreen = () => {
           <button key={f.key} onClick={() => setActiveFilter(f.key)} style={{
             padding: '0.4rem 1.2rem', borderRadius: '20px', border: activeFilter === f.key ? 'none' : '1px solid var(--glass-border)',
             background: activeFilter === f.key ? 'var(--accent-gold)' : 'transparent',
-            color: activeFilter === f.key ? '#1e293b' : 'var(--text-secondary)',
+            color: activeFilter === f.key ? 'var(--on-accent)' : 'var(--text-secondary)',
             fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
           }}>{f.label}</button>
         ))}
@@ -76,9 +76,9 @@ const LessonsScreen = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           {[1,2,3,4].map(i => (
             <div key={i} className="glass-card" style={{ padding: '1.5rem', animation: 'pulse 1.5s infinite' }}>
-              <div style={{ height: '20px', width: '60%', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginBottom: '1rem' }} />
-              <div style={{ height: '12px', width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '0.5rem' }} />
-              <div style={{ height: '4px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }} />
+              <div style={{ height: '20px', width: '60%', background: 'var(--surface-3)', borderRadius: '4px', marginBottom: '1rem' }} />
+              <div style={{ height: '12px', width: '40%', background: 'var(--surface-2)', borderRadius: '4px', marginBottom: '0.5rem' }} />
+              <div style={{ height: '4px', width: '100%', background: 'var(--surface-2)', borderRadius: '2px' }} />
             </div>
           ))}
         </div>
@@ -103,7 +103,7 @@ const LessonsScreen = () => {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{lesson.title}</div>
                     {lesson.weekNumber && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '0.15rem 0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'inline-block', marginTop: '0.2rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '0.15rem 0.5rem', background: 'var(--surface-2)', borderRadius: '12px', display: 'inline-block', marginTop: '0.2rem' }}>
                         الأسبوع {lesson.weekNumber}
                       </span>
                     )}
@@ -116,7 +116,7 @@ const LessonsScreen = () => {
                   <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>description</span>
                   {lesson.contentItemCount || 0} ملفات
                 </span>
-                <div style={{ flex: 1, margin: '0 1rem', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ flex: 1, margin: '0 1rem', height: '4px', background: 'var(--surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
                   <div style={{ width: '0%', height: '100%', background: 'linear-gradient(90deg, var(--accent-gold), var(--accent-gold-hover))', borderRadius: '2px' }} />
                 </div>
               </div>

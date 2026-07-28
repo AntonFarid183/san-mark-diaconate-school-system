@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const CURRICULUM_SUBJECTS = [
   { slug: 'rites', label: 'الطقس' },
@@ -80,6 +81,7 @@ export default function LandingNavbar() {
         </nav>
 
         <div className="landing-navbar-actions">
+          <ThemeToggle size={36} />
           <button className="btn-secondary" style={{ width: 'auto', padding: '0.5rem 1.4rem' }} onClick={() => navigate('/login')}>
             تسجيل الدخول
           </button>

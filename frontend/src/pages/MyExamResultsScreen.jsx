@@ -77,13 +77,13 @@ const MyExamResultsScreen = () => {
 
                   {/* Progress bar */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
+                    <div style={{ height: '10px', background: 'var(--track-bg)', borderRadius: '5px', overflow: 'hidden' }}>
                       <div style={{ width: `${p}%`, height: '100%', background: p >= 60 ? 'var(--success)' : 'var(--danger)', borderRadius: '5px', transition: 'width 0.8s ease' }} />
                     </div>
                   </div>
                 </div>
 
-                {r.notes && <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '6px' }}>ملاحظة: {r.notes}</p>}
+                {r.notes && <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0.75rem', background: 'var(--surface-2)', borderRadius: '6px' }}>ملاحظة: {r.notes}</p>}
 
                 {r.certificateId && r.status === 1 && (
                   <div style={{ marginTop: '0.75rem' }}>

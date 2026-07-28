@@ -210,7 +210,7 @@ const AttendanceSessionsScreen = () => {
             {roster.map(student => {
               const status = statusByStudent[student.studentId];
               return (
-                <div key={student.studentId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.85rem', borderRadius: '8px', background: status !== undefined ? `${STATUS_COLORS[status]}08` : 'rgba(255,255,255,0.02)', transition: 'background 0.2s' }}>
+                <div key={student.studentId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.85rem', borderRadius: '8px', background: status !== undefined ? `${STATUS_COLORS[status]}08` : 'var(--surface-1)', transition: 'background 0.2s' }}>
                   <div>
                     <span style={{ fontSize: '0.9rem' }}>{student.studentName}</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>({student.studentCode})</span>

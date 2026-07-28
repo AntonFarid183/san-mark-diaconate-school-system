@@ -41,7 +41,7 @@ const ExamResultsScreen = () => {
       <div style="text-align:center;margin-bottom:2rem"><h1>${result.title}</h1><p>تاريخ التقديم: ${new Date().toLocaleDateString('ar-EG')}</p></div>
       <div class="score"><div>النتيجة النهائية</div><div class="score-num">${result.score}/${result.totalPoints}</div><div>(${result.percentage}%) - ${result.passed ? 'ناجح' : 'راسب'}</div></div>
       <div style="margin-top:2rem">${answersList.map((q, i) => `<div class="q"><div style="font-weight:600">${i+1}. ${q.questionText} <span style="float:left;color:#999;font-weight:400">${q.pointsPossible} نقطة</span></div>
-        ${q.type === 'MultipleChoice' ? `<div style="margin-top:0.3rem">إجابتك: ${q.options[q.userAnswer] || '—'}</div><div style="color:${q.isCorrect ? '#10b981' : '#ef4444'}">${q.isCorrect ? '✓ صحيح' : '✗ خطأ'}</div>` : `<div style="margin-top:0.3rem">إجابتك: ${q.userAnswer || '—'}</div>`}</div>`).join('')}</div>
+        ${q.type === 'MultipleChoice' ? `<div style="margin-top:0.3rem">إجابتك: ${q.options[q.userAnswer] || '—'}</div><div style="color:${q.isCorrect ? 'var(--success)' : 'var(--danger)'}">${q.isCorrect ? '✓ صحيح' : '✗ خطأ'}</div>` : `<div style="margin-top:0.3rem">إجابتك: ${q.userAnswer || '—'}</div>`}</div>`).join('')}</div>
       </body></html>
     `);
     w.document.close();
@@ -71,15 +71,15 @@ const ExamResultsScreen = () => {
       <div ref={printRef} style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>النتيجة النهائية</div>
-          <div style={{ fontSize: '3.5rem', fontWeight: 700, color: result.passed ? '#10b981' : '#ef4444' }}>{result.score}<span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>/{result.totalPoints}</span></div>
-          <div style={{ fontSize: '0.9rem', marginTop: '0.3rem', color: result.passed ? '#10b981' : '#ef4444', fontWeight: 600 }}>{result.percentage}% — {result.passed ? 'ناجح' : 'راسب'}</div>
+          <div style={{ fontSize: '3.5rem', fontWeight: 700, color: result.passed ? 'var(--success)' : 'var(--danger)' }}>{result.score}<span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>/{result.totalPoints}</span></div>
+          <div style={{ fontSize: '0.9rem', marginTop: '0.3rem', color: result.passed ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>{result.percentage}% — {result.passed ? 'ناجح' : 'راسب'}</div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1.5rem' }}>
             <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>{correctCount}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>{correctCount}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>إجابات صحيحة</div>
             </div>
             <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>{mcCount - correctCount}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--danger)' }}>{mcCount - correctCount}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>إجابات خاطئة</div>
             </div>
           </div>
@@ -89,22 +89,22 @@ const ExamResultsScreen = () => {
           <h3 style={{ color: 'var(--accent-gold)', fontSize: '0.95rem', marginBottom: '1rem' }}>مراجعة الإجابات</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {answers.map((q, i) => (
-              <div key={q.questionId} style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.03)' }}>
+              <div key={q.questionId} style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
                     <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '0.5rem' }}>{i + 1}.</span>
                     {q.questionText}
                   </div>
-                  <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}>{q.pointsPossible} نقطة</span>
+                  <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '12px', background: 'var(--surface-3)', color: 'var(--text-muted)' }}>{q.pointsPossible} نقطة</span>
                 </div>
                 {q.type === 'MultipleChoice' ? (
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>إجابتك:</span>
                     <span style={{ fontWeight: 600 }}>{q.options[q.userAnswer] || 'لم يجب'}</span>
                     {q.isCorrect ? (
-                      <span className="material-symbols-outlined" style={{ color: '#10b981', fontSize: '20px' }}>check_circle</span>
+                      <span className="material-symbols-outlined" style={{ color: 'var(--success)', fontSize: '20px' }}>check_circle</span>
                     ) : (
-                      <span className="material-symbols-outlined" style={{ color: '#ef4444', fontSize: '20px' }}>cancel</span>
+                      <span className="material-symbols-outlined" style={{ color: 'var(--danger)', fontSize: '20px' }}>cancel</span>
                     )}
                   </div>
                 ) : (

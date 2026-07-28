@@ -47,11 +47,11 @@ const CertificateScreen = () => {
   };
 
   const classifyColor = (p) => {
-    if (p >= 90) return '#16a34a';
-    if (p >= 80) return '#2563eb';
-    if (p >= 70) return '#d97706';
-    if (p >= 60) return '#7c3aed';
-    return '#dc2626';
+    if (p >= 90) return 'var(--c-green)';
+    if (p >= 80) return 'var(--accent-blue)';
+    if (p >= 70) return 'var(--accent-amber)';
+    if (p >= 60) return 'var(--accent-violet)';
+    return 'var(--danger)';
   };
 
   if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
@@ -82,7 +82,7 @@ const CertificateScreen = () => {
         maxWidth: '700px',
         margin: '0 auto',
         textAlign: 'center',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--surface-1)',
       }}>
         <div style={{ marginBottom: '1.5rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)' }}>workspace_premium</span>

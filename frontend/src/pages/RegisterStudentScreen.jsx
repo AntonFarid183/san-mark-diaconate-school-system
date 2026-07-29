@@ -160,8 +160,9 @@ const RegisterStudentScreen = () => {
         {formSections.map((section, i) => (
           <div key={section.key} onClick={() => setCurrentStep(i)} style={{
             flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
-            background: i === currentStep ? 'rgba(251,191,36,0.1)' : 'rgba(15,23,42,0.55)',
-            border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
+            background: i === currentStep ? 'var(--gold-tint)' : 'var(--glass-bg)',
+            border: i === currentStep ? '1px solid var(--accent-gold)' : '1px solid var(--glass-border)',
+            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '20px', display: 'block', marginBottom: '0.25rem', color: i === currentStep ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
               {i < currentStep ? 'check_circle' : section.icon}

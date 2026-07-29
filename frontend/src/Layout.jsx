@@ -262,11 +262,10 @@ const Layout = () => {
   return (
     <PageTitleProvider>
       {(title) => (
-    <div style={{
-      display: 'flex', minHeight: '100vh', direction: 'rtl',
-      backgroundImage: 'linear-gradient(var(--app-wash), var(--app-wash)), url(/san-mark-wide.png)',
-      backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed',
-    }}>
+    <div className="app-shell" style={{ display: 'flex', minHeight: '100vh', direction: 'rtl' }}>
+      {/* Backdrop lives in its own layer so the photo can be tone-mapped
+          (see .app-backdrop) rather than just hidden under a heavy wash. */}
+      <div className="app-backdrop" aria-hidden="true" />
 
       {/* Sidebar */}
       <aside style={{
@@ -462,7 +461,7 @@ const Layout = () => {
       </aside>
 
       {/* Main content */}
-      <main style={{ flex: 1, marginRight: sidebarWidth, padding: '2rem', minHeight: '100vh', transition: 'margin-right 0.25s ease' }}>
+      <main style={{ flex: 1, marginRight: sidebarWidth, padding: '2rem', minHeight: '100vh', transition: 'margin-right 0.25s ease', position: 'relative', zIndex: 1 }}>
         {isStudent && !hasProfilePhoto && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem',

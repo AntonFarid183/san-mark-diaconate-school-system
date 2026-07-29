@@ -79,6 +79,7 @@
   --c-cyan: #06b6d4;
   --purple: #a855f7;
   --purple-tint: rgba(168, 85, 247, 0.12);
+  --auth-bg-image: url('/landing wallpaper.png');
   --auth-scrim: linear-gradient(180deg, rgba(10,16,30,0.25) 0%, rgba(10,16,30,0.4) 60%, rgba(10,16,30,0.72) 100%),
     radial-gradient(ellipse at center, rgba(10,16,30,0.02) 0%, rgba(10,16,30,0.22) 80%);
   --auth-bg-brightness: 0.8;
@@ -86,8 +87,12 @@
 
   /* Scrims + elevation */
   --shadow-tint: rgba(0, 0, 0, 0.45);
-  /* Authenticated app shell — the sidebar and the wash over the backdrop photo */
-  --app-wash: rgba(10, 16, 30, 0.35);
+  /* Authenticated app shell. The backdrop photo sits in its own layer
+     (.app-backdrop) over --app-backdrop-base, so its tone can be adjusted
+     independently of how strongly it shows through. */
+  --app-backdrop-base: #0a101e;
+  --app-backdrop-filter: none;
+  --app-backdrop-opacity: 0.65;
   --app-sidebar-bg: rgba(10, 16, 30, 0.97);
   --overlay: rgba(0, 0, 0, 0.6);
   --overlay-media: rgba(0, 0, 0, 0.9);
@@ -147,8 +152,15 @@
   --info-tint: rgba(29, 78, 216, 0.11);
 
   --shadow-tint: rgba(15, 23, 42, 0.14);
-  /* Same backdrop photo, washed to near-white so dark text stays legible. */
-  --app-wash: rgba(244, 246, 251, 0.9);
+  /* The backdrop is a dark church interior (median luminance ~0.17), so simply
+     fading it out is the only way to keep dark text legible — which is why it
+     used to be invisible at 90% wash. Instead the photo is tone-mapped first:
+     brightness lifts the shadows and contrast(<1) compresses the range, so it
+     reads as a soft texture with a much higher floor. That lets it show through
+     ~2.5x more strongly while text on the shell still clears AA. */
+  --app-backdrop-base: #f4f6fb;
+  --app-backdrop-filter: brightness(1.8) contrast(0.55) saturate(0.8);
+  --app-backdrop-opacity: 0.42;
   --app-sidebar-bg: rgba(255, 255, 255, 0.97);
   --overlay: rgba(15, 23, 42, 0.45);
   --overlay-media: rgba(15, 23, 42, 0.88);
@@ -171,12 +183,16 @@
   --c-cyan: #0e7490;
   --purple: #7e22ce;
   --purple-tint: rgba(126, 34, 206, 0.11);
-  /* Light auth screen: keep the wallpaper but wash it out so the white card
-     sits on a bright, airy backdrop instead of a dark one. */
-  --auth-scrim: linear-gradient(180deg, rgba(241,244,249,0.62) 0%, rgba(241,244,249,0.74) 60%, rgba(241,244,249,0.88) 100%),
-    radial-gradient(ellipse at center, rgba(241,244,249,0.28) 0%, rgba(241,244,249,0.6) 80%);
-  --auth-bg-brightness: 1.06;
-  --auth-bg-opacity: 0.5;
+  /* Light auth screen: a dedicated light-mode edit of the same icon (pale
+     background instead of navy), so it can be shown at near-full strength
+     with no wash — the old approach reused the dark-mode art and faded it to
+     ~50% opacity, which was the "I can't see it" complaint. Only a soft edge
+     vignette remains, to keep the card the visual focus. */
+  --auth-bg-image: url('/landing wallpaper light mode.png');
+  --auth-scrim: linear-gradient(180deg, rgba(241,244,249,0.08) 0%, rgba(241,244,249,0.04) 40%, rgba(241,244,249,0.4) 100%),
+    radial-gradient(ellipse at center, rgba(241,244,249,0) 0%, rgba(241,244,249,0.22) 85%);
+  --auth-bg-brightness: 1;
+  --auth-bg-opacity: 0.92;
 }
 
 body {
@@ -487,7 +503,7 @@ a {
   content: '';
   position: absolute;
   inset: -5%;
-  background-image: url('/landing wallpaper.png');
+  background-image: var(--auth-bg-image);
   background-size: cover;
   background-position: center;
   filter: brightness(var(--auth-bg-brightness));
@@ -576,4 +592,31 @@ a {
   top: 1rem;
   left: 1rem;
   z-index: 5;
+}
+
+/* ── Authenticated app backdrop ─────────────────────────────────────────
+   Two layers: a flat base colour and the photograph above it. Keeping them
+   separate means the photo can carry a filter without that filter also
+   washing over the tint. */
+.app-shell {
+  position: relative;
+}
+
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--app-backdrop-base);
+}
+
+.app-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/san-mark-wide.png');
+  background-size: cover;
+  background-position: center;
+  filter: var(--app-backdrop-filter);
+  opacity: var(--app-backdrop-opacity);
 }

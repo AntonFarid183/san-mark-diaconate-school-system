@@ -9,9 +9,10 @@ export default function HeroSection() {
 
   return (
     <section className="landing-hero" id="hero">
-      {/* Swappable background — replace this <img> with a <video> later, no other changes needed */}
+      {/* Swappable background — swaps image via --landing-hero-image per theme
+          (see Landing.css); replace with a <video> later, no other changes needed */}
       <div className="landing-hero-media">
-        <img src="/landing wallpaper.png" alt="" className="landing-hero-media-img" />
+        <div className="landing-hero-media-img" />
       </div>
       <div className="landing-hero-overlay" />
 

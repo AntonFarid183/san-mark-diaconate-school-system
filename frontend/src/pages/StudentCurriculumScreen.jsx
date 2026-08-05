@@ -31,6 +31,14 @@ export default function StudentCurriculumScreen() {
     } catch { alert('تعذّر تنزيل الملف.'); }
   };
 
+  // Grouped by academic year, most recent first, so a returning student sees
+  // "هذا العام" separated from older years rather than one mixed pile.
+  const groupedByYear = items.reduce((acc, item) => {
+    (acc[item.academicYear] ||= []).push(item);
+    return acc;
+  }, {});
+  const yearGroups = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a));
+
   if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   return (
@@ -41,8 +49,16 @@ export default function StudentCurriculumScreen() {
           <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>لا توجد مناهج منشورة لمرحلتك حالياً</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
-          {items.map(item => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {yearGroups.map(year => (
+            <div key={year}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>calendar_month</span>
+                <h2 style={{ fontSize: '1.05rem', color: 'var(--accent-gold)' }}>{year}</h2>
+                <div style={{ flex: 1, height: '1px', background: 'var(--divider)' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                {groupedByYear[year].map(item => (
             <div key={item.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent-gold)' }}>menu_book</span>
@@ -74,6 +90,9 @@ export default function StudentCurriculumScreen() {
                 ) : (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', width: '100%' }}>لم يُرفع ملف PDF بعد</div>
                 )}
+              </div>
+            </div>
+                ))}
               </div>
             </div>
           ))}

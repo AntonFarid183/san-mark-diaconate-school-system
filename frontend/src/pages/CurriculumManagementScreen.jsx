@@ -9,8 +9,6 @@ const STATUS_MAP = {
   2: { label: 'مؤرشف', color: 'var(--text-muted)',            bg: 'rgba(148,163,184,0.12)' },
 };
 
-const CURRENT_YEAR = `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`;
-
 const SUBJECT_OPTIONS = [
   { value: 1, label: 'الطقس' },
   { value: 2, label: 'الألحان' },
@@ -30,6 +28,7 @@ export default function CurriculumManagementScreen() {
   const [items, setItems]             = useState([]);
   const [stages, setStages]           = useState([]);
   const [allGrades, setAllGrades]     = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [filterStage, setFilterStage] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -39,7 +38,7 @@ export default function CurriculumManagementScreen() {
   const [showForm, setShowForm]       = useState(false);
   const [editing, setEditing]         = useState(null);
   const [filterSubject, setFilterSubject] = useState('');
-  const [form, setForm]               = useState({ title: '', description: '', academicYear: CURRENT_YEAR, subject: 1, stageId: '', gradeId: '' });
+  const [form, setForm]               = useState({ title: '', description: '', academicYear: '', subject: 1, stageId: '', gradeId: '' });
   const [pendingFile, setPendingFile] = useState(null);
 
   const [uploadTarget, setUploadTarget] = useState(null);
@@ -50,7 +49,7 @@ export default function CurriculumManagementScreen() {
   const modalFileRef  = useRef();
   const replaceRef    = useRef();
 
-  useEffect(() => { fetchStages(); fetchAllGrades(); fetchAll(); }, []);
+  useEffect(() => { fetchStages(); fetchAllGrades(); fetchAcademicYears(); fetchAll(); }, []);
   useEffect(() => { fetchAll(); }, [filterStage, filterStatus, filterYear]);
 
   const fetchStages = async () => {
@@ -59,6 +58,18 @@ export default function CurriculumManagementScreen() {
 
   const fetchAllGrades = async () => {
     try { const r = await apiClient.get('/students/grades'); setAllGrades(r.data); } catch (err) { console.error('Failed to load grades', err); }
+  };
+
+  // Reuses the real academic-years table (same one class distribution and
+  // attendance use) instead of a free-text field, so a curriculum's year can
+  // never drift from "2024/2025" vs "2024-2025" typos and can be grouped by.
+  const fetchAcademicYears = async () => {
+    try {
+      const r = await apiClient.get('/academic-years');
+      setAcademicYears(r.data);
+      const current = r.data.find(y => y.isCurrent) || r.data[0];
+      if (current) setForm(f => ({ ...f, academicYear: current.name }));
+    } catch (err) { console.error('Failed to load academic years', err); }
   };
 
   const fetchAll = async () => {
@@ -85,7 +96,8 @@ export default function CurriculumManagementScreen() {
   // ── form ──────────────────────────────────────────────────────────────────
   const openCreate = () => {
     setEditing(null); setPendingFile(null);
-    setForm({ title: '', description: '', academicYear: CURRENT_YEAR, subject: 1, stageId: stages[0]?.id || '', gradeId: '' });
+    const current = academicYears.find(y => y.isCurrent) || academicYears[0];
+    setForm({ title: '', description: '', academicYear: current?.name || '', subject: 1, stageId: stages[0]?.id || '', gradeId: '' });
     setShowForm(true);
   };
   const openEdit = (item) => {
@@ -164,6 +176,27 @@ export default function CurriculumManagementScreen() {
   );
   const fmt = (b) => b ? (b > 1e6 ? `${(b/1e6).toFixed(1)} MB` : `${Math.round(b/1024)} KB`) : null;
 
+  // Group by academic year so the list reads as "this year's curriculum,
+  // then last year's" rather than one flat pile the admin has to scan by eye.
+  // Years the AcademicYears table knows about are ordered by their own start
+  // date (current year first); any leftover string that doesn't match a real
+  // year (typo, or content predating this feature) still gets its own group,
+  // just sorted after the known ones rather than silently dropped.
+  const orderedYearNames = [...academicYears]
+    .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+    .map(y => y.name);
+  const groupedByYear = filtered.reduce((acc, item) => {
+    (acc[item.academicYear] ||= []).push(item);
+    return acc;
+  }, {});
+  const yearGroups = Object.keys(groupedByYear).sort((a, b) => {
+    const ia = orderedYearNames.indexOf(a), ib = orderedYearNames.indexOf(b);
+    if (ia === -1 && ib === -1) return b.localeCompare(a);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
   return (
     <>
 
@@ -210,7 +243,10 @@ export default function CurriculumManagementScreen() {
           <option value="1">منشور</option>
           <option value="2">مؤرشف</option>
         </select>
-        <input className="premium-input" placeholder="العام (2024/2025)" value={filterYear} onChange={e => setFilterYear(e.target.value)} style={{ width: '145px' }} />
+        <select className="premium-input" value={filterYear} onChange={e => setFilterYear(e.target.value)} style={{ width: '160px' }}>
+          <option value="">كل الأعوام الدراسية</option>
+          {academicYears.map(y => <option key={y.id} value={y.name}>{y.name}{y.isCurrent ? ' (الحالي)' : ''}</option>)}
+        </select>
         <button className="btn-primary" style={{ width: 'auto', padding: '0.55rem 1.25rem', whiteSpace: 'nowrap' }} onClick={openCreate}>
           + منهج جديد
         </button>
@@ -225,8 +261,22 @@ export default function CurriculumManagementScreen() {
           <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>لا توجد مناهج</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {filtered.map(item => {
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {yearGroups.map(year => {
+            const isCurrentYear = academicYears.find(y => y.name === year)?.isCurrent;
+            return (
+              <div key={year}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.85rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>calendar_month</span>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--accent-gold)' }}>{year}</h3>
+                  {isCurrentYear && (
+                    <span style={{ fontSize: '0.68rem', padding: '0.15rem 0.55rem', borderRadius: '20px', background: 'var(--gold-tint)', color: 'var(--accent-gold)', fontWeight: 700 }}>العام الحالي</span>
+                  )}
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({groupedByYear[year].length})</span>
+                  <div style={{ flex: 1, height: '1px', background: 'var(--divider)' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {groupedByYear[year].map(item => {
             const st = STATUS_MAP[item.status] || STATUS_MAP[0];
             return (
               <div key={item.id} className="glass-card" style={{ padding: '1.25rem' }}>
@@ -286,6 +336,10 @@ export default function CurriculumManagementScreen() {
                       <span className="btn-icon-label">حذف</span>
                     </button>
                   </div>
+                </div>
+              </div>
+            );
+                  })}
                 </div>
               </div>
             );
@@ -369,7 +423,15 @@ export default function CurriculumManagementScreen() {
 
               <div>
                 <label style={lbl}>العام الدراسي *</label>
-                <input className="premium-input" value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })} placeholder="2024/2025" />
+                <select className="premium-input" value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })}>
+                  <option value="">اختر العام الدراسي</option>
+                  {/* Editing an older item whose year isn't in the current table (e.g. typed
+                      free-text before this dropdown existed) still shows its real value. */}
+                  {form.academicYear && !academicYears.some(y => y.name === form.academicYear) && (
+                    <option value={form.academicYear}>{form.academicYear}</option>
+                  )}
+                  {academicYears.map(y => <option key={y.id} value={y.name}>{y.name}{y.isCurrent ? ' (الحالي)' : ''}</option>)}
+                </select>
               </div>
 
               {/* Grade picker — only appears when stage has sub-grades */}

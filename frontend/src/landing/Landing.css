@@ -1494,9 +1494,9 @@
 
 .landing-synax-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.25rem;
-  max-width: 980px;
+  max-width: 1080px;
   margin: 0 auto;
 }
 
@@ -1509,6 +1509,25 @@
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-card);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+/* Photo sits beside the text rather than above it — reads calmer and lets
+   the card stay compact instead of growing tall. */
+.landing-synax-card-has-photo {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.landing-synax-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .landing-synax-card-has-photo {
+    flex-direction: column;
+  }
 }
 
 .landing-synax-card:hover {
@@ -1679,12 +1698,19 @@
 }
 
 .landing-synax-card-photo {
-  width: calc(100% + 0.5rem);
-  height: 260px;
+  width: 128px;
+  height: 190px;
+  flex-shrink: 0;
   object-fit: contain;
   object-position: center;
   border-radius: var(--radius-md);
-  margin: -0.25rem -0.25rem 1rem;
   border: 1px solid var(--gold-tint);
   background: var(--landing-media-bg);
+}
+
+@media (max-width: 560px) {
+  .landing-synax-card-photo {
+    width: 100%;
+    height: 220px;
+  }
 }

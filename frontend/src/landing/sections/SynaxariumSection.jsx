@@ -13,7 +13,7 @@ function SaintCard({ saint, index }) {
   const shown = expanded || !needsToggle ? saint.story : saint.story.slice(0, EXCERPT_LENGTH).trim() + '…';
 
   return (
-    <Reveal delay={index * 90} className="landing-synax-card">
+    <Reveal delay={index * 90} className={`landing-synax-card ${saint.imageUrl ? 'landing-synax-card-has-photo' : ''}`}>
       {saint.imageUrl ? (
         <img src={saint.imageUrl} alt="" className="landing-synax-card-photo" loading="lazy" />
       ) : (
@@ -21,14 +21,16 @@ function SaintCard({ saint, index }) {
           <span className="material-symbols-outlined" aria-hidden="true">history_edu</span>
         </div>
       )}
-      <h3 className="landing-synax-card-title">{saint.title}</h3>
-      <p className="landing-synax-card-story">{shown}</p>
-      {needsToggle && (
-        <button type="button" className="landing-synax-toggle" onClick={() => setExpanded(v => !v)}>
-          {expanded ? 'إخفاء' : 'قراءة السيرة كاملة'}
-          <span className="material-symbols-outlined" aria-hidden="true">{expanded ? 'expand_less' : 'expand_more'}</span>
-        </button>
-      )}
+      <div className="landing-synax-card-body">
+        <h3 className="landing-synax-card-title">{saint.title}</h3>
+        <p className="landing-synax-card-story">{shown}</p>
+        {needsToggle && (
+          <button type="button" className="landing-synax-toggle" onClick={() => setExpanded(v => !v)}>
+            {expanded ? 'إخفاء' : 'قراءة السيرة كاملة'}
+            <span className="material-symbols-outlined" aria-hidden="true">{expanded ? 'expand_less' : 'expand_more'}</span>
+          </button>
+        )}
+      </div>
     </Reveal>
   );
 }

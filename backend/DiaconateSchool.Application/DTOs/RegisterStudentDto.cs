@@ -31,4 +31,9 @@ public class RegisterStudentDto
     public bool HasPaidFees { get; set; }
     public decimal? PaidAmount { get; set; }
     public bool SelfRegistered { get; set; } = false;
+
+    // Uploaded (via /file/upload-registration-photo for self-registration, or
+    // the authenticated /file/upload for an admin) BEFORE this form submits —
+    // photo capture happens as its own step, this DTO just carries the URL.
+    public string? ProfilePictureUrl { get; set; }
 }

@@ -33,4 +33,29 @@ public class FileController : ControllerBase
         var url = await _storage.SaveAsync(file.OpenReadStream(), file.FileName, category);
         return Ok(new { Url = url });
     }
+
+    // Deliberately narrow anonymous endpoint — self-registration happens before
+    // any account exists, so it has no bearer token to use the endpoint above.
+    // Unlike it, this one can't be pointed at an arbitrary category, only
+    // accepts image content-types, and caps well below the authenticated
+    // limit — an open anonymous upload with a free-form category would be a
+    // much bigger abuse surface than "small images into /profiles" is.
+    private static readonly string[] AllowedImageTypes = { "image/jpeg", "image/png", "image/webp" };
+
+    [AllowAnonymous]
+    [HttpPost("upload-registration-photo")]
+    [RequestSizeLimit(5_000_000)]
+    public async Task<IActionResult> UploadRegistrationPhoto()
+    {
+        var file = Request.Form.Files.GetFile("file");
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "No file provided." });
+        if (file.Length > 5_000_000)
+            return BadRequest(new { Message = "حجم الصورة يتجاوز الحد الأقصى (5 ميغابايت)." });
+        if (!Array.Exists(AllowedImageTypes, t => t.Equals(file.ContentType, StringComparison.OrdinalIgnoreCase)))
+            return BadRequest(new { Message = "يجب أن تكون الصورة بصيغة JPEG أو PNG أو WEBP." });
+
+        var url = await _storage.SaveAsync(file.OpenReadStream(), file.FileName, "profiles");
+        return Ok(new { Url = url });
+    }
 }

@@ -92,6 +92,7 @@ public class StudentRegistrationService : IStudentRegistrationService
             Landmark = dto.Landmark,
             FeesPaid = dto.HasPaidFees,
             PaidAmount = dto.HasPaidFees ? dto.PaidAmount : null,
+            ProfilePictureUrl = dto.ProfilePictureUrl,
             UserId = userId,
             RegisteredByUserId = userId,
             EnrollmentDate = DateTime.UtcNow

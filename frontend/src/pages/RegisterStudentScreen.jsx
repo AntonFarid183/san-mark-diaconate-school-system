@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
+import PhotoCaptureField from '../components/PhotoCaptureField';
+import { BACKEND_URL } from '../config';
+const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND_URL}${url}`);
 
 const STAGE_IDS = {
   childhood:   '00000000-0000-0000-0000-000000000001',
@@ -43,6 +46,7 @@ const RegisterStudentScreen = () => {
     isDeacon: false, deaconRank: null, fatherOfConfession: '',
     studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
     address: '', landmark: '', hasPaidFees: false, paidAmount: '',
+    profilePictureUrl: '',
   });
 
   const [grades, setGrades] = useState([]);
@@ -88,6 +92,16 @@ const RegisterStudentScreen = () => {
     };
     fetchGrades();
   }, [formData.stage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Admin is logged in, so this goes straight through the authenticated
+  // upload endpoint — no separate anonymous path needed here (that's only
+  // for self-registration, before any account/token exists).
+  const uploadPhoto = async (blob) => {
+    const form = new FormData();
+    form.append('file', blob, 'profile.jpg');
+    const res = await apiClient.post('/file/upload?category=profiles', form, { headers: { 'Content-Type': undefined } });
+    return res.data.url || res.data.Url;
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -184,6 +198,14 @@ const RegisterStudentScreen = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)' }}>person</span>
                 <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem' }}>البيانات الأساسية</h2>
+              </div>
+
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <PhotoCaptureField
+                  photoUrl={toAbsUrl(formData.profilePictureUrl)}
+                  uploadFn={uploadPhoto}
+                  onUploaded={url => setFormData(prev => ({ ...prev, profilePictureUrl: url }))}
+                />
               </div>
 
               <div style={{ marginBottom: '1rem' }}>

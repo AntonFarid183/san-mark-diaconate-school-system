@@ -1,60 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Cropper from 'react-easy-crop';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
+import PhotoCaptureField from '../components/PhotoCaptureField';
 
 import { BACKEND_URL as BACKEND } from '../config';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND}${url}`);
-
-const getCroppedBlob = (imageSrc, croppedAreaPixels) =>
-  new Promise((resolve) => {
-    const image = new Image();
-    image.src = imageSrc;
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 400;
-      canvas.getContext('2d').drawImage(
-        image,
-        croppedAreaPixels.x, croppedAreaPixels.y,
-        croppedAreaPixels.width, croppedAreaPixels.height,
-        0, 0, 400, 400
-      );
-      canvas.toBlob(resolve, 'image/jpeg', 0.92);
-    };
-  });
-
-// ── Crop Modal ────────────────────────────────────────────────────────────────
-const CropModal = ({ imageSrc, onConfirm, onCancel, uploading }) => {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const onCropComplete = useCallback((_, pixels) => setCroppedAreaPixels(pixels), []);
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay-media)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: '420px' }}>
-        <h3 style={{ color: 'var(--accent-gold)', textAlign: 'center', marginBottom: '1rem' }}>اضبط الصورة</h3>
-        <div style={{ position: 'relative', width: '100%', height: '340px', borderRadius: '12px', overflow: 'hidden', background: '#111' }}>
-          <Cropper image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false}
-            onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={onCropComplete} />
-        </div>
-        <div style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span className="material-symbols-outlined" style={{ color: 'var(--text-muted)', fontSize: '18px' }}>zoom_out</span>
-          <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ flex: 1, accentColor: 'var(--accent-gold)' }} />
-          <span className="material-symbols-outlined" style={{ color: 'var(--text-muted)', fontSize: '18px' }}>zoom_in</span>
-        </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1rem' }}>اسحب لتحريك الصورة — استخدم الشريط للتكبير</p>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn-secondary" onClick={onCancel} style={{ flex: 1 }} disabled={uploading}>إلغاء</button>
-          <button className="btn-primary" style={{ flex: 1 }} disabled={uploading} onClick={() => onConfirm(croppedAreaPixels)}>
-            {uploading ? 'جاري الرفع...' : 'تأكيد'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ── Stat Pill ─────────────────────────────────────────────────────────────────
 const StatPill = ({ icon, label, value, color = 'var(--accent-gold)' }) => (
@@ -78,49 +29,30 @@ const InfoRow = ({ icon, label, value }) => (
 const StudentProfileScreen = () => {
   usePageTitle('الملف الشخصي');
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-  const [rawImageSrc, setRawImageSrc] = useState(null);
 
   useEffect(() => {
     apiClient.get('/students/me').then(r => setProfile(r.data)).finally(() => setLoading(false));
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = '';
-    const reader = new FileReader();
-    reader.onload = () => setRawImageSrc(reader.result);
-    reader.readAsDataURL(file);
+  // The cropped Blob is handed to us by PhotoCaptureField — we just own where
+  // it gets uploaded to (the authenticated "it's my own profile" endpoint)
+  // and what happens with the resulting URL.
+  const uploadOwnPhoto = async (blob) => {
+    const form = new FormData();
+    form.append('file', blob, 'profile.jpg');
+    const uploadRes = await apiClient.post('/file/upload?category=profiles', form, { headers: { 'Content-Type': undefined } });
+    return uploadRes.data.url || uploadRes.data.Url;
   };
 
-  const handleCropConfirm = async (croppedAreaPixels) => {
-    setUploadError(null);
-    setUploading(true);
-    try {
-      const blob = await getCroppedBlob(rawImageSrc, croppedAreaPixels);
-      const form = new FormData();
-      form.append('file', blob, 'profile.jpg');
-      const uploadRes = await apiClient.post('/file/upload?category=profiles', form, { headers: { 'Content-Type': undefined } });
-      const url = uploadRes.data.url || uploadRes.data.Url;
-      const updated = await apiClient.patch('/students/me/picture', { url });
-      setProfile(updated.data);
-      setRawImageSrc(null);
-    } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.Message || err.message;
-      setUploadError(`فشل رفع الصورة: ${msg}`);
-    } finally {
-      setUploading(false);
-    }
+  const handlePhotoUploaded = async (url) => {
+    const updated = await apiClient.patch('/students/me/picture', { url });
+    setProfile(updated.data);
   };
 
   if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
-  const hasPhoto = !!profile?.profilePictureUrl;
   const photoUrl = toAbsUrl(profile?.profilePictureUrl);
   const fullName = [profile?.firstName, profile?.secondName, profile?.thirdName, profile?.lastName].filter(Boolean).join(' ');
   const feesPaid = profile?.feesPaid;
@@ -128,8 +60,6 @@ const StudentProfileScreen = () => {
 
   return (
     <>
-      {rawImageSrc && <CropModal imageSrc={rawImageSrc} uploading={uploading} onConfirm={handleCropConfirm} onCancel={() => setRawImageSrc(null)} />}
-
       <div style={{ maxWidth: '580px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
         {/* ── Hero Card ── */}
@@ -145,40 +75,9 @@ const StudentProfileScreen = () => {
 
           <div style={{ padding: '2rem 1.5rem 1.5rem', textAlign: 'center' }}>
             {/* Photo */}
-            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1rem' }}>
-              {hasPhoto ? (
-                <img src={photoUrl} alt="" style={{ width: '110px', height: '110px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent-gold)', boxShadow: '0 0 24px rgba(251,191,36,0.35)' }} />
-              ) : (
-                <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'var(--surface-2)', border: '3px dashed rgba(251,191,36,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '54px', color: 'rgba(251,191,36,0.4)' }}>account_circle</span>
-                </div>
-              )}
-
-              {/* Camera button overlay */}
-              <button
-                onClick={() => fileInputRef.current.click()}
-                disabled={uploading}
-                style={{ position: 'absolute', bottom: '2px', left: '2px', width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-gold)', border: '2px solid var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--on-accent)' }}>photo_camera</span>
-              </button>
-
-              {/* Red dot if no photo */}
-              {!hasPhoto && (
-                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', background: 'var(--danger-solid)', borderRadius: '50%', border: '2px solid var(--bg-primary)', animation: 'pulse 2s infinite' }} />
-              )}
+            <div style={{ marginBottom: '1rem' }}>
+              <PhotoCaptureField photoUrl={photoUrl} required uploadFn={uploadOwnPhoto} onUploaded={handlePhotoUploaded} />
             </div>
-
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
-
-            {!hasPhoto && (
-              <div style={{ fontSize: '0.78rem', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.5rem' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>error</span>
-                يجب رفع صورة شخصية
-              </div>
-            )}
 
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 0.25rem' }}>{fullName}</h2>
 
@@ -188,8 +87,6 @@ const StudentProfileScreen = () => {
                 {profile.studentCode}
               </span>
             )}
-
-            {uploadError && <div className="error-box" style={{ margin: '0.75rem 0' }}>{uploadError}</div>}
 
             {/* Stat pills */}
             <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'var(--surface-1)', borderRadius: 'var(--radius-sm)', marginTop: '0.5rem' }}>
@@ -245,13 +142,6 @@ const StudentProfileScreen = () => {
         </div>
 
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.3); }
-        }
-      `}</style>
     </>
   );
 };

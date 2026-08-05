@@ -1,4 +1,5 @@
 using System.Net;
+using System.Linq;
 using System.Text.RegularExpressions;
 using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
@@ -24,6 +25,8 @@ namespace DiaconateSchool.Infrastructure.Services;
 public class SynaxariumService : ISynaxariumService
 {
     private const string SourceUrl = "https://st-takla.org/zJ/index.php/ar-synaxarium";
+    private const string ImageSourceUrl = "https://bubastis.deltamultisys.com/Synaxarium/Index";
+    private const string ImageSourceOrigin = "https://bubastis.deltamultisys.com";
     private const string CacheKeyPrefix = "synaxarium:";
 
     // Anchors bounding the actual day content within the page — everything
@@ -151,6 +154,18 @@ public class SynaxariumService : ISynaxariumService
 
         if (heading == null || saints.Count == 0) return null;
 
+        // Best-effort — a second source (bubastis) carries a real icon photo
+        // per saint that st-takla's page doesn't have. Never lets an image
+        // fetch failure take down the (already-complete) text result.
+        try
+        {
+            await AttachImagesAsync(saints);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex, "Synaxarium image fetch failed; continuing without icons.");
+        }
+
         return new SynaxariumDayDto
         {
             DayHeading = heading,
@@ -158,6 +173,90 @@ public class SynaxariumService : ISynaxariumService
             Saints = saints,
         };
     }
+
+    private static readonly Regex SaintCardMarker = new("class=\"saint-card\"", RegexOptions.Compiled);
+    private static readonly Regex SaintImageRegex = new("<img\\s+src=\"([^\"]*)\"", RegexOptions.Compiled);
+    private static readonly Regex SaintTitleRegex = new("<h3>(.*?)</h3>", RegexOptions.Singleline | RegexOptions.Compiled);
+    // The site's evergreen "major feasts" reminder appears as its own card
+    // every day — it isn't a specific saint, so it's never a useful image match.
+    private const string GenericFeastMarker = "الأعياد السيدية";
+
+    // Fuzzy title match (word-overlap) rather than positional, since the two
+    // sites don't list saints in the same order and bubastis's card list also
+    // includes that generic entry st-takla doesn't have.
+    private async Task AttachImagesAsync(List<SynaxariumEntryDto> saints)
+    {
+        var client = _httpClientFactory.CreateClient(nameof(SynaxariumService));
+        client.Timeout = TimeSpan.FromSeconds(8);
+        using var request = new HttpRequestMessage(HttpMethod.Get, ImageSourceUrl);
+        request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (compatible; DiaconateSchoolBot/1.0)");
+
+        using var response = await client.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return;
+        var html = await response.Content.ReadAsStringAsync();
+
+        var cardStarts = SaintCardMarker.Matches(html).Select(m => m.Index).ToList();
+        if (cardStarts.Count == 0) return;
+        cardStarts.Add(html.Length);
+
+        var candidates = new List<(string Title, string ImageUrl, HashSet<string> Words)>();
+        for (var i = 0; i < cardStarts.Count - 1; i++)
+        {
+            var card = html.Substring(cardStarts[i], cardStarts[i + 1] - cardStarts[i]);
+            var titleMatch = SaintTitleRegex.Match(card);
+            var imageMatch = SaintImageRegex.Match(card);
+            if (!titleMatch.Success || !imageMatch.Success) continue;
+
+            var title = StripTags(titleMatch.Groups[1].Value);
+            if (string.IsNullOrWhiteSpace(title) || title.Contains(GenericFeastMarker, StringComparison.Ordinal)) continue;
+
+            var imageUrl = imageMatch.Groups[1].Value;
+            if (!imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                imageUrl = ImageSourceOrigin + imageUrl;
+
+            candidates.Add((title, imageUrl, TitleWords(title)));
+        }
+
+        foreach (var saint in saints)
+        {
+            var saintWords = TitleWords(saint.Title);
+            var best = candidates
+                .Select(c => (c, overlap: c.Words.Intersect(saintWords).Count()))
+                .Where(x => x.overlap > 0)
+                .OrderByDescending(x => x.overlap)
+                .FirstOrDefault();
+
+            if (best.c.ImageUrl != null)
+            {
+                saint.ImageUrl = best.c.ImageUrl;
+                candidates.Remove(best.c); // don't match two saints to the same photo
+            }
+        }
+    }
+
+    // Boilerplate that appears in nearly every entry's title ("تذكار",
+    // "القديس"...) — without excluding these, two unrelated saints "match" on
+    // a shared generic word (that's the bug this stoplist fixes: ورشنوفيوس
+    // and أندراوس both contain "القديس", which isn't a real match).
+    private static readonly HashSet<string> TitleStopWords = new()
+    {
+        "تذكار", "استشهاد", "نياحة", "رسامة", "نقل", "اعضاء", "دخول", "خروج",
+        "القديس", "القديسة", "القديسين", "الشهيد", "الشهيدة", "الرسول", "الانبا",
+        "البابا", "الاسقف", "مار", "الاب", "هذا", "اليوم", "من", "في", "الى",
+    };
+
+    // Words of 3+ chars, minus the stoplist above — short Arabic connectors
+    // and role-boilerplate would otherwise "match" almost anything and defeat
+    // the point of comparing. Alef variants are normalized first — the two
+    // sites spell the same name differently (اندراوس vs. أندراوس), which
+    // would otherwise silently defeat an exact-word match.
+    private static HashSet<string> TitleWords(string title)
+        => NormalizeAlef(title).Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => w.Length >= 3 && !TitleStopWords.Contains(w))
+            .ToHashSet();
+
+    private static string NormalizeAlef(string s)
+        => s.Replace('أ', 'ا').Replace('إ', 'ا').Replace('آ', 'ا');
 
     private static string StripTags(string html)
         => WebUtility.HtmlDecode(TagRegex.Replace(html, string.Empty)).Trim();

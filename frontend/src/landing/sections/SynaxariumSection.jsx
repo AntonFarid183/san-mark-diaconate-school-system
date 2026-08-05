@@ -14,9 +14,13 @@ function SaintCard({ saint, index }) {
 
   return (
     <Reveal delay={index * 90} className="landing-synax-card">
-      <div className="landing-synax-card-icon">
-        <span className="material-symbols-outlined" aria-hidden="true">history_edu</span>
-      </div>
+      {saint.imageUrl ? (
+        <img src={saint.imageUrl} alt="" className="landing-synax-card-photo" loading="lazy" />
+      ) : (
+        <div className="landing-synax-card-icon">
+          <span className="material-symbols-outlined" aria-hidden="true">history_edu</span>
+        </div>
+      )}
       <h3 className="landing-synax-card-title">{saint.title}</h3>
       <p className="landing-synax-card-story">{shown}</p>
       {needsToggle && (

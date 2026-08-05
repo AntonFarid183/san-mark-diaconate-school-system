@@ -4,6 +4,10 @@ public class SynaxariumEntryDto
 {
     public string Title { get; set; } = string.Empty;
     public string Story { get; set; } = string.Empty;
+    // Best-effort — matched by title from a second source that carries saint
+    // icons; null when no confident match was found (frontend falls back to
+    // a plain icon badge in that case).
+    public string? ImageUrl { get; set; }
 }
 
 public class SynaxariumDayDto

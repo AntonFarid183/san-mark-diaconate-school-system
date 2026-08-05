@@ -47,57 +47,64 @@ export default function SynaxariumSection() {
 
   return (
     <section className="landing-section landing-synax-section" id="synaxarium">
-      <div className="landing-section-heading">
-        <span className="landing-section-eyebrow">
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">auto_stories</span>
-          سنكسار اليوم
-        </span>
-        <h2 className="landing-section-title">تذكار قديسي اليوم</h2>
-        <p className="landing-section-subtitle">
-          {status === 'ready' ? day.dayHeading : 'كل يوم تذكار وسيرة من سير القديسين والشهداء الأبرار'}
-        </p>
+      <div className="landing-synax-media">
+        <div className="landing-synax-media-img" />
       </div>
+      <div className="landing-synax-overlay" />
 
-      {status === 'loading' && (
-        <div className="landing-synax-loading" aria-live="polite">
-          <span className="landing-synax-loading-dot" />
-          <span className="landing-synax-loading-dot" />
-          <span className="landing-synax-loading-dot" />
+      <div className="landing-synax-content">
+        <div className="landing-section-heading">
+          <span className="landing-section-eyebrow">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">auto_stories</span>
+            سنكسار اليوم
+          </span>
+          <h2 className="landing-section-title">تذكار قديسي اليوم</h2>
+          <p className="landing-section-subtitle">
+            {status === 'ready' ? day.dayHeading : 'كل يوم تذكار وسيرة من سير القديسين والشهداء الأبرار'}
+          </p>
         </div>
-      )}
 
-      {status === 'ready' && (
-        <>
-          {day.blessing && (
-            <Reveal className="landing-synax-blessing">
-              <span className="material-symbols-outlined" aria-hidden="true">format_quote</span>
-              <p>{day.blessing}</p>
-            </Reveal>
-          )}
-
-          <div className="landing-synax-grid">
-            {day.saints.map((s, i) => (
-              <SaintCard key={i} saint={s} index={i} />
-            ))}
+        {status === 'loading' && (
+          <div className="landing-synax-loading" aria-live="polite">
+            <span className="landing-synax-loading-dot" />
+            <span className="landing-synax-loading-dot" />
+            <span className="landing-synax-loading-dot" />
           </div>
+        )}
 
-          {day.isStale && (
-            <p className="landing-synax-stale-hint">
-              يُعرض آخر سنكسار متاح — قد لا يعكس تذكار اليوم بدقة.
-            </p>
-          )}
+        {status === 'ready' && (
+          <>
+            {day.blessing && (
+              <Reveal className="landing-synax-blessing">
+                <span className="material-symbols-outlined" aria-hidden="true">format_quote</span>
+                <p>{day.blessing}</p>
+              </Reveal>
+            )}
 
-          <a
-            href="https://st-takla.org/zJ/index.php/ar-synaxarium"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="landing-synax-source"
-          >
-            المصدر: موقع الأنبا تكلاهيمانوت
-            <span className="material-symbols-outlined" aria-hidden="true">north_west</span>
-          </a>
-        </>
-      )}
+            <div className="landing-synax-grid">
+              {day.saints.map((s, i) => (
+                <SaintCard key={i} saint={s} index={i} />
+              ))}
+            </div>
+
+            {day.isStale && (
+              <p className="landing-synax-stale-hint">
+                يُعرض آخر سنكسار متاح — قد لا يعكس تذكار اليوم بدقة.
+              </p>
+            )}
+
+            <a
+              href="https://st-takla.org/zJ/index.php/ar-synaxarium"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="landing-synax-source"
+            >
+              المصدر: موقع الأنبا تكلاهيمانوت
+              <span className="material-symbols-outlined" aria-hidden="true">north_west</span>
+            </a>
+          </>
+        )}
+      </div>
     </section>
   );
 }

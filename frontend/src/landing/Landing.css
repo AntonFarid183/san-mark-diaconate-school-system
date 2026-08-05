@@ -1444,3 +1444,168 @@
     font-size: 22px;
   }
 }
+
+/* ── Synaxarium of the day — today's saints, read gently ───────────────
+   Warm, parchment-adjacent card treatment (gold-tinted glass, generous
+   line-height, a quote mark on the opening blessing) so daily scripture-
+   adjacent reading feels calm rather than like another data card. */
+
+.landing-synax-section .landing-section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.landing-synax-blessing {
+  max-width: 620px;
+  margin: 0 auto clamp(2rem, 5vw, 2.75rem);
+  text-align: center;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.landing-synax-blessing .material-symbols-outlined {
+  font-size: 28px;
+  color: var(--gold-tint-strong);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.landing-synax-blessing p {
+  font-size: 1.02rem;
+  line-height: 2.1;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.landing-synax-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.landing-synax-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.landing-synax-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-tint-strong);
+  box-shadow: var(--shadow-pop);
+}
+
+.landing-synax-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-tint);
+  margin-bottom: 1rem;
+}
+
+.landing-synax-card-icon .material-symbols-outlined {
+  font-size: 22px;
+  color: var(--accent-gold);
+}
+
+.landing-synax-card-title {
+  font-size: 1.05rem;
+  color: var(--accent-gold);
+  line-height: 1.6;
+  margin-bottom: 0.65rem;
+}
+
+.landing-synax-card-story {
+  font-size: 0.92rem;
+  line-height: 1.95;
+  color: var(--text-secondary);
+}
+
+.landing-synax-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.85rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent-gold);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.landing-synax-toggle .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.landing-synax-toggle:hover {
+  text-decoration: underline;
+}
+
+.landing-synax-stale-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+}
+
+.landing-synax-source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  transition: color 0.18s ease;
+}
+
+.landing-synax-source .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.landing-synax-source:hover {
+  color: var(--accent-gold);
+}
+
+.landing-synax-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 0;
+}
+
+.landing-synax-loading-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  opacity: 0.35;
+  animation: landing-synax-pulse 1.2s ease-in-out infinite;
+}
+
+.landing-synax-loading-dot:nth-child(2) { animation-delay: 0.15s; }
+.landing-synax-loading-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes landing-synax-pulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-synax-loading-dot { animation: none; opacity: 0.6; }
+}

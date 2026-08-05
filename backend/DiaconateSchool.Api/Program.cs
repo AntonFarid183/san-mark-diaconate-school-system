@@ -102,6 +102,9 @@ builder.Services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
 builder.Services.AddScoped<IStudentPerformanceService, StudentPerformanceService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<ISynaxariumService, SynaxariumService>();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 // 6. CORS for React
 builder.Services.AddCors(options =>

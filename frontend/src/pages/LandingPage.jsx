@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import '../landing/Landing.css';
 import LandingNavbar from '../landing/sections/LandingNavbar';
 import HeroSection from '../landing/sections/HeroSection';
+import SynaxariumSection from '../landing/sections/SynaxariumSection';
 import GallerySection from '../landing/sections/GallerySection';
 import AboutSection from '../landing/sections/AboutSection';
 import OrdinationSection from '../landing/sections/OrdinationSection';
@@ -28,6 +29,7 @@ export default function LandingPage() {
     <div className="landing-page">
       <LandingNavbar />
       <HeroSection />
+      <SynaxariumSection />
       <GallerySection />
       <AboutSection />
       <OrdinationSection />

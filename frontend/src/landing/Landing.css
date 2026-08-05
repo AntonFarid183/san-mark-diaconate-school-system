@@ -1679,12 +1679,12 @@
 }
 
 .landing-synax-card-photo {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  object-position: top center;
+  width: calc(100% + 0.5rem);
+  height: 260px;
+  object-fit: contain;
+  object-position: center;
   border-radius: var(--radius-md);
   margin: -0.25rem -0.25rem 1rem;
-  width: calc(100% + 0.5rem);
   border: 1px solid var(--gold-tint);
+  background: var(--landing-media-bg);
 }

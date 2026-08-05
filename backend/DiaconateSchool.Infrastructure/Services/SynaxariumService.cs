@@ -154,13 +154,35 @@ public class SynaxariumService : ISynaxariumService
         return new SynaxariumDayDto
         {
             DayHeading = heading,
-            Blessing = blessing ?? string.Empty,
+            Blessing = BuildBlessing(heading) ?? blessing ?? string.Empty,
             Saints = saints,
         };
     }
 
     private static string StripTags(string html)
         => WebUtility.HtmlDecode(TagRegex.Replace(html, string.Empty)).Trim();
+
+    // The traditional opening greeting, in the exact fixed wording — not the
+    // scraped page's own phrasing, which varies. The one part that legitimately
+    // changes day to day is استقباله vs. إنقضاءه: the first half of a Coptic
+    // month (1–15) is "welcomed" (استقباله), the second half (16–30) is
+    // "concluded" (إنقضاءه). Day/month are read off the already-parsed day
+    // heading (e.g. "29- اليوم التاسع والعشرين - شهر أبيب") rather than
+    // scraped separately, so this never disagrees with the heading shown
+    // right below it.
+    private static readonly Regex DayHeadingRegex = new(@"^(\d+)-.*?شهر\s+(.+)$", RegexOptions.Compiled);
+
+    private static string? BuildBlessing(string dayHeading)
+    {
+        var m = DayHeadingRegex.Match(dayHeading.Trim());
+        if (!m.Success || !int.TryParse(m.Groups[1].Value, out var day)) return null;
+        var month = m.Groups[2].Value.Trim();
+        var phase = day is >= 1 and <= 15 ? "استقباله" : "إنقضاءه";
+
+        return "بسم الآب والإبن والروح القدس الإله الواحد آمين. "
+             + $"اليوم {day} من شهر {month} أحسن الله {phase} وأعاده علينا وعليكم "
+             + "ونحن متمتعين بهدوء وإطمئنان مغفوري اخطايا والزلات من قبل مراحم الرب يا آبائي وإخوتي آمين.";
+    }
 
     private static DateTime GetCairoNow()
     {

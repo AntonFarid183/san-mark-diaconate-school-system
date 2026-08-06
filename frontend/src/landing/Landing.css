@@ -1653,6 +1653,7 @@
   background-image: url('/Synaxarium.png');
   background-size: cover;
   background-position: center;
+  filter: var(--landing-synax-image-filter, none);
   opacity: 0;
   transform: scale(1.04);
   animation: landing-synax-media-fade-in 0.8s ease forwards;
@@ -1663,19 +1664,21 @@
 }
 
 /* Scrim is identical to the Hero's (--landing-hero-scrim) as asked. Opacity
-   can't also literally be the Hero's value, though: the Hero photo in light
-   mode is a bright dedicated edit (median luminance ~0.49) that reads fine
-   at 0.9; this section's own photo is dark (~0.19), so 0.9 here measured
-   1.34:1 against the blessing text — nowhere close to legible. 0.2 is the
-   highest opacity this specific photo clears AA at with no other change
-   (secondary text 4.76:1). Dark theme's photo is fine at the Hero's own
-   0.5 — no such mismatch there. */
+   can't literally be the Hero's value: the Hero photo in light mode is a
+   bright dedicated edit (median luminance ~0.49) that reads fine at 0.9;
+   this section's own photo is dark (~0.19). A flat opacity alone topped out
+   at 0.2 (barely visible); adding a brightness/contrast lift on just this
+   photo — same idea as the earlier app-shell-backdrop and auth-photo
+   fixes — gets it to 0.44 instead, more than double, while still clearing
+   AA (secondary text 4.7:1). Dark theme's photo is fine at the Hero's own
+   0.5 with no filter — no such mismatch there. */
 .landing-synax-media {
   opacity: var(--landing-hero-image-opacity);
 }
 
 [data-theme='light'] .landing-synax-media {
-  opacity: 0.2;
+  opacity: 0.44;
+  --landing-synax-image-filter: brightness(3.6) contrast(0.7) saturate(0.85);
 }
 
 .landing-synax-overlay {

@@ -1663,18 +1663,13 @@
   to { opacity: 1; }
 }
 
-/* Same opacity/scrim tokens as the Hero — own photo (Synaxarium.png) kept.
-   At the Hero's literal 0.9 opacity this photo's worst pixel fails AA
-   (1.34:1, own photo is much darker than the Hero's light-mode edit,
-   ~0.19 vs ~0.49 median luminance) — a brightness/contrast lift (same
-   tone-mapping technique as the app-shell backdrop and auth photo) keeps
-   it at the Hero's opacity while clearing AA (4.76:1 at worst pixel). */
+/* Same opacity/scrim tokens as the Hero, no filter — own photo
+   (Synaxarium.png) kept as-is, unedited. Note: at the Hero's 0.9 opacity
+   this photo's worst pixel does not clear AA on its own (secondary text
+   ~1.34:1 at the darkest point) since it's much darker than the Hero's
+   light-mode edit — requested plain, no tone-mapping. */
 .landing-synax-media {
   opacity: var(--landing-hero-image-opacity);
-}
-
-[data-theme='light'] .landing-synax-media {
-  --landing-synax-image-filter: brightness(6) contrast(0.6) saturate(0.85);
 }
 
 .landing-synax-overlay {

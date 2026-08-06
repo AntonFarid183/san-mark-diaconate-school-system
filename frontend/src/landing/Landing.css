@@ -1574,10 +1574,13 @@
   text-decoration: underline;
 }
 
+/* --text-secondary, not --text-muted — these small labels sit directly on
+   the (now dimmer, photo-not-flat-color) section backdrop, where --text-muted
+   doesn't reliably clear AA at every point across the image. */
 .landing-synax-stale-hint {
   text-align: center;
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-top: 1.5rem;
 }
 
@@ -1588,7 +1591,7 @@
   gap: 0.3rem;
   margin-top: 1rem;
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: color 0.18s ease;
 }
 
@@ -1647,7 +1650,7 @@
 .landing-synax-media-img {
   width: 100%;
   height: 100%;
-  background-image: var(--landing-hero-image);
+  background-image: url('/Synaxarium.png');
   background-size: cover;
   background-position: center;
   opacity: 0;
@@ -1659,8 +1662,20 @@
   to { opacity: 1; }
 }
 
+/* Scrim is identical to the Hero's (--landing-hero-scrim) as asked. Opacity
+   can't also literally be the Hero's value, though: the Hero photo in light
+   mode is a bright dedicated edit (median luminance ~0.49) that reads fine
+   at 0.9; this section's own photo is dark (~0.19), so 0.9 here measured
+   1.34:1 against the blessing text — nowhere close to legible. 0.2 is the
+   highest opacity this specific photo clears AA at with no other change
+   (secondary text 4.76:1). Dark theme's photo is fine at the Hero's own
+   0.5 — no such mismatch there. */
 .landing-synax-media {
   opacity: var(--landing-hero-image-opacity);
+}
+
+[data-theme='light'] .landing-synax-media {
+  opacity: 0.2;
 }
 
 .landing-synax-overlay {

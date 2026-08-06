@@ -52,12 +52,14 @@
   --landing-media-bg: #e2e8f0;
 
   /* Same photo, but its median luminance (~0.19) is too dark for dark text
-     as-is — lifted+flattened rather than washed white, and solved down to
-     the specific opacity that still clears AA (secondary text 4.59:1). */
-  --landing-synax-image-filter: brightness(1.6) contrast(0.5) saturate(0.8);
-  --landing-synax-image-opacity: 0.3;
+     as-is — lifted+flattened rather than washed white. Re-solved with a
+     wider brightness/contrast/opacity grid search (was capped at 0.3
+     opacity, read as barely-there); this combo pushes opacity to 0.35 with
+     more brightness lift while still clearing AA (secondary text 4.55:1). */
+  --landing-synax-image-filter: brightness(2.4) contrast(0.5) saturate(0.85);
+  --landing-synax-image-opacity: 0.35;
   --landing-synax-scrim:
-    linear-gradient(180deg, rgba(246,248,252,0.35) 0%, rgba(246,248,252,0.55) 50%, rgba(246,248,252,0.8) 100%);
+    linear-gradient(180deg, rgba(246,248,252,0.25) 0%, rgba(246,248,252,0.45) 50%, rgba(246,248,252,0.72) 100%);
 }
 
 /* ── Navbar ─────────────────────────────────────────────────────────── */

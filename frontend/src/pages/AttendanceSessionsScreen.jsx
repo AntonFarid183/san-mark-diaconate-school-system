@@ -35,6 +35,7 @@ const AttendanceSessionsScreen = () => {
   const [academicYearId, setAcademicYearId] = useState('');
   const [stageId, setStageId] = useState('');
   const [gradeId, setGradeId] = useState('');
+  const [level, setLevel] = useState(1);
   const [classId, setClassId] = useState('');
   const [date, setDate] = useState(todayStr());
 
@@ -74,18 +75,21 @@ const AttendanceSessionsScreen = () => {
     }
   }, [stageId]);
 
-  // Grade + year -> classes
+  // Grade + year + level -> classes. Level defaults to 1 server-side when
+  // omitted (GET /classes' [FromQuery] StudentLevel level = Level1), which
+  // is exactly why level-2 classes used to be invisible here — there was no
+  // level param sent at all, let alone a picker to change it.
   useEffect(() => {
     setClassId(''); setClasses([]);
     if (gradeId && academicYearId) {
-      apiClient.get('/classes', { params: { gradeId, academicYearId } }).then(r => {
+      apiClient.get('/classes', { params: { gradeId, academicYearId, level } }).then(r => {
         setClasses(r.data);
         const target = initialTarget.current.classId;
         if (target && r.data.find(c => c.id === target)) setClassId(target);
         initialTarget.current = {}; // consume — only auto-apply once
       }).catch(() => setClasses([]));
     }
-  }, [gradeId, academicYearId]);
+  }, [gradeId, academicYearId, level]);
 
   // Class or date -> roster for that day
   useEffect(() => {
@@ -182,6 +186,13 @@ const AttendanceSessionsScreen = () => {
             <select className="premium-input" value={gradeId} onChange={e => setGradeId(e.target.value)} disabled={!stageId}>
               <option value="">اختر الصف</option>
               {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div style={{ minWidth: '140px' }}>
+            <label style={labelStyle}>المستوى</label>
+            <select className="premium-input" value={level} onChange={e => setLevel(Number(e.target.value))}>
+              <option value={1}>المستوى 1</option>
+              <option value={2}>المستوى 2</option>
             </select>
           </div>
           <div style={{ minWidth: '140px' }}>

@@ -90,6 +90,31 @@ public class RecordClassAttendanceDto
     public List<RecordClassAttendanceEntryDto> Entries { get; set; } = new();
 }
 
+// ── QR scan — an extra way to mark Present on top of the same simplified
+// class+date flow above. Reuses the same auto-created-per-day session
+// underneath; nothing session-shaped is exposed to the UI. ──
+public class QrScanDto
+{
+    public string QrToken { get; set; } = string.Empty;
+    public Guid ClassId { get; set; }
+    public DateOnly Date { get; set; }
+}
+
+public enum QrScanResultCode
+{
+    Success,
+    AlreadyPresent,
+    WrongClass,
+    InvalidQr
+}
+
+public class QrScanResultDto
+{
+    public QrScanResultCode ResultCode { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public AttendanceRecordDto? Record { get; set; }
+}
+
 public class UpdateAttendanceRecordDto
 {
     public AttendanceStatus Status { get; set; }

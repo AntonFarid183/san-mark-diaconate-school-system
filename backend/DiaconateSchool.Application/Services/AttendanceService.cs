@@ -263,35 +263,43 @@ public class AttendanceService : IAttendanceService
             .ToList();
     }
 
-    public async Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId)
+    // Shared by both the manual roster save and the QR scan below — same
+    // "one session per class+day" bucket either way, never surfaced to the UI
+    // as a lifecycle of its own.
+    private async Task<AttendanceSession> GetOrCreateSessionAsync(Guid classId, DateOnly date, Guid createdByUserId)
     {
-        var session = await _repo.GetSessionByClassAndDateAsync(dto.ClassId, dto.Date);
+        var session = await _repo.GetSessionByClassAndDateAsync(classId, date);
         if (session == null)
         {
-            var schoolClass = await _classRepo.GetByIdAsync(dto.ClassId)
+            var schoolClass = await _classRepo.GetByIdAsync(classId)
                 ?? throw new InvalidOperationException("الفصل غير موجود.");
 
-            var dayStart = dto.Date.ToDateTime(TimeOnly.MinValue);
+            var dayStart = date.ToDateTime(TimeOnly.MinValue);
             session = new AttendanceSession
             {
                 Id = Guid.NewGuid(),
-                Title = $"حضور {schoolClass.Name} - {dto.Date:yyyy-MM-dd}",
+                Title = $"حضور {schoolClass.Name} - {date:yyyy-MM-dd}",
                 GradeId = schoolClass.GradeId,
-                ClassId = dto.ClassId,
+                ClassId = classId,
                 StartsAt = dayStart,
                 EndsAt = dayStart.AddHours(1),
                 LateAfterMinutes = 0,
                 Pin = GeneratePin(),
                 Status = AttendanceSessionStatus.Closed,
-                CreatedByUserId = recordedByUserId,
+                CreatedByUserId = createdByUserId,
                 CreatedAt = DateTime.UtcNow
             };
             await _repo.AddSessionAsync(session);
             await _uow.SaveChangesAsync();
             session = await _repo.GetSessionByIdAsync(session.Id);
         }
+        return session!;
+    }
 
-        var existingMap = session!.Records.ToDictionary(r => r.StudentId);
+    public async Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId)
+    {
+        var session = await GetOrCreateSessionAsync(dto.ClassId, dto.Date, recordedByUserId);
+        var existingMap = session.Records.ToDictionary(r => r.StudentId);
 
         foreach (var entry in dto.Entries)
         {
@@ -324,6 +332,69 @@ public class AttendanceService : IAttendanceService
         var studentIds = dto.Entries.Select(e => e.StudentId).ToHashSet();
         var allRecords = await _repo.GetRecordsBySessionAsync(session.Id);
         return allRecords.Where(r => studentIds.Contains(r.StudentId)).Select(MapToRecordDto).ToList();
+    }
+
+    public async Task<QrScanResultDto> ScanQrAsync(QrScanDto dto, Guid recordedByUserId)
+    {
+        var student = await _studentRepo.GetByQrTokenAsync(dto.QrToken);
+        if (student == null)
+        {
+            return new QrScanResultDto { ResultCode = QrScanResultCode.InvalidQr, Message = "كود الطالب غير صالح" };
+        }
+
+        if (student.ClassId != dto.ClassId)
+        {
+            return new QrScanResultDto { ResultCode = QrScanResultCode.WrongClass, Message = "الطالب لا ينتمي إلى هذا الفصل" };
+        }
+
+        var session = await GetOrCreateSessionAsync(dto.ClassId, dto.Date, recordedByUserId);
+        var existing = session.Records.FirstOrDefault(r => r.StudentId == student.Id);
+
+        if (existing != null && existing.Status == AttendanceStatus.Present)
+        {
+            // GetOrCreateSessionAsync's Records don't carry Student.User — refetch
+            // with the includes MapToRecordDto needs (same as the success path below).
+            var alreadyRecord = (await _repo.GetRecordsBySessionAsync(session.Id)).First(r => r.StudentId == student.Id);
+            return new QrScanResultDto
+            {
+                ResultCode = QrScanResultCode.AlreadyPresent,
+                Message = "الطالب مسجل حضوره بالفعل",
+                Record = MapToRecordDto(alreadyRecord)
+            };
+        }
+
+        if (existing != null)
+        {
+            existing.Status = AttendanceStatus.Present;
+            existing.Method = AttendanceMethod.Qr;
+            existing.RecordedByUserId = recordedByUserId;
+            existing.RecordedAt = DateTime.UtcNow;
+            await _repo.UpdateRecordAsync(existing);
+        }
+        else
+        {
+            existing = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                SessionId = session.Id,
+                StudentId = student.Id,
+                Status = AttendanceStatus.Present,
+                Method = AttendanceMethod.Qr,
+                RecordedByUserId = recordedByUserId,
+                RecordedAt = DateTime.UtcNow
+            };
+            await _repo.AddRecordAsync(existing);
+        }
+
+        await _uow.SaveChangesAsync();
+
+        var saved = (await _repo.GetRecordsBySessionAsync(session.Id)).First(r => r.StudentId == student.Id);
+        return new QrScanResultDto
+        {
+            ResultCode = QrScanResultCode.Success,
+            Message = "تم تسجيل حضور الطالب",
+            Record = MapToRecordDto(saved)
+        };
     }
 
     public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status)

@@ -18,6 +18,7 @@ public interface IStudentRepository
     Task<List<Grade>> GetAllGradesAsync();
     Task<Student?> GetByIdWithIncludesAsync(Guid id);
     Task<Student?> GetByUserIdAsync(Guid userId);
+    Task<Student?> GetByQrTokenAsync(string qrToken);
     Task<List<Student>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task UpdateAsync(Student student);
     Task<List<Student>> GetPendingAsync();

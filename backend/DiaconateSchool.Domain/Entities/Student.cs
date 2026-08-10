@@ -10,6 +10,12 @@ public class Student
     public required string StudentCode { get; set; }
     public StudentStatus Status { get; set; } = StudentStatus.Active;
 
+    // Stable, opaque identity for the QR-code ID card. Generated once at
+    // registration, never shown/entered by an admin, not derived from any
+    // other private field — just a random, unique, non-reversible token the
+    // backend resolves back to this student on scan.
+    public required string QrToken { get; set; }
+
     public Gender Gender { get; set; }
     public DateOnly DateOfBirth { get; set; }
 

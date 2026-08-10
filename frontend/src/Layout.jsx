@@ -207,6 +207,7 @@ const Layout = () => {
     { path: '/register-student', label: 'تسجيل طالب جديد', icon: 'person_add' },
     { path: '/pending-approvals', label: 'طلبات التسجيل', icon: 'pending_actions' },
     { path: '/payment-reports', label: 'تقرير المدفوعات', icon: 'account_balance' },
+    { path: '/student-cards', label: 'كارنيهات الطلاب', icon: 'badge' },
   ];
 
   const adminItems = [

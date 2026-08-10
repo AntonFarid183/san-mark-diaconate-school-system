@@ -141,7 +141,8 @@ public enum AttendanceStatus
 public enum AttendanceMethod
 {
     Manual = 0,
-    Pin = 1
+    Pin = 1,
+    Qr = 2
 }
 
 public enum LeaveStatus

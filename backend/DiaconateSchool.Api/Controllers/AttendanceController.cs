@@ -137,6 +137,16 @@ public class AttendanceController : ControllerBase
         }
     }
 
+    // QR is an extra way to mark Present on the same class-roster flow — the
+    // frontend still shows the class+date roster, this just fills in one row.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("scan")]
+    public async Task<IActionResult> ScanQr([FromBody] QrScanDto dto)
+    {
+        var result = await _service.ScanQrAsync(dto, GetUserId());
+        return Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("records")]
     public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status)

@@ -43,6 +43,7 @@ public class StudentQueryService : IStudentQueryService
             {
                 Id = s.Id,
                 StudentCode = s.StudentCode,
+                QrToken = s.QrToken,
                 UserName = s.User.UserName,
                 FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
                 FirstName = s.User.FirstName,
@@ -234,6 +235,7 @@ public class StudentQueryService : IStudentQueryService
             UserId = student.UserId.ToString(),
             UserName = student.User.UserName,
             StudentCode = student.StudentCode,
+            QrToken = student.QrToken,
             Status = student.Status.ToString(),
             FirstName = student.User.FirstName,
             SecondName = student.User.MiddleName,

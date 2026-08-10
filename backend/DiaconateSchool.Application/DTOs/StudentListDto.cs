@@ -47,6 +47,7 @@ public class StudentListItemDto
 {
     public Guid Id { get; set; }
     public string StudentCode { get; set; } = string.Empty;
+    public string QrToken { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
@@ -83,6 +84,7 @@ public class StudentDetailDto
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string StudentCode { get; set; } = string.Empty;
+    public string QrToken { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string SecondName { get; set; } = string.Empty;

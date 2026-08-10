@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
+import QrScanner from '../components/QrScanner';
+
+// Mirrors DiaconateSchool.Application.DTOs.QrScanResultCode (serialized as numbers)
+const QR_RESULT_SUCCESS = 0;
+const QR_RESULT_ALREADY_PRESENT = 1;
 
 // Enum values mirror DiaconateSchool.Domain.Enums.AttendanceStatus (serialized as numbers)
 const STATUS_PRESENT = 0;
@@ -38,6 +43,8 @@ const AttendanceSessionsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanFeed, setScanFeed] = useState([]); // recent scan results, newest first — shown while the scanner is open
 
   // Academic years — default to current
   useEffect(() => {
@@ -110,6 +117,26 @@ const AttendanceSessionsScreen = () => {
   };
 
   const markedCount = Object.keys(statusByStudent).length;
+
+  const handleScan = async (qrToken) => {
+    try {
+      const r = await apiClient.post('/attendance/scan', { qrToken, classId, date });
+      const result = r.data;
+      const success = result.resultCode === QR_RESULT_SUCCESS || result.resultCode === QR_RESULT_ALREADY_PRESENT;
+      if (success && result.record) {
+        setStatusByStudent(prev => ({ ...prev, [result.record.studentId]: 0 })); // 0 = Present
+      }
+      setScanFeed(prev => [
+        { id: Date.now(), success, text: result.record ? `${result.record.studentName} — ${result.message}` : result.message },
+        ...prev,
+      ].slice(0, 8));
+    } catch (e) {
+      setScanFeed(prev => [
+        { id: Date.now(), success: false, text: e.response?.data?.message || 'فشل تسجيل الحضور بالكود.' },
+        ...prev,
+      ].slice(0, 8));
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -203,8 +230,25 @@ const AttendanceSessionsScreen = () => {
               >
                 تغييب الجميع
               </button>
+              <button
+                onClick={() => setScannerOpen(true)}
+                style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>qr_code_scanner</span>
+                مسح كارنيه الطالب
+              </button>
             </div>
           </div>
+
+          {scanFeed.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '1rem' }}>
+              {scanFeed.map(item => (
+                <div key={item.id} style={{ fontSize: '0.8rem', padding: '0.4rem 0.7rem', borderRadius: '6px', background: item.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: item.success ? 'var(--success)' : 'var(--danger)' }}>
+                  {item.text}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {roster.map(student => {
@@ -247,6 +291,10 @@ const AttendanceSessionsScreen = () => {
             {saving ? 'جاري الحفظ...' : 'حفظ الحضور'}
           </button>
         </div>
+      )}
+
+      {scannerOpen && (
+        <QrScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />
       )}
     </>
   );

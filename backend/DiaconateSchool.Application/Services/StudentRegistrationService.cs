@@ -76,6 +76,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         {
             Id = studentId,
             StudentCode = studentCode,
+            QrToken = GenerateQrToken(),
             Status = dto.SelfRegistered ? StudentStatus.Suspended : StudentStatus.Active,
             Gender = dto.Gender,
             DateOfBirth = dto.DateOfBirth,
@@ -124,4 +125,9 @@ public class StudentRegistrationService : IStudentRegistrationService
     {
         return Random.Shared.Next(100000, 999999).ToString();
     }
+
+    // 32 hex chars from a fresh Guid — unique for all practical purposes, carries
+    // nothing derived from the student's identity, and isn't reversible into any
+    // private data. This is the only thing that ever goes inside the QR code.
+    private static string GenerateQrToken() => Guid.NewGuid().ToString("N");
 }

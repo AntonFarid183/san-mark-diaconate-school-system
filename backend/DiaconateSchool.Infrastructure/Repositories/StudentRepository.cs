@@ -164,6 +164,16 @@ public class StudentRepository : IStudentRepository
             .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
+    public async Task<Student?> GetByQrTokenAsync(string qrToken)
+    {
+        return await _context.Students
+            .Include(s => s.User)
+            .Include(s => s.Grade)
+                .ThenInclude(g => g.Stage)
+            .Include(s => s.Class)
+            .FirstOrDefaultAsync(s => s.QrToken == qrToken);
+    }
+
     public async Task<List<Student>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         var idList = ids.ToList();

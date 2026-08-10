@@ -251,6 +251,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Student>()
             .HasIndex(s => s.StudentCode).IsUnique();
         modelBuilder.Entity<Student>()
+            .HasIndex(s => s.QrToken).IsUnique();
+        modelBuilder.Entity<Student>()
             .Property(s => s.PaidAmount).HasPrecision(18, 2);
 
         modelBuilder.Entity<ContentAccess>()

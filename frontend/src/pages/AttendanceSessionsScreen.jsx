@@ -8,6 +8,11 @@ import QrScanner from '../components/QrScanner';
 const QR_RESULT_SUCCESS = 0;
 const QR_RESULT_ALREADY_PRESENT = 1;
 
+// How long the camera stays closed behind the result popup before the
+// scanner reopens on its own — long enough to read, short enough to keep
+// scanning a whole class moving without an extra tap per student.
+const SCAN_PAUSE_MS = 1400;
+
 // Enum values mirror DiaconateSchool.Domain.Enums.AttendanceStatus (serialized as numbers)
 const STATUS_PRESENT = 0;
 const STATUS_ABSENT = 1;
@@ -46,6 +51,8 @@ const AttendanceSessionsScreen = () => {
   const [msg, setMsg] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanFeed, setScanFeed] = useState([]); // recent scan results, newest first — shown while the scanner is open
+  const [scanPause, setScanPause] = useState(null); // { success, text } — camera closed, popup shown, while set
+  const scanPauseTimerRef = useRef(null);
 
   // Academic years — default to current
   useEffect(() => {
@@ -122,6 +129,16 @@ const AttendanceSessionsScreen = () => {
 
   const markedCount = Object.keys(statusByStudent).length;
 
+  // Closes the camera behind a result popup for SCAN_PAUSE_MS, then reopens
+  // it automatically — every outcome pauses (not just success): a wrong-
+  // class or already-present hit needs the same beat to read as a fresh
+  // one, otherwise jsQR just refires it every frame the card stays in view.
+  const pauseThenResume = (success, text) => {
+    setScanPause({ success, text });
+    if (scanPauseTimerRef.current) clearTimeout(scanPauseTimerRef.current);
+    scanPauseTimerRef.current = setTimeout(() => setScanPause(null), SCAN_PAUSE_MS);
+  };
+
   const handleScan = async (qrToken) => {
     try {
       const r = await apiClient.post('/attendance/scan', { qrToken, classId, date });
@@ -130,17 +147,25 @@ const AttendanceSessionsScreen = () => {
       if (success && result.record) {
         setStatusByStudent(prev => ({ ...prev, [result.record.studentId]: 0 })); // 0 = Present
       }
-      setScanFeed(prev => [
-        { id: Date.now(), success, text: result.record ? `${result.record.studentName} — ${result.message}` : result.message },
-        ...prev,
-      ].slice(0, 8));
+      const text = result.record ? `${result.record.studentName} — ${result.message}` : result.message;
+      setScanFeed(prev => [{ id: Date.now(), success, text }, ...prev].slice(0, 8));
+      pauseThenResume(success, text);
     } catch (e) {
-      setScanFeed(prev => [
-        { id: Date.now(), success: false, text: e.response?.data?.message || 'فشل تسجيل الحضور بالكود.' },
-        ...prev,
-      ].slice(0, 8));
+      const text = e.response?.data?.message || 'فشل تسجيل الحضور بالكود.';
+      setScanFeed(prev => [{ id: Date.now(), success: false, text }, ...prev].slice(0, 8));
+      pauseThenResume(false, text);
     }
   };
+
+  // Scanner closed (either the pause popup or the admin hitting إغلاق) —
+  // don't leave a stale timer alive to reopen the camera after that.
+  useEffect(() => {
+    if (!scannerOpen && scanPauseTimerRef.current) {
+      clearTimeout(scanPauseTimerRef.current);
+      scanPauseTimerRef.current = null;
+      setScanPause(null);
+    }
+  }, [scannerOpen]);
 
   const save = async () => {
     setSaving(true);
@@ -305,7 +330,29 @@ const AttendanceSessionsScreen = () => {
       )}
 
       {scannerOpen && (
-        <QrScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />
+        scanPause ? (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.25rem' }}>
+            <div
+              style={{
+                width: '84px', height: '84px', borderRadius: '50%',
+                background: scanPause.success ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                border: `2px solid ${scanPause.success ? 'var(--success)' : 'var(--danger)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'scan-pause-pop 0.25s ease',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '44px', color: scanPause.success ? 'var(--success)' : 'var(--danger)' }}>
+                {scanPause.success ? 'check_circle' : 'error'}
+              </span>
+            </div>
+            <p style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 700, textAlign: 'center', maxWidth: '85vw' }}>
+              {scanPause.text}
+            </p>
+            <style>{'@keyframes scan-pause-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }'}</style>
+          </div>
+        ) : (
+          <QrScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />
+        )
       )}
     </>
   );

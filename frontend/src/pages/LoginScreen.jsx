@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
-import ChurchLogo from '../components/ChurchLogo';
+import SchoolLogo from '../components/SchoolLogo';
 import ThemeToggle from '../components/ThemeToggle';
 
 const LoginScreen = () => {
@@ -46,7 +46,7 @@ const LoginScreen = () => {
       <div className="glass-card" style={{ maxWidth: '420px', width: '100%' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <ChurchLogo size={96} className="auth-logo" />
+          <SchoolLogo size={96} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
           <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
         </div>

@@ -79,6 +79,17 @@
   gap: 0.75rem;
   cursor: pointer;
   min-width: 0;
+  flex: 1;
+}
+
+/* min-width:0 on a flex child alone doesn't stop its text content from
+   forcing the row wider than the viewport — the child still won't shrink
+   below its content's natural (nowrap) width. Needed here too, plus
+   ellipsis, or the long school name pushes under/behind the theme toggle
+   and hamburger on narrow screens instead of truncating. */
+.landing-navbar-brand-text {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .landing-navbar-brand-text h1 {
@@ -86,12 +97,17 @@
   font-size: 0.95rem;
   line-height: 1.35;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .landing-navbar-brand-text p {
   font-size: 0.7rem;
   color: var(--text-muted);
   line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .landing-navbar-links {
@@ -122,6 +138,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 /* ── Navbar dropdown (المناهج) ─────────────────────────────────────── */
@@ -242,6 +259,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-navbar {
+    padding: 0.7rem 1rem;
+  }
+  /* Subtitle (church name/branch) was the actual overlap trigger — its own
+     text wrapped to 2 lines while the title stayed nowrap+ellipsis next to
+     it, growing the brand block taller than the fixed-height navbar and
+     pushing into the toggle/hamburger row. Not load-bearing at this width
+     with the title already showing "مدرسة بي ثيؤريموس..."; drop it. */
+  .landing-navbar-brand-text p {
+    display: none;
+  }
+  .landing-navbar-actions {
+    gap: 0.35rem;
   }
 }
 

@@ -23,11 +23,14 @@ jobs:
         with:
           dotnet-version: '10.x'
 
+      # No .sln in this repo — building/publishing at repo root has nothing
+      # to build. Target the API project directly; its ProjectReferences
+      # (Domain/Application/Infrastructure) build along with it.
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build backend/DiaconateSchool.Api/DiaconateSchool.Api.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish backend/DiaconateSchool.Api/DiaconateSchool.Api.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

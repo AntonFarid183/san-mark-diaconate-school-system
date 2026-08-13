@@ -107,11 +107,19 @@ builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
 // 6. CORS for React
+// Localhost stays allowed unconditionally (dev). Production origins come
+// from the AllowedOrigins app setting (comma-separated) — App Service env
+// vars use __ for nesting, but this one's a flat CSV string, not a section.
+var configuredOrigins = (builder.Configuration["AllowedOrigins"] ?? string.Empty)
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.SetIsOriginAllowed(origin => origin.StartsWith("http://localhost:"))
+        policy.SetIsOriginAllowed(origin =>
+                  origin.StartsWith("http://localhost:") ||
+                  configuredOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

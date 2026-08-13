@@ -1,8 +1,12 @@
 import axios from 'axios';
+import { BACKEND_URL } from './config';
 
-// 1. Bind strictly to your local .NET API Port
+// Backend origin is environment-driven (see config.js) so the same build
+// process works against localhost in dev and the real API in production —
+// this used to be hardcoded to localhost, which would've silently pointed
+// a deployed frontend at nothing.
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5016/api',
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

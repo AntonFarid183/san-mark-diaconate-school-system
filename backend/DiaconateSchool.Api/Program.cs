@@ -21,8 +21,17 @@ builder.Configuration["ContentRoot"] = builder.Environment.ContentRootPath;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// EnableRetryOnFailure: Azure SQL serverless auto-pauses when idle and takes
+// a few seconds to resume on the next connection -- that resume routinely
+// surfaces as SQL error 40613 ("Database ... is not currently available")
+// on the very first request after a pause. Without retry, EF Core treats
+// that as fatal and the app crashes on startup instead of just waiting out
+// a normal, expected cold-start.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure(
+        maxRetryCount: 5,
+        maxRetryDelay: TimeSpan.FromSeconds(10),
+        errorNumbersToAdd: null)));
 
 // 2. JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

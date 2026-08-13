@@ -195,6 +195,17 @@
   --auth-bg-opacity: 0.92;
 }
 
+/* overflow-x:hidden on both html and body: this is an RTL page with
+   animated wide content (the church-gallery marquee track, transform-
+   translated far past its own viewport by design). Browsers occasionally
+   compute a small negative initial scrollX for RTL documents that contain
+   that kind of content, which reveals a sliver gap of the page background
+   along one edge on load, on mobile especially. Locks the page to the
+   viewport regardless of what any child animation transiently does. */
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
@@ -202,6 +213,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   direction: rtl;
+  overflow-x: hidden;
 }
 
 * {

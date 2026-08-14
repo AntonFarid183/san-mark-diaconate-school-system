@@ -132,7 +132,13 @@ export default function CurriculumManagementScreen() {
       else { const r = await apiClient.post('/curriculum', payload); savedId = r.data.id; }
       if (pendingFile && savedId) {
         const fd = new FormData(); fd.append('file', pendingFile);
-        await apiClient.post(`/curriculum/${savedId}/upload-pdf`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        // Content-Type must be left to axios (via `undefined`, not a hardcoded
+        // string) so it can attach the multipart boundary itself — a hardcoded
+        // 'multipart/form-data' has no boundary, which corrupts the body and
+        // makes Request.Form.Files come back empty server-side (400 "الملف
+        // مطلوب"), reported here as a blanket "فشل الحفظ" even though the
+        // curriculum record itself was already created successfully.
+        await apiClient.post(`/curriculum/${savedId}/upload-pdf`, fd, { headers: { 'Content-Type': undefined } });
       }
       flash('success', editing ? 'تم التحديث.' : 'تم الإنشاء.');
       setShowForm(false); setPendingFile(null); fetchAll();
@@ -146,7 +152,7 @@ export default function CurriculumManagementScreen() {
     setUploading(true);
     const fd = new FormData(); fd.append('file', file);
     try {
-      await apiClient.post(`/curriculum/${uploadTarget.id}/upload-pdf`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await apiClient.post(`/curriculum/${uploadTarget.id}/upload-pdf`, fd, { headers: { 'Content-Type': undefined } });
       flash('success', 'تم رفع الملف بنجاح.');
       const r = await apiClient.get(`/curriculum/${uploadTarget.id}`);
       setUploadTarget(r.data);

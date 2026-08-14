@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
-import StudentPaymentModal from '../components/StudentPaymentModal';
 import ExportModal from '../components/ExportModal';
 import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
 
@@ -20,7 +19,6 @@ const StudentListScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [paymentModalStudent, setPaymentModalStudent] = useState(null);
   const [showExport, setShowExport] = useState(false);
   const [exportRows, setExportRows] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
@@ -214,15 +212,9 @@ const StudentListScreen = () => {
                       </td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{s.dateOfBirth}</td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
-                          <button onClick={() => navigate(`/students/${s.id}`)} className="btn-secondary" style={{ padding: '0.3rem 1rem', fontSize: '0.8rem' }}>
-                            عرض الملف
-                          </button>
-                          <button onClick={() => setPaymentModalStudent(s)} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>payments</span>
-                            المدفوعات
-                          </button>
-                        </div>
+                        <button onClick={() => navigate(`/students/${s.id}`)} className="btn-secondary" style={{ padding: '0.3rem 1rem', fontSize: '0.8rem' }}>
+                          عرض الملف
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -258,14 +250,6 @@ const StudentListScreen = () => {
             </div>
           </div>
         </>
-      )}
-
-      {paymentModalStudent && (
-        <StudentPaymentModal
-          studentId={paymentModalStudent.id}
-          studentName={paymentModalStudent.fullName}
-          onClose={() => setPaymentModalStudent(null)}
-        />
       )}
 
       {showExport && (

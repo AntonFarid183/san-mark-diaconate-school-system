@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
+import StudentPaymentModal from '../components/StudentPaymentModal';
 
 const PAYMENT_EXPORT_COLUMNS = [
   { key: 'studentCode', label: 'الكود' },
@@ -59,6 +60,7 @@ export default function PaymentReportsScreen() {
   const [grades, setGrades] = useState([]);
 
   const [showExport, setShowExport] = useState(false);
+  const [paymentModalStudent, setPaymentModalStudent] = useState(null);
 
   const [filters, setFilters] = useState({
     name: searchParams.get('name') || '',
@@ -226,6 +228,7 @@ export default function PaymentReportsScreen() {
                   <th style={thStyle}>تاريخ التسجيل</th>
                   <th style={thStyle}>الحالة</th>
                   <th style={thStyle}>المبلغ</th>
+                  <th style={thStyle}></th>
                 </tr>
               </thead>
               <tbody>
@@ -249,6 +252,12 @@ export default function PaymentReportsScreen() {
                       <td style={{ ...tdStyle, fontWeight: 700, color: item.paidAmount ? 'var(--success)' : 'var(--text-muted)' }}>
                         {item.paymentStatus === 'paid' ? formatAmount(item.paidAmount) : '—'}
                       </td>
+                      <td style={tdStyle}>
+                        <button onClick={() => setPaymentModalStudent(item)} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>payments</span>
+                          إدارة المدفوعات
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -259,6 +268,14 @@ export default function PaymentReportsScreen() {
             إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.items.filter(i => i.paymentStatus === 'exempted').length} معفى — إجمالي محصل {formatAmount(data.totalCollected)}
           </div>
         </div>
+      )}
+
+      {paymentModalStudent && (
+        <StudentPaymentModal
+          studentId={paymentModalStudent.id}
+          studentName={paymentModalStudent.fullName}
+          onClose={() => { setPaymentModalStudent(null); fetchReport(); }}
+        />
       )}
 
       {showExport && data && (

@@ -91,9 +91,16 @@ public class CurriculumController : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
+    // No [RequestSizeLimit] override here on purpose. That attribute is a hard
+    // ceiling enforced by the framework itself while it reads the request body
+    // -- a file over its limit gets the connection aborted mid-read, before
+    // this method's own size check ever runs, so the admin got a blind
+    // "فشل الحفظ" instead of the friendly message below. Falls back to the
+    // app-wide Kestrel MaxRequestBodySize (200MB, set in Program.cs for hymn
+    // videos) as the real backstop, so a real curriculum PDF (scanned
+    // booklets routinely run 30-60MB) can actually reach the check.
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{id}/upload-pdf")]
-    [RequestSizeLimit(20_000_000)]
     public async Task<IActionResult> UploadPdf(Guid id)
     {
         var file = Request.Form.Files.GetFile("file");
@@ -101,8 +108,8 @@ public class CurriculumController : ControllerBase
             return BadRequest(new { Message = "الملف مطلوب." });
         if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { Message = "يجب أن يكون الملف بصيغة PDF." });
-        if (file.Length > 20_000_000)
-            return BadRequest(new { Message = "حجم الملف يتجاوز الحد الأقصى (20 ميغابايت)." });
+        if (file.Length > 60_000_000)
+            return BadRequest(new { Message = "حجم الملف يتجاوز الحد الأقصى (60 ميغابايت)." });
 
         var url = await _storage.SaveAsync(file.OpenReadStream(), file.FileName, "curriculums");
         var result = await _service.SetPdfAsync(id, url, file.FileName, file.Length);

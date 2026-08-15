@@ -25,4 +25,11 @@ public interface IStudentRepository
     Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId);
     Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo);
+
+    // Permanently removes a student and every record that references them
+    // (attendance, homework, exams, certificates, payments, hymn progress,
+    // leave requests, grade history, content access) plus their login
+    // account -- not just the Students row, so it doesn't leave orphaned
+    // history behind or fail on FK constraints for students who have any.
+    Task DeleteAsync(Guid studentId);
 }

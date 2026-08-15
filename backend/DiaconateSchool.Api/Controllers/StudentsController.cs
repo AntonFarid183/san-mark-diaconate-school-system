@@ -180,6 +180,24 @@ public class StudentsController : ControllerBase
     }
 
     [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStudent(string id)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        try
+        {
+            await _registrationService.DeleteStudentAsync(parsedId);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { Message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("level")]
     public async Task<IActionResult> SetStudentsLevel([FromBody] SetStudentsLevelDto dto)
     {

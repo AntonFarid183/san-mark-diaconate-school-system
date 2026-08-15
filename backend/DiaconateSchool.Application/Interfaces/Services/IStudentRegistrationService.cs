@@ -11,4 +11,5 @@ public interface IStudentRegistrationService
     Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto);
     Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
     Task<IEnumerable<Stage>> GetAllStagesAsync();
+    Task DeleteStudentAsync(Guid studentId);
 }

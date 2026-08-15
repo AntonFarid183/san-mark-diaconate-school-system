@@ -55,6 +55,9 @@ export default function StudentDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +102,18 @@ export default function StudentDetailScreen() {
     load();
     return () => { cancelled = true; };
   }, [id]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await apiClient.delete(`/students/${id}`);
+      navigate('/students');
+    } catch (e) {
+      setDeleteError(e.response?.data?.message || 'فشل حذف الطالب.');
+      setDeleting(false);
+    }
+  };
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '4rem' }}><p>جاري التحميل...</p></div>
@@ -252,6 +267,13 @@ export default function StudentDetailScreen() {
               <button onClick={() => navigate('/students')} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
                 العودة
+              </button>
+              <button
+                onClick={() => { setDeleteError(null); setShowDeleteConfirm(true); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.08)', color: 'var(--danger)', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                حذف الطالب
               </button>
             </div>
           </div>
@@ -498,6 +520,42 @@ export default function StudentDetailScreen() {
 
       {showAccountModal && (
         <StudentPaymentModal studentId={id} studentName={student.fullName} onClose={() => setShowAccountModal(false)} />
+      )}
+
+      {showDeleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: 'min(420px, 90vw)', direction: 'rtl' }}>
+            <h3 style={{ color: 'var(--danger)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="material-symbols-outlined">warning</span>
+              حذف الطالب نهائياً
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: '0.5rem' }}>
+              سيتم حذف <strong style={{ color: 'var(--text-primary)' }}>{student.fullName}</strong> نهائياً، بما في ذلك سجل الحضور والواجبات ونتائج الامتحانات والشهادات والمدفوعات وتسجيلات الألحان وحساب الدخول الخاص به. لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            {deleteError && (
+              <p style={{ fontSize: '0.85rem', color: 'var(--danger)', background: 'rgba(239,68,68,0.1)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }}>
+                {deleteError}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                className="btn-secondary"
+                style={{ flex: 1 }}
+                disabled={deleting}
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                إلغاء
+              </button>
+              <button
+                style={{ flex: 1, borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--danger)', color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', padding: '0.7rem', opacity: deleting ? 0.7 : 1 }}
+                disabled={deleting}
+                onClick={handleDelete}
+              >
+                {deleting ? 'جاري الحذف...' : 'حذف نهائياً'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

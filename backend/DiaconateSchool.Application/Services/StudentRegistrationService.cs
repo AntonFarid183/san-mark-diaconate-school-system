@@ -121,6 +121,11 @@ public class StudentRegistrationService : IStudentRegistrationService
         return await _studentRepo.GetAllStagesAsync();
     }
 
+    public async Task DeleteStudentAsync(Guid studentId)
+    {
+        await _studentRepo.DeleteAsync(studentId);
+    }
+
     private static string GenerateRandomPassword()
     {
         return Random.Shared.Next(100000, 999999).ToString();

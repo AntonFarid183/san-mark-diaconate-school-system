@@ -250,4 +250,41 @@ public class StudentRepository : IStudentRepository
 
         return (items, items.Count, paidCount, totalCollected, payments);
     }
+
+    // Deletes in leaf-to-root order inside one transaction. Bulk
+    // ExecuteDeleteAsync issues its own SQL immediately (doesn't batch
+    // through SaveChanges), so the transaction is what makes this atomic --
+    // without it, a failure partway through would leave the student's
+    // history half-deleted instead of either fully gone or untouched.
+    public async Task DeleteAsync(Guid studentId)
+    {
+        var student = await _context.Students.FindAsync(studentId)
+            ?? throw new InvalidOperationException("الطالب غير موجود.");
+        var userId = student.UserId;
+
+        await using var tx = await _context.Database.BeginTransactionAsync();
+
+        await _context.HomeworkAnswers.Where(a => a.HomeworkSubmission.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.HomeworkSubmissions.Where(s => s.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.PaymentTransactions.Where(t => t.StudentAccount.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.StudentAccounts.Where(a => a.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.HymnSubmissions.Where(s => s.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.HymnLessonProgresses.Where(p => p.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.LeaveRequests.Where(l => l.StudentId == studentId).ExecuteDeleteAsync();
+        // AttendanceAuditLogs cascade from AttendanceRecords at the DB level
+        // (FK OnDelete: Cascade) -- no separate delete needed for those.
+        await _context.AttendanceRecords.Where(r => r.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.GradeHistories.Where(g => g.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.Certificates.Where(c => c.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.ExamResults.Where(e => e.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.StudentProgressSummaries.Where(p => p.StudentId == studentId).ExecuteDeleteAsync();
+        await _context.ContentAccesses.Where(c => c.StudentId == studentId).ExecuteDeleteAsync();
+
+        await _context.Students.Where(s => s.Id == studentId).ExecuteDeleteAsync();
+        // The student's own login account -- not RegisteredByUserId (the
+        // admin who registered them), that user is untouched.
+        await _context.Users.Where(u => u.Id == userId).ExecuteDeleteAsync();
+
+        await tx.CommitAsync();
+    }
 }

@@ -130,7 +130,11 @@ const RegisterStudentScreen = () => {
       setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
     } catch (err) {
       let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
-      if (err.response?.data?.Message) errorMsg = err.response.data.Message;
+      // Backend serializes as camelCase ("message") by ASP.NET Core's default
+      // -- .Message (capital) was silently always undefined, hiding the real
+      // server error behind this generic fallback every single time.
+      const serverMsg = err.response?.data?.message || err.response?.data?.Message;
+      if (serverMsg) errorMsg = serverMsg;
       else if (err.response?.data?.errors) errorMsg = `خطأ في البيانات: ${Object.values(err.response.data.errors)[0]}`;
       else if (!err.response) errorMsg = 'لا يمكن الاتصال بالخادم. يرجى التأكد من تشغيل الـ Backend.';
       setError(errorMsg);

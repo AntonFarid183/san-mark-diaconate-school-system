@@ -569,6 +569,19 @@ public class ApplicationDbContext : DbContext
                 StageId = secondaryId
             });
 
+        // Pseudo-grades for stages the UI treats as gradeless (no picker
+        // shown) but Student.GradeId is a required FK regardless -- the
+        // registration forms (RegisterStudentScreen.jsx, SelfRegisterScreen.jsx)
+        // have always sent these exact hardcoded IDs as the grade for طفولة/
+        // جامعة/خريجون/كبار, but no Grade row with these IDs ever existed,
+        // so every registration in one of these stages failed the FK
+        // constraint on insert (unhandled exception -> 500).
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0000-000000000011"), Name = "KG1", Level = 1, StageId = childhoodId });
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0000-000000000012"), Name = "KG2", Level = 2, StageId = childhoodId });
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0004-000000000011"), Name = "جامعة", Level = 1, StageId = universityId });
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0005-000000000011"), Name = "خريجون", Level = 1, StageId = graduatesId });
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0006-000000000011"), Name = "كبار", Level = 1, StageId = seniorsId });
+
         modelBuilder.Entity<Grade>().HasData(grades);
     }
 }

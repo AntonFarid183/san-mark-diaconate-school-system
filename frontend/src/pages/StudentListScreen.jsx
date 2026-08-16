@@ -230,7 +230,7 @@ const StudentListScreen = () => {
             </span>
             <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', opacity: page === totalPages ? 0.4 : 1, display: 'flex', alignItems: 'center' }}>
+                className="btn-secondary tap-target" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', opacity: page === totalPages ? 0.4 : 1, display: 'flex', alignItems: 'center' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
               </button>
               {pageNumbers().map(p => (
@@ -244,7 +244,7 @@ const StudentListScreen = () => {
                 }}>{p}</button>
               ))}
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', opacity: page === 1 ? 0.4 : 1, display: 'flex', alignItems: 'center' }}>
+                className="btn-secondary tap-target" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', opacity: page === 1 ? 0.4 : 1, display: 'flex', alignItems: 'center' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_left</span>
               </button>
             </div>

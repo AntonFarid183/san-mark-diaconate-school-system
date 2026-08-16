@@ -220,14 +220,49 @@ body {
   box-sizing: border-box;
 }
 
+/* Leading, not tracking.
+   Apple's type guidance says to tighten tracking as display text grows —
+   that rule is Latin-specific and must NOT be applied here: Arabic is a
+   cursive script whose letters join, so any letter-spacing (negative or
+   positive) breaks those joins and damages legibility. What does carry
+   over is leading, and it carries over *inverted*: Arabic needs more
+   generous line-height than Latin at the same size because of its tall
+   ascenders/descenders and diacritics. Headings were on `normal` (~1.2),
+   which crowds those marks; body was too. */
 h1, h2, h3, h4 {
   margin: 0;
   font-weight: 700;
+  line-height: 1.4;
 }
+
+/* Large display text can afford tighter leading than body copy — the
+   inverse-with-size half of the same rule. */
+h1 { line-height: 1.3; }
 
 p {
   margin: 0;
   color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* Touch targets.
+   Apple HIG floor is 44x44pt. Several icon-only controls (sidebar toggle
+   30px, theme toggle 38px, notification bell 40px, pagination chevrons
+   34x28) sit under it. Rather than inflating them visually — which would
+   throw off the chrome's density — expand only the *hit* area with a
+   centered pseudo-element, so the control looks identical and just becomes
+   reliably tappable. */
+.tap-target {
+  position: relative;
+}
+.tap-target::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 44px);
+  height: max(100%, 44px);
 }
 
 a {

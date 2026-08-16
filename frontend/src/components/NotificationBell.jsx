@@ -82,6 +82,7 @@ export default function NotificationBell() {
     <div ref={containerRef} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
+        className="tap-target"
         style={{
           position: 'relative', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
           borderRadius: 'var(--radius-sm)', width: '40px', height: '40px', display: 'flex',

@@ -286,7 +286,7 @@ const Layout = () => {
           {/* Logo */}
           <div style={{ borderBottom: '1px solid var(--surface-2)', position: 'relative' }}>
             {!isStudent && (
-              <button onClick={() => setOpen(o => !o)} style={{ position: 'absolute', top: '0.75rem', left: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
+              <button onClick={() => setOpen(o => !o)} className="tap-target" style={{ position: 'absolute', top: '0.75rem', left: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-gold)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
                 <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>{open ? 'menu_open' : 'menu'}</span>

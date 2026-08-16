@@ -16,6 +16,7 @@ export default function ThemeToggle({ size = 38 }) {
       onClick={toggleTheme}
       aria-label={label}
       title={label}
+      className="tap-target"
       style={{
         width: size, height: size,
         display: 'flex', alignItems: 'center', justifyContent: 'center',

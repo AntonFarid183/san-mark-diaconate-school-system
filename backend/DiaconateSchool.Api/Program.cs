@@ -168,6 +168,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Warm-up probe. Deliberately touches NOTHING -- no database, no auth, no
+// external call -- so an external pinger can keep the App Service process
+// loaded without waking the serverless SQL database. Keeping the app warm
+// is free; keeping the database warm is not (the free SQL offer is
+// 100,000 vCore-seconds/month, and holding it awake around the clock would
+// need well over ten times that).
+app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

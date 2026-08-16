@@ -13,11 +13,17 @@ const LoginScreen = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // The database is Azure SQL serverless and auto-pauses when idle, so the
+  // first login after a quiet spell waits on it resuming (tens of seconds).
+  // Nothing is broken during that wait, but a button that just says
+  // "verifying" for 40s reads as frozen -- explain what's happening instead.
+  const [slowWake, setSlowWake] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    const slowTimer = setTimeout(() => setSlowWake(true), 4000);
 
     try {
       const response = await apiClient.post('/auth/login', { userName, password });
@@ -36,6 +42,8 @@ const LoginScreen = () => {
         setError('حدث خطأ في الاتصال بالخادم. تأكد من أن الـ Backend يعمل.');
       }
     } finally {
+      clearTimeout(slowTimer);
+      setSlowWake(false);
       setIsLoading(false);
     }
   };
@@ -131,6 +139,13 @@ const LoginScreen = () => {
           <button type="submit" className="btn-primary" disabled={isLoading}>
             {isLoading ? 'جاري التحقق...' : 'تسجيل الدخول'}
           </button>
+
+          {slowWake && (
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '15px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>hourglass_top</span>
+              جاري تشغيل الخادم، أول تسجيل دخول بعد فترة توقف قد يستغرق حتى دقيقة. من فضلك انتظر.
+            </p>
+          )}
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>

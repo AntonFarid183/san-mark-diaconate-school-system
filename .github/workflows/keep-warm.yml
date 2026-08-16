@@ -1,0 +1,33 @@
+# Keeps the App Service process loaded so users don't pay a cold start on
+# the first request. The F1 (free) tier has no "Always On" setting and
+# unloads the app after roughly 20 minutes without traffic, which is why
+# the first login of the day felt frozen.
+#
+# Hits /health only -- that endpoint touches no database, so this does NOT
+# wake the serverless SQL database and burns none of the free 100,000
+# vCore-seconds/month budget. The database's own cold start is not solved
+# by this (see the login screen's progressive "waking up" message).
+name: Keep API warm
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub may delay scheduled runs under load; the App
+    # Service idle timeout is ~20 min, so a missed tick is tolerable.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 \
+              https://sanmark-api-fvadf0ecbze6f5hf.italynorth-01.azurewebsites.net/health) && \
+              echo "attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 15
+          done
+          echo "health check did not return 200"
+          exit 1

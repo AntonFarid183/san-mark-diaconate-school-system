@@ -42,11 +42,17 @@ import StudentPerformanceScreen from './pages/StudentPerformanceScreen';
 import CurriculumBrowserPage from './pages/CurriculumBrowserPage';
 import Layout from './Layout';
 
-const ProtectedRoute = ({ children, adminOnly }) => {
+const ProtectedRoute = ({ children, adminOnly, studentOnly }) => {
     const { user, loading } = useAuth();
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
     if (adminOnly && user.role !== 'Admin') return <Navigate to="/dashboard" replace />;
+    // Mirror of adminOnly. These screens are built entirely on "/my"-style
+    // endpoints that resolve a student from the JWT — an admin has no student
+    // profile, so every one of them 400/403/404s and renders a broken page.
+    // The sidebar never links there for an admin, but the URLs were reachable
+    // by typing them.
+    if (studentOnly && user.role === 'Admin') return <Navigate to="/dashboard" replace />;
     return children;
 };
 
@@ -91,25 +97,27 @@ function AppRoutes() {
                 <Route path="/hymn-submissions" element={<ProtectedRoute adminOnly><HymnSubmissionsScreen /></ProtectedRoute>} />
                 <Route path="/homework-management" element={<ProtectedRoute adminOnly><HomeworkManagementScreen /></ProtectedRoute>} />
 
-                {/* Shared */}
+                {/* Shared — genuinely render for both roles */}
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-                <Route path="/lessons" element={<ProtectedRoute><LessonsScreen /></ProtectedRoute>} />
-                <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailScreen /></ProtectedRoute>} />
-                <Route path="/progress" element={<ProtectedRoute><ProgressScreen /></ProtectedRoute>} />
-                <Route path="/curriculum" element={<ProtectedRoute><StudentCurriculumScreen /></ProtectedRoute>} />
-                <Route path="/hymn-lessons" element={<ProtectedRoute><StudentHymnLessonsScreen /></ProtectedRoute>} />
-                <Route path="/hymn-lessons/:id" element={<ProtectedRoute><HymnLessonDetailScreen /></ProtectedRoute>} />
                 <Route path="/announcements" element={<ProtectedRoute><AnnouncementsScreen /></ProtectedRoute>} />
+                {/* Takes an explicit id — an admin legitimately opens a student's
+                    certificate from that student's profile. */}
                 <Route path="/certificates/:id" element={<ProtectedRoute><CertificateScreen /></ProtectedRoute>} />
 
-                {/* Student only */}
-                <Route path="/profile" element={<ProtectedRoute><StudentProfileScreen /></ProtectedRoute>} />
-                <Route path="/my-results" element={<ProtectedRoute><MyExamResultsScreen /></ProtectedRoute>} />
-                <Route path="/my-certificates" element={<ProtectedRoute><MyCertificatesScreen /></ProtectedRoute>} />
-                <Route path="/attendance/checkin" element={<ProtectedRoute><StudentCheckInScreen /></ProtectedRoute>} />
-                <Route path="/homework" element={<ProtectedRoute><StudentHomeworkListScreen /></ProtectedRoute>} />
-                <Route path="/homework/:id" element={<ProtectedRoute><StudentHomeworkDetailScreen /></ProtectedRoute>} />
+                {/* Student only — all of these resolve the student from the JWT */}
+                <Route path="/lessons" element={<ProtectedRoute studentOnly><LessonsScreen /></ProtectedRoute>} />
+                <Route path="/lessons/:id" element={<ProtectedRoute studentOnly><LessonDetailScreen /></ProtectedRoute>} />
+                <Route path="/progress" element={<ProtectedRoute studentOnly><ProgressScreen /></ProtectedRoute>} />
+                <Route path="/curriculum" element={<ProtectedRoute studentOnly><StudentCurriculumScreen /></ProtectedRoute>} />
+                <Route path="/hymn-lessons" element={<ProtectedRoute studentOnly><StudentHymnLessonsScreen /></ProtectedRoute>} />
+                <Route path="/hymn-lessons/:id" element={<ProtectedRoute studentOnly><HymnLessonDetailScreen /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute studentOnly><StudentProfileScreen /></ProtectedRoute>} />
+                <Route path="/my-results" element={<ProtectedRoute studentOnly><MyExamResultsScreen /></ProtectedRoute>} />
+                <Route path="/my-certificates" element={<ProtectedRoute studentOnly><MyCertificatesScreen /></ProtectedRoute>} />
+                <Route path="/attendance/checkin" element={<ProtectedRoute studentOnly><StudentCheckInScreen /></ProtectedRoute>} />
+                <Route path="/homework" element={<ProtectedRoute studentOnly><StudentHomeworkListScreen /></ProtectedRoute>} />
+                <Route path="/homework/:id" element={<ProtectedRoute studentOnly><StudentHomeworkDetailScreen /></ProtectedRoute>} />
             </Route>
         </Routes>
     );

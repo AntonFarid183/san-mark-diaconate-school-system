@@ -204,7 +204,7 @@ const AttendanceDashboardScreen = () => {
       {/* Override Modal */}
       {editing && (
         <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '420px', direction: 'rtl' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '420px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>تعديل حالة الحضور</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{editing.studentName} — {editing.sessionTitle}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

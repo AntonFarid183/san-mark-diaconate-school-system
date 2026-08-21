@@ -162,33 +162,33 @@ const ContentManagementScreen = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
                 <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>العنوان</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="input-field" placeholder="عنوان الدرس" />
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="premium-input" placeholder="عنوان الدرس" />
               </div>
               <div>
                 <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>الوصف</label>
-                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-field" style={{ minHeight: '80px' }} placeholder="وصف الدرس" />
+                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="premium-input" style={{ minHeight: '80px' }} placeholder="وصف الدرس" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>رقم الدرس</label>
-                  <input type="number" value={form.lessonNumber} onChange={e => setForm({ ...form, lessonNumber: parseInt(e.target.value) })} className="input-field" />
+                  <input type="number" value={form.lessonNumber} onChange={e => setForm({ ...form, lessonNumber: parseInt(e.target.value) })} className="premium-input" />
                 </div>
                 <div>
                   <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>رقم الأسبوع</label>
-                  <input type="number" value={form.weekNumber} onChange={e => setForm({ ...form, weekNumber: parseInt(e.target.value) })} className="input-field" />
+                  <input type="number" value={form.weekNumber} onChange={e => setForm({ ...form, weekNumber: parseInt(e.target.value) })} className="premium-input" />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>المرحلة</label>
-                  <select value={form.stageId} onChange={e => setForm({ ...form, stageId: e.target.value })} className="input-field">
+                  <select value={form.stageId} onChange={e => setForm({ ...form, stageId: e.target.value })} className="premium-input">
                     <option value="">اختر المرحلة</option>
                     {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>الصف</label>
-                  <select value={form.gradeId} onChange={e => setForm({ ...form, gradeId: e.target.value })} className="input-field">
+                  <select value={form.gradeId} onChange={e => setForm({ ...form, gradeId: e.target.value })} className="premium-input">
                     <option value="">اختر الصف</option>
                     {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
@@ -212,11 +212,11 @@ const ContentManagementScreen = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
                 <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>عنوان الملف</label>
-                <input value={uploadForm.title} onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })} className="input-field" placeholder="عنوان المحتوى" />
+                <input value={uploadForm.title} onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })} className="premium-input" placeholder="عنوان المحتوى" />
               </div>
               <div>
                 <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>النوع</label>
-                <select value={uploadForm.type} onChange={e => setUploadForm({ ...uploadForm, type: e.target.value })} className="input-field">
+                <select value={uploadForm.type} onChange={e => setUploadForm({ ...uploadForm, type: e.target.value })} className="premium-input">
                   <option value="Pdf">PDF</option>
                   <option value="Video">فيديو</option>
                   <option value="Audio">صوتي</option>
@@ -225,7 +225,7 @@ const ContentManagementScreen = () => {
               </div>
               <div>
                 <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>الملف</label>
-                <input type="file" onChange={e => setUploadForm({ ...uploadForm, file: e.target.files[0] })} className="input-field" style={{ padding: '0.5rem' }} />
+                <input type="file" onChange={e => setUploadForm({ ...uploadForm, file: e.target.files[0] })} className="premium-input" style={{ padding: '0.5rem' }} />
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
                 <button onClick={() => setShowUpload(null)} className="btn-secondary">إلغاء</button>

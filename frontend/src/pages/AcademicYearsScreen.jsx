@@ -184,7 +184,7 @@ export default function AcademicYearsScreen() {
       {/* Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '420px', direction: 'rtl' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '420px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>
               {editing ? 'تعديل السنة الدراسية' : 'سنة دراسية جديدة'}
             </h3>
@@ -198,8 +198,8 @@ export default function AcademicYearsScreen() {
                   onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 150px' }}>
                   <label style={labelStyle}>تاريخ البداية</label>
                   <input
                     className="premium-input"
@@ -208,7 +208,7 @@ export default function AcademicYearsScreen() {
                     onChange={e => setForm({ ...form, startDate: e.target.value })}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 150px' }}>
                   <label style={labelStyle}>تاريخ الانتهاء</label>
                   <input
                     className="premium-input"
@@ -247,7 +247,7 @@ export default function AcademicYearsScreen() {
       {/* Delete Warning Modal */}
       {deleteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '440px', direction: 'rtl', border: '1px solid rgba(239,68,68,0.4)' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '440px', maxWidth: '92vw', direction: 'rtl', border: '1px solid rgba(239,68,68,0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--danger)' }}>warning</span>
               <h3 style={{ color: 'var(--danger)' }}>حذف السنة الدراسية "{deleteTarget.name}"</h3>

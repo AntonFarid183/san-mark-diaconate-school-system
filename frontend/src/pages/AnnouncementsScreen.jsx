@@ -107,11 +107,11 @@ const AnnouncementsScreen = () => {
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '540px', direction: 'rtl' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '540px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', direction: 'rtl' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>{editing ? 'تعديل إعلان' : 'إعلان جديد'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input className="input-field" placeholder="عنوان الإعلان" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-              <textarea className="input-field" placeholder="نص الإعلان" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} rows={5} style={{ resize: 'vertical' }} />
+              <input className="premium-input" placeholder="عنوان الإعلان" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              <textarea className="premium-input" placeholder="نص الإعلان" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} rows={5} style={{ resize: 'vertical' }} />
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} />
                 نشر مباشرة

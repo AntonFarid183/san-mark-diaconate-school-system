@@ -158,7 +158,7 @@ const ExamTakingScreen = () => {
 
           {q.type === 'Essay' && (
             <textarea value={answers[q.id] || ''} onChange={e => handleAnswer(q.id, e.target.value)}
-              className="input-field" style={{ minHeight: '200px', width: '100%' }} placeholder="اكتب إجابتك هنا..." />
+              className="premium-input" style={{ minHeight: '200px', width: '100%' }} placeholder="اكتب إجابتك هنا..." />
           )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>

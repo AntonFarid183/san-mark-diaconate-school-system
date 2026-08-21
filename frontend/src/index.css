@@ -667,3 +667,18 @@ a {
   filter: var(--app-backdrop-filter);
   opacity: var(--app-backdrop-opacity);
 }
+
+/* Edit-student page: form beside a fixed-width actions rail on desktop, stacked once the
+   rail no longer fits — the rail's own cards read fine at full width. */
+.edit-student-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .edit-student-layout {
+    grid-template-columns: 1fr;
+  }
+}

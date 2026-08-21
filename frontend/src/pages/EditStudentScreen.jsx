@@ -33,10 +33,10 @@ const REQUIRED_FIELDS = PERSONAL_FIELDS;
 
 const emptyForm = () => Object.fromEntries(EDITABLE_KEYS.map(key => [key, '']));
 
-const actionButtonStyle = (color, tint) => ({
-  background: tint,
-  border: `1px solid ${color}`,
-  color,
+const resetPasswordButtonStyle = {
+  background: 'rgba(251,191,36,0.1)',
+  border: '1px solid var(--accent-gold)',
+  color: 'var(--accent-gold)',
   borderRadius: '8px',
   padding: '0.6rem 1rem',
   cursor: 'pointer',
@@ -46,7 +46,7 @@ const actionButtonStyle = (color, tint) => ({
   alignItems: 'center',
   justifyContent: 'center',
   gap: '0.5rem',
-});
+};
 
 const EditStudentScreen = () => {
   usePageTitle('تعديل بيانات الطالب');
@@ -130,17 +130,6 @@ const EditStudentScreen = () => {
     }
   };
 
-  const toggleActive = async () => {
-    const endpoint = student.isActive ? 'deactivate' : 'activate';
-    try {
-      await apiClient.post(`/students/${id}/${endpoint}`);
-      setStudent({ ...student, isActive: !student.isActive });
-      setMsg({ type: 'success', text: student.isActive ? 'تم إيقاف الحساب.' : 'تم تفعيل الحساب.' });
-    } catch (e) {
-      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل العملية.' });
-    }
-  };
-
   if (loading) return <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>;
 
   const renderField = ([label, key]) => (
@@ -200,22 +189,10 @@ const EditStudentScreen = () => {
           <div className="glass-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>إجراءات الحساب</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button onClick={() => setShowReset(true)} style={actionButtonStyle('var(--accent-gold)', 'rgba(251,191,36,0.1)')}>
+              <button onClick={() => setShowReset(true)} style={resetPasswordButtonStyle}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>lock_reset</span>
                 إعادة تعيين كلمة المرور
               </button>
-              <button onClick={() => navigate(`/students/${id}/promote`)} style={actionButtonStyle('var(--c-blue)', 'rgba(96,165,250,0.1)')}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upgrade</span>
-                ترقية الطالب
-              </button>
-              {student && (
-                <button onClick={toggleActive} style={student.isActive
-                  ? actionButtonStyle('var(--danger)', 'rgba(239,68,68,0.1)')
-                  : actionButtonStyle('var(--success)', 'rgba(16,185,129,0.1)')}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{student.isActive ? 'block' : 'check_circle'}</span>
-                  {student.isActive ? 'إيقاف الحساب' : 'تفعيل الحساب'}
-                </button>
-              )}
             </div>
           </div>
 

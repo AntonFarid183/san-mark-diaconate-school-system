@@ -8,7 +8,6 @@ import DashboardScreen from './pages/DashboardScreen';
 import StudentListScreen from './pages/StudentListScreen';
 import StudentDetailScreen from './pages/StudentDetailScreen';
 import EditStudentScreen from './pages/EditStudentScreen';
-import StudentPromotionScreen from './pages/StudentPromotionScreen';
 import LessonsScreen from './pages/LessonsScreen';
 import LessonDetailScreen from './pages/LessonDetailScreen';
 import ContentManagementScreen from './pages/ContentManagementScreen';
@@ -86,7 +85,6 @@ function AppRoutes() {
                 <Route path="/student-performance" element={<ProtectedRoute adminOnly><StudentPerformanceScreen /></ProtectedRoute>} />
                 <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />
                 <Route path="/students/:id/edit" element={<ProtectedRoute adminOnly><EditStudentScreen /></ProtectedRoute>} />
-                <Route path="/students/:id/promote" element={<ProtectedRoute adminOnly><StudentPromotionScreen /></ProtectedRoute>} />
                 <Route path="/content" element={<ProtectedRoute adminOnly><ContentManagementScreen /></ProtectedRoute>} />
                 <Route path="/curriculum-management" element={<ProtectedRoute adminOnly><CurriculumManagementScreen /></ProtectedRoute>} />
                 <Route path="/hymn-lessons-management" element={<ProtectedRoute adminOnly><HymnLessonManagementScreen /></ProtectedRoute>} />

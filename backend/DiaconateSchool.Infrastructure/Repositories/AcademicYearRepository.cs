@@ -19,7 +19,7 @@ public class AcademicYearRepository : IAcademicYearRepository
 
     public async Task<List<AcademicYear>> GetAllAsync()
         => await _context.AcademicYears
-            .OrderByDescending(y => y.StartDate)
+            .OrderByDescending(y => y.CreatedAt)
             .ToListAsync();
 
     public async Task<AcademicYear?> GetByIdAsync(Guid id)

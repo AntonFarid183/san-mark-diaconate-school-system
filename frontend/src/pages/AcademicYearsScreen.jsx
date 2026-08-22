@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 
-const empty = { name: '', startDate: '', endDate: '', termFee: '', setAsCurrent: false };
+const empty = { name: '', termFee: '', setAsCurrent: false };
 
 export default function AcademicYearsScreen() {
   usePageTitle('السنوات الدراسية');
@@ -40,8 +40,6 @@ export default function AcademicYearsScreen() {
     setEditing(year);
     setForm({
       name: year.name,
-      startDate: year.startDate,
-      endDate: year.endDate,
       termFee: year.termFee ?? '',
       setAsCurrent: false,
     });
@@ -49,22 +47,18 @@ export default function AcademicYearsScreen() {
   };
 
   const save = async () => {
-    if (!form.name.trim() || !form.startDate || !form.endDate) return;
+    if (!form.name.trim()) return;
     setSaving(true);
     try {
       if (editing) {
         await apiClient.put(`/academic-years/${editing.id}`, {
           name: form.name,
-          startDate: form.startDate,
-          endDate: form.endDate,
           termFee: Number(form.termFee) || 0,
         });
         setMsg({ type: 'success', text: 'تم تحديث السنة الدراسية.' });
       } else {
         await apiClient.post('/academic-years', {
           name: form.name,
-          startDate: form.startDate,
-          endDate: form.endDate,
           termFee: Number(form.termFee) || 0,
           setAsCurrent: form.setAsCurrent,
         });
@@ -103,8 +97,6 @@ export default function AcademicYearsScreen() {
       setDeleting(false);
     }
   };
-
-  const fmt = (d) => new Date(d).toLocaleDateString('ar-EG');
 
   return (
     <>
@@ -149,10 +141,11 @@ export default function AcademicYearsScreen() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    {fmt(y.startDate)} — {fmt(y.endDate)}
-                    {y.termFee > 0 && <> · اشتراك {Number(y.termFee).toLocaleString('ar-EG')} ج.م</>}
-                  </div>
+                  {y.termFee > 0 && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                      اشتراك {Number(y.termFee).toLocaleString('ar-EG')} ج.م
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -197,30 +190,10 @@ export default function AcademicYearsScreen() {
                 <label style={labelStyle}>اسم السنة الدراسية</label>
                 <input
                   className="premium-input"
-                  placeholder="مثال: 2025-2026"
+                  placeholder="مثال: نيروز 1743"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
                 />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 150px' }}>
-                  <label style={labelStyle}>تاريخ البداية</label>
-                  <input
-                    className="premium-input"
-                    type="date"
-                    value={form.startDate}
-                    onChange={e => setForm({ ...form, startDate: e.target.value })}
-                  />
-                </div>
-                <div style={{ flex: '1 1 150px' }}>
-                  <label style={labelStyle}>تاريخ الانتهاء</label>
-                  <input
-                    className="premium-input"
-                    type="date"
-                    value={form.endDate}
-                    onChange={e => setForm({ ...form, endDate: e.target.value })}
-                  />
-                </div>
               </div>
               <div>
                 <label style={labelStyle}>قيمة الاشتراك (ج.م)</label>
@@ -252,7 +225,7 @@ export default function AcademicYearsScreen() {
               <button
                 className="btn-primary"
                 style={{ flex: 1 }}
-                disabled={!form.name.trim() || !form.startDate || !form.endDate || saving}
+                disabled={!form.name.trim() || saving}
                 onClick={save}
               >
                 {saving ? 'جاري الحفظ...' : 'حفظ'}

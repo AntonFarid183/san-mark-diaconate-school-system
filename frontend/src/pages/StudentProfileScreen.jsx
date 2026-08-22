@@ -30,10 +30,12 @@ const StudentProfileScreen = () => {
   usePageTitle('الملف الشخصي');
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
+  const [balance, setBalance] = useState(null); // { remainingBalance, hasBalance } -- never the total fee or a discount, see /students/me/balance
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     apiClient.get('/students/me').then(r => setProfile(r.data)).finally(() => setLoading(false));
+    apiClient.get('/students/me/balance').then(r => setBalance(r.data)).catch(() => {});
   }, []);
 
   // The cropped Blob is handed to us by PhotoCaptureField — we just own where
@@ -55,8 +57,16 @@ const StudentProfileScreen = () => {
 
   const photoUrl = toAbsUrl(profile?.profilePictureUrl);
   const fullName = [profile?.firstName, profile?.secondName, profile?.thirdName, profile?.lastName].filter(Boolean).join(' ');
-  const feesPaid = profile?.feesPaid;
   const isActive = profile?.status === 'Active';
+
+  // What the student is allowed to know: nothing when no fee is configured,
+  // "مسدد" when settled, or the amount still owed -- never the total, never
+  // whether any of it was a discount or exemption.
+  const balanceLabel = !balance?.hasBalance ? null : balance.remainingBalance > 0
+    ? `${Number(balance.remainingBalance).toLocaleString('ar-EG')} ج.م`
+    : 'مسدد';
+  const balanceColor = !balance?.hasBalance ? 'var(--accent-gold)'
+    : balance.remainingBalance > 0 ? 'var(--c-orange)' : 'var(--c-green)';
 
   return (
     <>
@@ -93,8 +103,12 @@ const StudentProfileScreen = () => {
               <StatPill icon="school" label="السنة الدراسية" value={profile?.gradeName} />
               <div style={{ width: '1px', background: 'var(--surface-3)' }} />
               <StatPill icon="check_circle" label="الحالة" value={isActive ? 'نشط' : 'موقوف'} color={isActive ? 'var(--c-green)' : 'var(--c-red)'} />
-              <div style={{ width: '1px', background: 'var(--surface-3)' }} />
-              <StatPill icon="payments" label="الاشتراك" value={feesPaid ? 'مسدد' : 'غير مسدد'} color={feesPaid ? 'var(--c-green)' : 'var(--c-orange)'} />
+              {balanceLabel && (
+                <>
+                  <div style={{ width: '1px', background: 'var(--surface-3)' }} />
+                  <StatPill icon="payments" label="المستحق" value={balanceLabel} color={balanceColor} />
+                </>
+              )}
             </div>
           </div>
         </div>

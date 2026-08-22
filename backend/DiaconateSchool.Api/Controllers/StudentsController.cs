@@ -19,17 +19,20 @@ public class StudentsController : ControllerBase
     private readonly IStudentQueryService _queryService;
     private readonly IPromotionService _promotionService;
     private readonly IStudentPerformanceService _performanceService;
+    private readonly IPaymentService _paymentService;
 
     public StudentsController(
         IStudentRegistrationService registrationService,
         IStudentQueryService queryService,
         IPromotionService promotionService,
-        IStudentPerformanceService performanceService)
+        IStudentPerformanceService performanceService,
+        IPaymentService paymentService)
     {
         _registrationService = registrationService;
         _queryService = queryService;
         _promotionService = promotionService;
         _performanceService = performanceService;
+        _paymentService = paymentService;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -304,6 +307,22 @@ public class StudentsController : ControllerBase
 
         var updated = await _queryService.UpdateStudentAsync(student.Id, new UpdateStudentDto { ProfilePictureUrl = dto.Url });
         return Ok(updated);
+    }
+
+    // Deliberately its own minimal endpoint, not a redirect to the admin
+    // /students/{id}/account route -- that one returns the total fee, any
+    // discount, and the full transaction history, none of which a student
+    // is meant to see about their own record.
+    [Authorize(Policy = "AllAuthenticated")]
+    [HttpGet("me/balance")]
+    public async Task<IActionResult> GetMyBalance()
+    {
+        var student = await _queryService.GetStudentByUserIdAsync(GetUserId());
+        if (student == null)
+            return NotFound(new { Message = "Student profile not found." });
+
+        var balance = await _paymentService.GetMyBalanceAsync(student.Id);
+        return Ok(balance);
     }
 }
 

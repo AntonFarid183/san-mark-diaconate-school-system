@@ -59,3 +59,13 @@ public class VoidTransactionDto
 {
     public string Reason { get; set; } = string.Empty;
 }
+
+// What a student is allowed to know about their own account: only the amount
+// still owed. Never TotalRequired, never DiscountTotal, never the transaction
+// list -- a discount or exemption must never be visible to the student it was
+// granted to.
+public class StudentBalanceDto
+{
+    public decimal RemainingBalance { get; set; }
+    public bool HasBalance { get; set; } // false when no fee has been configured -- hides the line entirely
+}

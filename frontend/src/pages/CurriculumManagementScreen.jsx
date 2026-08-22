@@ -184,13 +184,11 @@ export default function CurriculumManagementScreen() {
 
   // Group by academic year so the list reads as "this year's curriculum,
   // then last year's" rather than one flat pile the admin has to scan by eye.
-  // Years the AcademicYears table knows about are ordered by their own start
-  // date (current year first); any leftover string that doesn't match a real
-  // year (typo, or content predating this feature) still gets its own group,
-  // just sorted after the known ones rather than silently dropped.
-  const orderedYearNames = [...academicYears]
-    .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
-    .map(y => y.name);
+  // Years the AcademicYears table knows about come back newest-created first
+  // already (the API orders them); any leftover string that doesn't match a
+  // real year (typo, or content predating this feature) still gets its own
+  // group, just sorted after the known ones rather than silently dropped.
+  const orderedYearNames = academicYears.map(y => y.name);
   const groupedByYear = filtered.reduce((acc, item) => {
     (acc[item.academicYear] ||= []).push(item);
     return acc;

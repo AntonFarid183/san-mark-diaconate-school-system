@@ -44,9 +44,7 @@ public static class DbInitializer
             context.AcademicYears.Add(new AcademicYear
             {
                 Id = Guid.NewGuid(),
-                Name = "2025-2026",
-                StartDate = new DateOnly(2025, 9, 1),
-                EndDate = new DateOnly(2026, 6, 30),
+                Name = "نيروز 1743",
                 IsCurrent = true,
                 CreatedAt = DateTime.UtcNow
             });

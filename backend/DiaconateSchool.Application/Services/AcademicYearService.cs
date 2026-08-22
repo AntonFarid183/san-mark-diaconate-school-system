@@ -41,9 +41,6 @@ public class AcademicYearService : IAcademicYearService
         if (string.IsNullOrWhiteSpace(dto.Name))
             return (false, "اسم السنة الدراسية مطلوب.", null);
 
-        if (dto.EndDate <= dto.StartDate)
-            return (false, "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية.", null);
-
         if (dto.TermFee < 0)
             return (false, "قيمة الاشتراك لا يمكن أن تكون سالبة.", null);
 
@@ -57,8 +54,6 @@ public class AcademicYearService : IAcademicYearService
         {
             Id = Guid.NewGuid(),
             Name = dto.Name.Trim(),
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
             IsCurrent = dto.SetAsCurrent,
             TermFee = dto.TermFee,
             CreatedAt = DateTime.UtcNow
@@ -78,9 +73,6 @@ public class AcademicYearService : IAcademicYearService
         if (string.IsNullOrWhiteSpace(dto.Name))
             return (false, "اسم السنة الدراسية مطلوب.", null);
 
-        if (dto.EndDate <= dto.StartDate)
-            return (false, "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية.", null);
-
         if (dto.TermFee < 0)
             return (false, "قيمة الاشتراك لا يمكن أن تكون سالبة.", null);
 
@@ -88,8 +80,6 @@ public class AcademicYearService : IAcademicYearService
             return (false, "يوجد سنة دراسية بهذا الاسم مسبقاً.", null);
 
         year.Name = dto.Name.Trim();
-        year.StartDate = dto.StartDate;
-        year.EndDate = dto.EndDate;
         year.TermFee = dto.TermFee;
 
         await _uow.SaveChangesAsync();
@@ -144,8 +134,6 @@ public class AcademicYearService : IAcademicYearService
     {
         Id = y.Id,
         Name = y.Name,
-        StartDate = y.StartDate,
-        EndDate = y.EndDate,
         IsCurrent = y.IsCurrent,
         TermFee = y.TermFee,
         CreatedAt = y.CreatedAt

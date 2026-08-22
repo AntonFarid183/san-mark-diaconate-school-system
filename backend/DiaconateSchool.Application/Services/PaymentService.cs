@@ -30,6 +30,17 @@ public class PaymentService : IPaymentService
         return (true, null, Map(account));
     }
 
+    public async Task<StudentBalanceDto> GetMyBalanceAsync(Guid studentId)
+    {
+        var account = await _repo.GetAccountByStudentIdAsync(studentId);
+        if (account == null || account.TotalRequired <= 0)
+            return new StudentBalanceDto { RemainingBalance = 0, HasBalance = false };
+
+        var settled = account.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
+        var remaining = Math.Max(0, account.TotalRequired - settled);
+        return new StudentBalanceDto { RemainingBalance = remaining, HasBalance = true };
+    }
+
     public async Task<(bool Success, string? Error, StudentAccountDto? Result)> SetTotalRequiredAsync(Guid studentId, SetTotalRequiredDto dto)
     {
         if (dto.TotalRequired < 0)

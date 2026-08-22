@@ -10,6 +10,10 @@ const STATUS_LABELS = {
 
 const formatAmount = (val) => `${Number(val ?? 0).toLocaleString('ar-EG')} ج.م`;
 
+// Mirrors DiaconateSchool.Domain.Enums.PaymentTransactionKind (serialized as numbers)
+const KIND_PAYMENT = 0;
+const KIND_DISCOUNT = 1;
+
 const emptyForm = { amount: '', description: '', notes: '', date: new Date().toISOString().slice(0, 10) };
 
 export default function StudentPaymentModal({ studentId, studentName, onClose }) {
@@ -23,6 +27,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
   const [savingTotal, setSavingTotal] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addKind, setAddKind] = useState(KIND_PAYMENT);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
@@ -79,6 +84,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
     try {
       const r = await apiClient.post(`/students/${studentId}/account/transactions`, {
         amount,
+        kind: addKind,
         description: form.description.trim(),
         notes: form.notes.trim() || null,
         transactionDate: form.date ? `${form.date}T00:00:00` : null,
@@ -87,7 +93,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
       setShowAddForm(false);
       setForm(emptyForm);
     } catch (e) {
-      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل تسجيل الدفعة.' });
+      setMsg({ type: 'error', text: e.response?.data?.message || (addKind === KIND_DISCOUNT ? 'فشل تسجيل الخصم.' : 'فشل تسجيل الدفعة.') });
     } finally {
       setSaving(false);
     }
@@ -178,6 +184,11 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
               <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--track-inset)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المدفوع</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--success)' }}>{formatAmount(account.amountPaid)}</div>
+                {account.discountTotal > 0 && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--c-blue)', marginTop: '0.25rem' }}>
+                    + خصم {formatAmount(account.discountTotal)}
+                  </div>
+                )}
               </div>
               <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--track-inset)', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>المتبقي</div>
@@ -210,17 +221,49 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
 
             {/* Add payment */}
             {!showAddForm ? (
-              <button onClick={() => setShowAddForm(true)} className="btn-primary" style={{ width: '100%', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-                إضافة دفعة
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => { setAddKind(KIND_PAYMENT); setForm(emptyForm); setShowAddForm(true); }}
+                  className="btn-primary"
+                  style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                  إضافة دفعة
+                </button>
+                <button
+                  onClick={() => { setAddKind(KIND_DISCOUNT); setForm({ ...emptyForm, description: 'خصم' }); setShowAddForm(true); }}
+                  disabled={account.remainingBalance <= 0}
+                  title={account.remainingBalance <= 0 ? 'لا يوجد مبلغ متبقٍ لخصمه' : undefined}
+                  style={{
+                    flex: '1 1 150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                    padding: '0.7rem 1rem', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 700,
+                    background: 'rgba(96,165,250,0.1)', border: '1px solid var(--c-blue)', color: 'var(--c-blue)',
+                    cursor: account.remainingBalance <= 0 ? 'not-allowed' : 'pointer',
+                    opacity: account.remainingBalance <= 0 ? 0.45 : 1,
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>percent</span>
+                  إضافة خصم
+                </button>
+              </div>
             ) : (
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)', marginBottom: '1.5rem' }}>
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: addKind === KIND_DISCOUNT ? 'rgba(96,165,250,0.06)' : 'rgba(251,191,36,0.05)', border: `1px solid ${addKind === KIND_DISCOUNT ? 'rgba(96,165,250,0.3)' : 'rgba(251,191,36,0.2)'}`, marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.75rem', color: addKind === KIND_DISCOUNT ? 'var(--c-blue)' : 'var(--accent-gold)' }}>
+                  {addKind === KIND_DISCOUNT
+                    ? `تسجيل خصم — المتبقي حالياً ${formatAmount(account.remainingBalance)}`
+                    : 'تسجيل دفعة'}
+                </div>
                 <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
                   <input className="premium-input" type="number" step="0.01" min="0.01" placeholder="المبلغ" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} style={{ flex: 1 }} />
                   <input className="premium-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} style={{ flex: 1 }} />
                 </div>
-                <input className="premium-input" placeholder="الوصف (مثال: رحلة الكنيسة، كتب، تبرع)" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ width: '100%', marginBottom: '0.75rem' }} />
+                <input
+                  className="premium-input"
+                  placeholder={addKind === KIND_DISCOUNT ? 'سبب الخصم (مثال: حالة اجتماعية، أخوة في المدرسة)' : 'الوصف (مثال: رحلة الكنيسة، كتب، تبرع)'}
+                  value={form.description}
+                  onChange={e => setForm({ ...form, description: e.target.value })}
+                  style={{ width: '100%', marginBottom: '0.75rem' }}
+                />
                 <textarea className="premium-input" placeholder="ملاحظات (اختياري)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ width: '100%', minHeight: '60px', marginBottom: '0.75rem', resize: 'vertical' }} />
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <button onClick={submitTransaction} disabled={saving || !form.amount || !form.description.trim()} className="btn-primary" style={{ flex: 1 }}>
@@ -272,6 +315,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: '0.85rem', fontWeight: 600, textDecoration: t.isVoided ? 'line-through' : 'none' }}>
                             {t.description}
+                            {t.kind === KIND_DISCOUNT && <span style={{ marginRight: '0.5rem', fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: '10px', background: 'rgba(96,165,250,0.15)', color: 'var(--c-blue)', fontWeight: 700, textDecoration: 'none', display: 'inline-block' }}>خصم</span>}
                             {t.isVoided && <span style={{ marginRight: '0.5rem', fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 700, textDecoration: 'none', display: 'inline-block' }}>ملغاة</span>}
                           </div>
                           {t.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{t.notes}</div>}
@@ -285,7 +329,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                           )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
-                          <div style={{ fontWeight: 700, color: 'var(--success)', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 700, color: t.kind === KIND_DISCOUNT ? 'var(--c-blue)' : 'var(--success)', whiteSpace: 'nowrap' }}>
                             {formatAmount(t.amount)}
                           </div>
                           {!t.isVoided && (

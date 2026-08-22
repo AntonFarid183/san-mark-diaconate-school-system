@@ -2,6 +2,7 @@ using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Application.Interfaces.Services;
+using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ public class StudentQueryService : IStudentQueryService
     private readonly IUserRepository _userRepo;
     private readonly IPasswordHasher _hasher;
     private readonly INotificationService _notificationService;
+    private readonly IAcademicYearRepository _academicYearRepo;
+    private readonly IPaymentRepository _paymentRepo;
     private readonly IUnitOfWork _uow;
 
     public StudentQueryService(
@@ -23,12 +26,16 @@ public class StudentQueryService : IStudentQueryService
         IUserRepository userRepo,
         IPasswordHasher hasher,
         INotificationService notificationService,
+        IAcademicYearRepository academicYearRepo,
+        IPaymentRepository paymentRepo,
         IUnitOfWork uow)
     {
         _studentRepo = studentRepo;
         _userRepo = userRepo;
         _hasher = hasher;
         _notificationService = notificationService;
+        _academicYearRepo = academicYearRepo;
+        _paymentRepo = paymentRepo;
         _uow = uow;
     }
 
@@ -170,12 +177,45 @@ public class StudentQueryService : IStudentQueryService
 
         await _studentRepo.UpdateAsync(student);
         await _userRepo.UpdateAsync(student.User);
+
+        if (isActive && !wasActive)
+            await ChargeTermFeeAsync(studentId);
+
         await _uow.SaveChangesAsync();
 
         if (isActive && !wasActive)
             await _notificationService.NotifyAccountActivatedAsync(student.UserId);
 
         return true;
+    }
+
+    // Puts the current year's standard subscription fee on the student's account the
+    // moment they're accepted, so the admin never types the amount per student.
+    // Only ever sets a fee that isn't there yet: re-activating a suspended student must
+    // not silently re-charge them or overwrite a balance someone adjusted by hand.
+    private async Task ChargeTermFeeAsync(Guid studentId)
+    {
+        var year = await _academicYearRepo.GetCurrentAsync();
+        if (year is null || year.TermFee <= 0) return;
+
+        var account = await _paymentRepo.GetAccountByStudentIdAsync(studentId);
+        if (account is null)
+        {
+            await _paymentRepo.AddAccountAsync(new StudentAccount
+            {
+                Id = Guid.NewGuid(),
+                StudentId = studentId,
+                TotalRequired = year.TermFee,
+                Description = $"اشتراك {year.Name}"
+            });
+            return;
+        }
+
+        if (account.TotalRequired <= 0)
+        {
+            account.TotalRequired = year.TermFee;
+            account.Description ??= $"اشتراك {year.Name}";
+        }
     }
 
     public async Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level)

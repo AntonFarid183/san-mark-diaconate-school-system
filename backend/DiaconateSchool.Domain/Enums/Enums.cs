@@ -174,3 +174,12 @@ public enum NotificationType
     CurriculumPublished = 4,
     HymnLessonPublished = 5
 }
+
+// Separates real money from waived money on the ledger. Both settle a student's
+// balance, but only Payment is cash the school actually received -- reports must
+// never add a discount into collected totals.
+public enum PaymentTransactionKind
+{
+    Payment = 0,
+    Discount = 1
+}

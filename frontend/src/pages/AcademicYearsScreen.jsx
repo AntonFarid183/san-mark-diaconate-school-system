@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 
-const empty = { name: '', startDate: '', endDate: '', setAsCurrent: false };
+const empty = { name: '', startDate: '', endDate: '', termFee: '', setAsCurrent: false };
 
 export default function AcademicYearsScreen() {
   usePageTitle('السنوات الدراسية');
@@ -42,6 +42,7 @@ export default function AcademicYearsScreen() {
       name: year.name,
       startDate: year.startDate,
       endDate: year.endDate,
+      termFee: year.termFee ?? '',
       setAsCurrent: false,
     });
     setShowForm(true);
@@ -56,6 +57,7 @@ export default function AcademicYearsScreen() {
           name: form.name,
           startDate: form.startDate,
           endDate: form.endDate,
+          termFee: Number(form.termFee) || 0,
         });
         setMsg({ type: 'success', text: 'تم تحديث السنة الدراسية.' });
       } else {
@@ -63,6 +65,7 @@ export default function AcademicYearsScreen() {
           name: form.name,
           startDate: form.startDate,
           endDate: form.endDate,
+          termFee: Number(form.termFee) || 0,
           setAsCurrent: form.setAsCurrent,
         });
         setMsg({ type: 'success', text: 'تم إضافة السنة الدراسية.' });
@@ -148,6 +151,7 @@ export default function AcademicYearsScreen() {
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                     {fmt(y.startDate)} — {fmt(y.endDate)}
+                    {y.termFee > 0 && <> · اشتراك {Number(y.termFee).toLocaleString('ar-EG')} ج.م</>}
                   </div>
                 </div>
               </div>
@@ -217,6 +221,21 @@ export default function AcademicYearsScreen() {
                     onChange={e => setForm({ ...form, endDate: e.target.value })}
                   />
                 </div>
+              </div>
+              <div>
+                <label style={labelStyle}>قيمة الاشتراك (ج.م)</label>
+                <input
+                  className="premium-input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="مثال: 300"
+                  value={form.termFee}
+                  onChange={e => setForm({ ...form, termFee: e.target.value })}
+                />
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', lineHeight: 1.7 }}>
+                  يُضاف تلقائياً على حساب كل طالب عند تفعيله. اتركه صفراً إذا لم يكن هناك اشتراك.
+                </p>
               </div>
               {!editing && (
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.88rem' }}>

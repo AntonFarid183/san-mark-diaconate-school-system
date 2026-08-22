@@ -44,6 +44,9 @@ public class AcademicYearService : IAcademicYearService
         if (dto.EndDate <= dto.StartDate)
             return (false, "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية.", null);
 
+        if (dto.TermFee < 0)
+            return (false, "قيمة الاشتراك لا يمكن أن تكون سالبة.", null);
+
         if (await _repo.NameExistsAsync(dto.Name))
             return (false, "يوجد سنة دراسية بهذا الاسم مسبقاً.", null);
 
@@ -57,6 +60,7 @@ public class AcademicYearService : IAcademicYearService
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsCurrent = dto.SetAsCurrent,
+            TermFee = dto.TermFee,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -77,12 +81,16 @@ public class AcademicYearService : IAcademicYearService
         if (dto.EndDate <= dto.StartDate)
             return (false, "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية.", null);
 
+        if (dto.TermFee < 0)
+            return (false, "قيمة الاشتراك لا يمكن أن تكون سالبة.", null);
+
         if (await _repo.NameExistsAsync(dto.Name, id))
             return (false, "يوجد سنة دراسية بهذا الاسم مسبقاً.", null);
 
         year.Name = dto.Name.Trim();
         year.StartDate = dto.StartDate;
         year.EndDate = dto.EndDate;
+        year.TermFee = dto.TermFee;
 
         await _uow.SaveChangesAsync();
         return (true, null, Map(year));
@@ -139,6 +147,7 @@ public class AcademicYearService : IAcademicYearService
         StartDate = y.StartDate,
         EndDate = y.EndDate,
         IsCurrent = y.IsCurrent,
+        TermFee = y.TermFee,
         CreatedAt = y.CreatedAt
     };
 }

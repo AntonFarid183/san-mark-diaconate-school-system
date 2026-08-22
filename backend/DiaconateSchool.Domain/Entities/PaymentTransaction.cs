@@ -1,4 +1,5 @@
 using System;
+using DiaconateSchool.Domain.Enums;
 
 namespace DiaconateSchool.Domain.Entities;
 
@@ -10,6 +11,7 @@ public class PaymentTransaction
     public StudentAccount StudentAccount { get; set; } = null!;
 
     public decimal Amount { get; set; }
+    public PaymentTransactionKind Kind { get; set; } = PaymentTransactionKind.Payment;
     public required string Description { get; set; }
     public string? Notes { get; set; }
 

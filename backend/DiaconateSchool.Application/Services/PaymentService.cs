@@ -2,6 +2,7 @@ using DiaconateSchool.Application.DTOs;
 using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,11 +57,25 @@ public class PaymentService : IPaymentService
         var account = await GetOrCreateAccountAsync(studentId);
         if (account == null) return (false, "الطالب غير موجود.", null);
 
+        // A waiver is money the school chose not to collect, so it has to be answerable
+        // later: never allow one to exceed what is actually still owed.
+        if (dto.Kind == PaymentTransactionKind.Discount)
+        {
+            var live = account.Transactions.Where(t => !t.IsVoided).ToList();
+            var settled = live.Sum(t => t.Amount);
+            var owing = account.TotalRequired - settled;
+            if (owing <= 0)
+                return (false, "لا يوجد مبلغ متبقٍ لخصمه.", null);
+            if (dto.Amount > owing)
+                return (false, $"الخصم أكبر من المبلغ المتبقي ({owing:0.##}).", null);
+        }
+
         var transaction = new PaymentTransaction
         {
             Id = Guid.NewGuid(),
             StudentAccountId = account.Id,
             Amount = dto.Amount,
+            Kind = dto.Kind,
             Description = dto.Description.Trim(),
             Notes = dto.Notes,
             TransactionDate = dto.TransactionDate ?? DateTime.UtcNow,
@@ -165,13 +180,19 @@ public class PaymentService : IPaymentService
 
     private static StudentAccountDto Map(StudentAccount a)
     {
-        var amountPaid = a.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
-        var remaining = a.TotalRequired - amountPaid;
+        var live = a.Transactions.Where(t => !t.IsVoided).ToList();
+
+        // Cash and waivers both settle the balance, but only cash was received.
+        // Keeping them apart is what stops a discount from being reported as income.
+        var amountPaid = live.Where(t => t.Kind == PaymentTransactionKind.Payment).Sum(t => t.Amount);
+        var discountTotal = live.Where(t => t.Kind == PaymentTransactionKind.Discount).Sum(t => t.Amount);
+        var settled = amountPaid + discountTotal;
+        var remaining = a.TotalRequired - settled;
 
         string status;
         if (a.TotalRequired <= 0) status = "no_balance";
         else if (remaining <= 0) status = "paid";
-        else if (amountPaid > 0) status = "partial";
+        else if (settled > 0) status = "partial";
         else status = "not_paid";
 
         return new StudentAccountDto
@@ -180,6 +201,7 @@ public class PaymentService : IPaymentService
             TotalRequired = a.TotalRequired,
             Description = a.Description,
             AmountPaid = amountPaid,
+            DiscountTotal = discountTotal,
             RemainingBalance = Math.Max(0, remaining),
             Status = status,
             Transactions = a.Transactions
@@ -188,6 +210,7 @@ public class PaymentService : IPaymentService
                 {
                     Id = t.Id,
                     Amount = t.Amount,
+                    Kind = t.Kind,
                     Description = t.Description,
                     Notes = t.Notes,
                     TransactionDate = t.TransactionDate,

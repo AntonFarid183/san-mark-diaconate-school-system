@@ -234,9 +234,14 @@ public class StudentRepository : IStudentRepository
             var status = "exempted"; // no fee obligation recorded for this student
             if (accountsByStudent.TryGetValue(s.Id, out var account))
             {
-                paid = account.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
+                var live = account.Transactions.Where(t => !t.IsVoided).ToList();
+                // Only Payment lines are money the school received. Discounts settle the
+                // balance too, so they count toward "paid" status, but they must stay out
+                // of `paid` itself -- that figure is summed into TotalCollected below.
+                paid = live.Where(t => t.Kind == PaymentTransactionKind.Payment).Sum(t => t.Amount);
+                var settled = paid + live.Where(t => t.Kind == PaymentTransactionKind.Discount).Sum(t => t.Amount);
                 if (account.TotalRequired > 0)
-                    status = paid >= account.TotalRequired ? "paid" : "not_paid";
+                    status = settled >= account.TotalRequired ? "paid" : "not_paid";
             }
             payments[s.Id] = (paid, status);
         }

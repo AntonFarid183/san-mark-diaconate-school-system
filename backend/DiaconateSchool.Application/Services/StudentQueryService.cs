@@ -174,13 +174,18 @@ public class StudentQueryService : IStudentQueryService
         // isExempt skips charging entirely — no StudentAccount, no balance, no
         // debt on record at all. Not "paid 0": a different state from
         // "تم السداد", which always charges the full term fee first.
+        decimal remainingBalance = 0;
+        string? accountDescription = null;
+
         if (isActive && !wasActive && !isExempt)
         {
             var account = await _feeService.ChargeTermFeeAsync(studentId);
+            accountDescription = account?.Description;
 
             // "تم السداد" means the full term fee unless paidAmount says
             // otherwise — the gap between paidAmount and the full fee becomes
-            // a recorded Discount, not just a smaller Payment.
+            // a recorded Discount, not just a smaller Payment. Without
+            // withFees, this is "سداد لاحقاً" — billed, nothing collected yet.
             if (withFees)
             {
                 var amountToRecord = paidAmount ?? account?.TotalRequired;
@@ -193,12 +198,16 @@ public class StudentQueryService : IStudentQueryService
                     await _feeService.RecordDiscountAsync(account, discount, recordedByUserId ?? student.RegisteredByUserId, "خصم عند التفعيل");
                 }
             }
+            else
+            {
+                remainingBalance = account?.TotalRequired ?? 0;
+            }
         }
 
         await _uow.SaveChangesAsync();
 
         if (isActive && !wasActive)
-            await _notificationService.NotifyAccountActivatedAsync(student.UserId);
+            await _notificationService.NotifyAccountActivatedAsync(student.UserId, remainingBalance > 0 ? remainingBalance : null, accountDescription);
 
         return true;
     }

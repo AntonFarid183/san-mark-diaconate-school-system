@@ -134,6 +134,14 @@ export default function PendingApprovalsScreen() {
                   </button>
                   <button
                     disabled={activating === s.id}
+                    onClick={() => activate(s.id, {})}
+                    title="تفعيل الحساب وتسجيل الرسوم كمبلغ مستحق، دون تحصيل الآن"
+                    style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--c-blue)', background: 'rgba(96,165,250,0.08)', color: 'var(--c-blue)', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>schedule</span>
+                    سداد لاحقاً — تفعيل
+                  </button>
+                  <button
+                    disabled={activating === s.id}
                     onClick={() => activate(s.id, { isExempt: true })}
                     style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.5)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>volunteer_activism</span>

@@ -17,7 +17,7 @@ public interface INotificationService
     Task MarkAllReadAsync(Guid userId);
 
     // Creation hooks — called by other services at the moment the underlying event happens
-    Task NotifyAccountActivatedAsync(Guid studentUserId);
+    Task NotifyAccountActivatedAsync(Guid studentUserId, decimal? remainingBalance = null, string? accountDescription = null);
     Task NotifyHomeworkPublishedAsync(Guid homeworkId, Guid gradeId, string title);
     Task NotifyHymnReviewedAsync(Guid studentUserId, Guid hymnLessonId, string hymnTitle, bool approved);
     Task NotifyAnnouncementPostedAsync(Guid announcementId, Guid? targetStageId, string title);

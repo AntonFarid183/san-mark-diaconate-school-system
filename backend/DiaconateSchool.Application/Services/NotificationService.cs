@@ -205,15 +205,25 @@ public class NotificationService : INotificationService
 
     // ── Creation hooks ───────────────────────────────────────────────────
 
-    public async Task NotifyAccountActivatedAsync(Guid studentUserId)
+    // remainingBalance/accountDescription are only passed for a "سداد لاحقاً" (pay
+    // later) activation — the student is billed but nothing has been collected
+    // yet, so they need to be told plainly, respectfully, and up front what's owed.
+    public async Task NotifyAccountActivatedAsync(Guid studentUserId, decimal? remainingBalance = null, string? accountDescription = null)
     {
+        var message = "يمكنك الآن الدخول واستخدام جميع خدمات المنصة.";
+        if (remainingBalance.HasValue && remainingBalance.Value > 0)
+        {
+            var desc = string.IsNullOrWhiteSpace(accountDescription) ? "" : $" ({accountDescription})";
+            message += $" يوجد مبلغ مستحق عليك قدره {remainingBalance.Value:N0} ج.م{desc} — برجاء سداده في أقرب وقت ممكن.";
+        }
+
         await _repo.AddAsync(new Notification
         {
             Id = Guid.NewGuid(),
             UserId = studentUserId,
             Type = NotificationType.AccountActivated,
             Title = "تم تفعيل حسابك",
-            Message = "يمكنك الآن الدخول واستخدام جميع خدمات المنصة.",
+            Message = message,
             ReferenceId = null,
             CreatedAt = DateTime.UtcNow
         });

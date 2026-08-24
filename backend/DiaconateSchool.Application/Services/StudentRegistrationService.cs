@@ -19,6 +19,7 @@ public class StudentRegistrationService : IStudentRegistrationService
     private readonly IPasswordHasher _hasher;
     private readonly IStudentCodeGenerator _codeGenerator;
     private readonly IStudentFeeService _feeService;
+    private readonly INotificationService _notificationService;
 
     public StudentRegistrationService(
         IStudentRepository studentRepo,
@@ -26,7 +27,8 @@ public class StudentRegistrationService : IStudentRegistrationService
         IUnitOfWork uow,
         IPasswordHasher hasher,
         IStudentCodeGenerator codeGenerator,
-        IStudentFeeService feeService)
+        IStudentFeeService feeService,
+        INotificationService notificationService)
     {
         _studentRepo = studentRepo;
         _userRepo = userRepo;
@@ -34,6 +36,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         _hasher = hasher;
         _codeGenerator = codeGenerator;
         _feeService = feeService;
+        _notificationService = notificationService;
     }
 
     public async Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto, Guid? recordedByUserId = null)
@@ -111,9 +114,14 @@ public class StudentRegistrationService : IStudentRegistrationService
         // IsExempt skips charging entirely (no debt at all); otherwise HasPaidFees
         // means the full term fee unless PaidAmount says otherwise (a discount —
         // the gap is recorded separately so it shows up in the discounts breakdown).
+        decimal remainingBalance = 0;
+        string? accountDescription = null;
+
         if (!dto.SelfRegistered && !dto.IsExempt)
         {
             var account = await _feeService.ChargeTermFeeAsync(studentId);
+            accountDescription = account?.Description;
+
             if (dto.HasPaidFees)
             {
                 var amountToRecord = dto.PaidAmount ?? account?.TotalRequired;
@@ -126,9 +134,20 @@ public class StudentRegistrationService : IStudentRegistrationService
                     await _feeService.RecordDiscountAsync(account, discount, recordedByUserId ?? userId, "خصم عند التسجيل");
                 }
             }
+            else
+            {
+                // "سداد لاحقاً" — billed on registration, nothing collected yet.
+                remainingBalance = account?.TotalRequired ?? 0;
+            }
         }
 
         await _uow.SaveChangesAsync();
+
+        // A self-registered student starts Suspended (pending review) — nothing to
+        // notify yet. An admin-registered student is Active immediately, so they
+        // need to know now, same as the pending-approvals activation flow.
+        if (!dto.SelfRegistered)
+            await _notificationService.NotifyAccountActivatedAsync(userId, remainingBalance > 0 ? remainingBalance : null, accountDescription);
 
         return new RegistrationResultDto
         {

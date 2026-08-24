@@ -92,6 +92,15 @@ public class StudentsController : ControllerBase
         return Ok(result);
     }
 
+    // Admin dashboard "أعياد الميلاد" card — active students whose birthday falls in the current month.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("birthdays-this-month")]
+    public async Task<IActionResult> GetBirthdaysThisMonth()
+    {
+        var result = await _queryService.GetBirthdaysThisMonthAsync();
+        return Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("performance")]
     public async Task<IActionResult> GetPerformance(

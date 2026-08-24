@@ -155,3 +155,17 @@ public class SetStudentsLevelDto
     public List<Guid> StudentIds { get; set; } = new();
     public StudentLevel Level { get; set; }
 }
+
+// ── Admin dashboard "أعياد الميلاد" card — just enough fields to show a
+// birthday row and link into the existing Student Detail page. ──
+public class StudentBirthdayDto
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string GradeName { get; set; } = string.Empty;
+    public string StageName { get; set; } = string.Empty;
+    public string? ClassName { get; set; }
+    public DateOnly DateOfBirth { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+    public bool IsToday { get; set; }
+}

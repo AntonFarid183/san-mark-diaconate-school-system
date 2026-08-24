@@ -18,4 +18,5 @@ public interface IStudentQueryService
     Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null);
     Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level);
     Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter);
+    Task<List<StudentBirthdayDto>> GetBirthdaysThisMonthAsync();
 }

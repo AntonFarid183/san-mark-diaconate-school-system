@@ -155,6 +155,16 @@ public class StudentRepository : IStudentRepository
         return await query.ToListAsync();
     }
 
+    public async Task<List<Student>> GetActiveStudentsWithBirthMonthIncludesAsync()
+    {
+        return await _context.Students
+            .Include(s => s.User)
+            .Include(s => s.Grade).ThenInclude(g => g.Stage)
+            .Include(s => s.Class)
+            .Where(s => s.User.IsActive)
+            .ToListAsync();
+    }
+
     public async Task<Student?> GetByUserIdAsync(Guid userId)
     {
         return await _context.Students

@@ -267,6 +267,28 @@ public class StudentQueryService : IStudentQueryService
         };
     }
 
+    public async Task<List<StudentBirthdayDto>> GetBirthdaysThisMonthAsync()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var students = await _studentRepo.GetActiveStudentsWithBirthMonthIncludesAsync();
+
+        return students
+            .Where(s => s.DateOfBirth.Month == today.Month)
+            .OrderBy(s => s.DateOfBirth.Day)
+            .Select(s => new StudentBirthdayDto
+            {
+                Id = s.Id,
+                FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
+                GradeName = s.Grade.Name,
+                StageName = s.Grade.Stage.Name,
+                ClassName = s.Class?.Name,
+                DateOfBirth = s.DateOfBirth,
+                ProfilePictureUrl = s.ProfilePictureUrl,
+                IsToday = s.DateOfBirth.Day == today.Day
+            })
+            .ToList();
+    }
+
     private static StudentDetailDto MapToDetailDto(Domain.Entities.Student student)
     {
         return new StudentDetailDto

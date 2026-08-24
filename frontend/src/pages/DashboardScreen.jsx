@@ -251,16 +251,26 @@ const StudentDashboard = () => {
 
 // ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
+const BIRTHDAYS_PREVIEW_COUNT = 5;
+const MONTH_DAY_LABEL = (isoDate) => new Date(isoDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(null);
+  const [birthdays, setBirthdays] = useState(null); // null = loading
+  const [showAllBirthdays, setShowAllBirthdays] = useState(false);
 
   useEffect(() => {
     apiClient.get('/students/pending')
       .then(r => setPendingCount(r.data.length))
       .catch(() => setPendingCount(0));
+    apiClient.get('/students/birthdays-this-month')
+      .then(r => setBirthdays(r.data))
+      .catch(() => setBirthdays([]));
   }, []);
+
+  const visibleBirthdays = showAllBirthdays ? birthdays : (birthdays || []).slice(0, BIRTHDAYS_PREVIEW_COUNT);
 
   const quickActions = [
     { icon: 'person_add',          title: 'تسجيل طالب جديد',     desc: 'إضافة بيانات عضو جديد للمدرسة',          path: '/register-student',        btnLabel: 'إضافة طالب' },
@@ -279,6 +289,56 @@ const AdminDashboard = () => {
       <p style={{ marginBottom: '1.5rem', fontSize: '0.95rem' }}>
         أهلاً بك يا {user?.fullName || user?.userName}، إليك الإجراءات المتاحة في النظام
       </p>
+
+      {/* Birthdays this month — active students only, sorted by day, today highlighted */}
+      <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>cake</span>
+            أعياد الميلاد
+          </h3>
+          {birthdays && birthdays.length > BIRTHDAYS_PREVIEW_COUNT && (
+            <button onClick={() => setShowAllBirthdays(v => !v)} style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
+              {showAllBirthdays ? 'عرض أقل' : 'عرض الكل'}
+            </button>
+          )}
+        </div>
+
+        {birthdays === null ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
+        ) : birthdays.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>لا يوجد أعياد ميلاد هذا الشهر</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {visibleBirthdays.map(b => (
+              <div
+                key={b.id}
+                onClick={() => navigate(`/students/${b.id}`)}
+                className="card-hover"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', background: b.isToday ? 'rgba(251,191,36,0.08)' : 'var(--surface-1)' }}
+              >
+                {b.profilePictureUrl ? (
+                  <img src={b.profilePictureUrl.startsWith('http') ? b.profilePictureUrl : `${BACKEND_URL}${b.profilePictureUrl}`} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)', flexShrink: 0 }} />
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontSize: '38px', color: 'var(--accent-gold)', flexShrink: 0 }}>account_circle</span>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {b.fullName}
+                    {b.isToday && <span title="عيد ميلاده اليوم">🎉</span>}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    {b.stageName} — {b.gradeName}{b.className ? ` — فصل ${b.className}` : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.82rem', color: b.isToday ? 'var(--accent-gold)' : 'var(--text-secondary)', fontWeight: b.isToday ? 700 : 400, flexShrink: 0 }}>
+                  {MONTH_DAY_LABEL(b.dateOfBirth)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {/* Pending approvals card — highlighted when action is needed */}

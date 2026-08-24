@@ -23,6 +23,10 @@ public interface IStudentRepository
     Task UpdateAsync(Student student);
     Task<List<Student>> GetPendingAsync();
     Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId);
+
+    // For the admin dashboard "birthdays this month" card — active students
+    // only, with the includes needed for name/photo/grade/stage/class.
+    Task<List<Student>> GetActiveStudentsWithBirthMonthIncludesAsync();
     Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo);
 

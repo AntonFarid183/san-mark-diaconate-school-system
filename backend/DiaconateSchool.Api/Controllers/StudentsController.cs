@@ -252,7 +252,7 @@ public class StudentsController : ControllerBase
         if (!Guid.TryParse(id, out var parsedId))
             return BadRequest(new { Message = "Invalid student ID format." });
 
-        var success = await _queryService.SetActiveStatusAsync(parsedId, true, dto?.WithFees ?? false, dto?.PaidAmount);
+        var success = await _queryService.SetActiveStatusAsync(parsedId, true, dto?.WithFees ?? false, dto?.PaidAmount, GetUserId());
         return success ? Ok(new { Message = "تم تفعيل الحساب." }) : NotFound(new { Message = "Student not found." });
     }
 

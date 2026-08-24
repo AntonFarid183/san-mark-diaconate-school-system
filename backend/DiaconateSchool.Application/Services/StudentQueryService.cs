@@ -159,7 +159,7 @@ public class StudentQueryService : IStudentQueryService
         return students.Select(MapToDetailDto);
     }
 
-    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null)
+    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
@@ -179,7 +179,28 @@ public class StudentQueryService : IStudentQueryService
         await _userRepo.UpdateAsync(student.User);
 
         if (isActive && !wasActive)
-            await ChargeTermFeeAsync(studentId);
+        {
+            var account = await ChargeTermFeeAsync(studentId);
+
+            // The admin just told us this amount was actually collected — the ledger
+            // (StudentAccount/PaymentTransaction) is what the payment report and every
+            // balance screen actually read, so without this the student shows Active
+            // with FeesPaid=true yet the report still lists the full fee as unpaid.
+            if (withFees && paidAmount.HasValue && paidAmount.Value > 0 && account != null)
+            {
+                await _paymentRepo.AddTransactionAsync(new PaymentTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    StudentAccountId = account.Id,
+                    Amount = paidAmount.Value,
+                    Kind = PaymentTransactionKind.Payment,
+                    Description = "دفعة تفعيل الحساب",
+                    TransactionDate = DateTime.UtcNow,
+                    RecordedByUserId = recordedByUserId ?? student.RegisteredByUserId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
 
         await _uow.SaveChangesAsync();
 
@@ -193,22 +214,24 @@ public class StudentQueryService : IStudentQueryService
     // moment they're accepted, so the admin never types the amount per student.
     // Only ever sets a fee that isn't there yet: re-activating a suspended student must
     // not silently re-charge them or overwrite a balance someone adjusted by hand.
-    private async Task ChargeTermFeeAsync(Guid studentId)
+    // Returns the account so the caller can record a matching payment against it.
+    private async Task<StudentAccount?> ChargeTermFeeAsync(Guid studentId)
     {
         var year = await _academicYearRepo.GetCurrentAsync();
-        if (year is null || year.TermFee <= 0) return;
+        if (year is null || year.TermFee <= 0) return null;
 
         var account = await _paymentRepo.GetAccountByStudentIdAsync(studentId);
         if (account is null)
         {
-            await _paymentRepo.AddAccountAsync(new StudentAccount
+            account = new StudentAccount
             {
                 Id = Guid.NewGuid(),
                 StudentId = studentId,
                 TotalRequired = year.TermFee,
                 Description = $"اشتراك {year.Name}"
-            });
-            return;
+            };
+            await _paymentRepo.AddAccountAsync(account);
+            return account;
         }
 
         if (account.TotalRequired <= 0)
@@ -216,6 +239,8 @@ public class StudentQueryService : IStudentQueryService
             account.TotalRequired = year.TermFee;
             account.Description ??= $"اشتراك {year.Name}";
         }
+
+        return account;
     }
 
     public async Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level)

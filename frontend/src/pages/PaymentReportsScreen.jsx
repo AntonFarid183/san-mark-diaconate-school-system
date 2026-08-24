@@ -140,7 +140,9 @@ export default function PaymentReportsScreen() {
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {statCard('groups', 'إجمالي الطلاب', data?.totalCount ?? '—', 'var(--text-primary)')}
         {statCard('payments', 'مدفوع', data?.paidCount ?? '—', 'var(--success)')}
-        {statCard('volunteer_activism', 'معفى', data?.items?.filter(i => i.paymentStatus === 'exempted').length ?? '—', 'var(--accent-gold)')}
+        {statCard('schedule', 'سداد لاحقاً', data?.notPaidCount ?? '—', 'var(--danger)')}
+        {statCard('volunteer_activism', 'معفى', data?.exemptedCount ?? '—', 'var(--accent-gold)')}
+        {statCard('sell', 'عدد الخصومات', data?.discountCount ?? '—', 'var(--c-blue)')}
         {statCard('account_balance', 'الإجمالي المحصل', data ? formatAmount(data.totalCollected) : '—', 'var(--success)')}
         {statCard('percent', 'إجمالي الخصومات', data ? formatAmount(data.totalDiscounted) : '—', 'var(--c-blue)')}
       </div>
@@ -271,7 +273,7 @@ export default function PaymentReportsScreen() {
             </table>
           </div>
           <div style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--glass-border)', textAlign: 'center' }}>
-            إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.items.filter(i => i.paymentStatus === 'exempted').length} معفى — إجمالي محصل {formatAmount(data.totalCollected)} — إجمالي خصومات {formatAmount(data.totalDiscounted)}
+            إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.notPaidCount} سداد لاحقاً — {data.exemptedCount} معفى — {data.discountCount} بخصم — إجمالي محصل {formatAmount(data.totalCollected)} — إجمالي خصومات {formatAmount(data.totalDiscounted)}
           </div>
         </div>
       )}

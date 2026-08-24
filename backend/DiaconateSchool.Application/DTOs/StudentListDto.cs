@@ -37,6 +37,10 @@ public class PaymentReportSummaryDto
     public int TotalCount { get; set; }
     public int PaidCount { get; set; }
     public int NotPaidCount { get; set; }
+    public int ExemptedCount { get; set; }
+    // Students with a nonzero DiscountAmount — regardless of whether their
+    // balance ended up fully "paid" (settled by discount) or still owing.
+    public int DiscountCount { get; set; }
     public decimal TotalCollected { get; set; }
     public decimal TotalDiscounted { get; set; }
 }

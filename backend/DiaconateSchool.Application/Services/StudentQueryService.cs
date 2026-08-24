@@ -231,7 +231,7 @@ public class StudentQueryService : IStudentQueryService
 
     public async Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter)
     {
-        var (items, totalCount, paidCount, totalCollected, totalDiscounted, payments) = await _studentRepo.GetPaymentReportAsync(
+        var (items, totalCount, paidCount, notPaidCount, exemptedCount, discountCount, totalCollected, totalDiscounted, payments) = await _studentRepo.GetPaymentReportAsync(
             filter.NameFilter, filter.StageId, filter.GradeId, filter.PaymentStatus, filter.DateFrom, filter.DateTo);
 
         return new PaymentReportSummaryDto
@@ -257,7 +257,9 @@ public class StudentQueryService : IStudentQueryService
             }).ToList(),
             TotalCount = totalCount,
             PaidCount = paidCount,
-            NotPaidCount = totalCount - paidCount,
+            NotPaidCount = notPaidCount,
+            ExemptedCount = exemptedCount,
+            DiscountCount = discountCount,
             TotalCollected = totalCollected,
             TotalDiscounted = totalDiscounted
         };

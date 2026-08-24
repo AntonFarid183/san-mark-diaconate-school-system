@@ -199,7 +199,7 @@ public class StudentRepository : IStudentRepository
         return Task.CompletedTask;
     }
 
-    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, decimal TotalDiscounted, Dictionary<Guid, (decimal PaidAmount, decimal DiscountAmount, string Status)> Payments)> GetPaymentReportAsync(
+    public async Task<(List<Student> Items, int TotalCount, int PaidCount, int NotPaidCount, int ExemptedCount, int DiscountCount, decimal TotalCollected, decimal TotalDiscounted, Dictionary<Guid, (decimal PaidAmount, decimal DiscountAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo)
     {
         // Payment status/amounts come from the ledger (StudentAccount/PaymentTransaction) — the
@@ -262,6 +262,9 @@ public class StudentRepository : IStudentRepository
         }
 
         var paidCount = payments.Values.Count(p => p.Status == "paid");
+        var notPaidCount = payments.Values.Count(p => p.Status == "not_paid");
+        var exemptedCount = payments.Values.Count(p => p.Status == "exempted");
+        var discountCount = payments.Values.Count(p => p.DiscountAmount > 0);
         var totalCollected = payments.Values.Sum(p => p.PaidAmount);
         var totalDiscounted = payments.Values.Sum(p => p.DiscountAmount);
 
@@ -269,7 +272,7 @@ public class StudentRepository : IStudentRepository
         if (!string.IsNullOrWhiteSpace(paymentStatus))
             items = items.Where(s => payments[s.Id].Status == paymentStatus).ToList();
 
-        return (items, items.Count, paidCount, totalCollected, totalDiscounted, payments);
+        return (items, items.Count, paidCount, notPaidCount, exemptedCount, discountCount, totalCollected, totalDiscounted, payments);
     }
 
     // Deletes in leaf-to-root order inside one transaction. Bulk

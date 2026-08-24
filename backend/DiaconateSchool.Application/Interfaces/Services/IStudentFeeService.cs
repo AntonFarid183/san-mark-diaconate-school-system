@@ -20,4 +20,9 @@ public interface IStudentFeeService
     // TotalRequired when not given, against `account`. No-op if the resolved
     // amount is null/zero or `account` is null.
     Task RecordPaymentAsync(StudentAccount? account, decimal? explicitAmount, Guid recordedByUserId, string description);
+
+    // Records a Discount transaction — the gap between what was actually
+    // collected and the full fee. No-op if `account` is null or `amount` is
+    // not positive; clamped so a discount can never exceed what's still owed.
+    Task RecordDiscountAsync(StudentAccount? account, decimal amount, Guid recordedByUserId, string description);
 }

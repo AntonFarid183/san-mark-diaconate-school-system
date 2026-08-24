@@ -156,7 +156,7 @@ public class StudentQueryService : IStudentQueryService
         return students.Select(MapToDetailDto);
     }
 
-    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null)
+    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null, bool isExempt = false)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
@@ -171,18 +171,27 @@ public class StudentQueryService : IStudentQueryService
         await _studentRepo.UpdateAsync(student);
         await _userRepo.UpdateAsync(student.User);
 
-        if (isActive && !wasActive)
+        // isExempt skips charging entirely — no StudentAccount, no balance, no
+        // debt on record at all. Not "paid 0": a different state from
+        // "تم السداد", which always charges the full term fee first.
+        if (isActive && !wasActive && !isExempt)
         {
             var account = await _feeService.ChargeTermFeeAsync(studentId);
 
-            // "تم السداد" means the full term fee — the admin doesn't type an amount,
-            // it's just whatever this year's subscription fee already is. An explicit
-            // paidAmount (e.g. a partial/custom payment entered elsewhere) still wins.
+            // "تم السداد" means the full term fee unless paidAmount says
+            // otherwise — the gap between paidAmount and the full fee becomes
+            // a recorded Discount, not just a smaller Payment.
             if (withFees)
             {
                 var amountToRecord = paidAmount ?? account?.TotalRequired;
                 if (amountToRecord.HasValue) student.PaidAmount = amountToRecord.Value;
-                await _feeService.RecordPaymentAsync(account, paidAmount, recordedByUserId ?? student.RegisteredByUserId, "دفعة تفعيل الحساب");
+                await _feeService.RecordPaymentAsync(account, amountToRecord, recordedByUserId ?? student.RegisteredByUserId, "دفعة تفعيل الحساب");
+
+                if (account != null && amountToRecord.HasValue && amountToRecord.Value < account.TotalRequired)
+                {
+                    var discount = account.TotalRequired - amountToRecord.Value;
+                    await _feeService.RecordDiscountAsync(account, discount, recordedByUserId ?? student.RegisteredByUserId, "خصم عند التفعيل");
+                }
             }
         }
 
@@ -213,14 +222,14 @@ public class StudentQueryService : IStudentQueryService
 
     public async Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter)
     {
-        var (items, totalCount, paidCount, totalCollected, payments) = await _studentRepo.GetPaymentReportAsync(
+        var (items, totalCount, paidCount, totalCollected, totalDiscounted, payments) = await _studentRepo.GetPaymentReportAsync(
             filter.NameFilter, filter.StageId, filter.GradeId, filter.PaymentStatus, filter.DateFrom, filter.DateTo);
 
         return new PaymentReportSummaryDto
         {
             Items = items.Select(s =>
             {
-                var (paidAmount, status) = payments[s.Id];
+                var (paidAmount, discountAmount, status) = payments[s.Id];
 
                 return new PaymentReportItemDto
                 {
@@ -231,6 +240,7 @@ public class StudentQueryService : IStudentQueryService
                     GradeName = s.Grade.Name,
                     FeesPaid = status == "paid",
                     PaidAmount = paidAmount,
+                    DiscountAmount = discountAmount,
                     IsActive = s.User.IsActive,
                     RegisteredDate = s.RegisteredDate,
                     PaymentStatus = status
@@ -239,7 +249,8 @@ public class StudentQueryService : IStudentQueryService
             TotalCount = totalCount,
             PaidCount = paidCount,
             NotPaidCount = totalCount - paidCount,
-            TotalCollected = totalCollected
+            TotalCollected = totalCollected,
+            TotalDiscounted = totalDiscounted
         };
     }
 

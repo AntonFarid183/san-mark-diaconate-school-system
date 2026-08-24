@@ -23,6 +23,9 @@ public class PaymentReportItemDto
     public string GradeName { get; set; } = string.Empty;
     public bool FeesPaid { get; set; }
     public decimal? PaidAmount { get; set; }
+    // Waived amount for this student (0 if none) — the compiled discounts
+    // breakdown the admin asked for lives in this column, not a separate screen.
+    public decimal DiscountAmount { get; set; }
     public bool IsActive { get; set; }
     public DateTime RegisteredDate { get; set; }
     public string PaymentStatus { get; set; } = string.Empty;
@@ -35,12 +38,19 @@ public class PaymentReportSummaryDto
     public int PaidCount { get; set; }
     public int NotPaidCount { get; set; }
     public decimal TotalCollected { get; set; }
+    public decimal TotalDiscounted { get; set; }
 }
 
 public class ActivateStudentDto
 {
     public bool WithFees { get; set; } = false;
+    // Only meaningful when WithFees=true and less than the current term fee —
+    // the gap between this and the full fee is recorded as a Discount, not
+    // just a smaller Payment, so it shows up in the discounts breakdown.
     public decimal? PaidAmount { get; set; }
+    // True = no fee obligation is charged at all (not "paid 0") — the
+    // student simply has no balance, same as an exempt direct registration.
+    public bool IsExempt { get; set; } = false;
 }
 
 public class StudentListItemDto

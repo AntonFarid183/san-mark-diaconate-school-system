@@ -54,12 +54,29 @@ public class StudentFeeService : IStudentFeeService
         var amount = explicitAmount ?? account.TotalRequired;
         if (amount <= 0) return;
 
+        await AddTransactionAsync(account, amount, PaymentTransactionKind.Payment, recordedByUserId, description);
+    }
+
+    public async Task RecordDiscountAsync(StudentAccount? account, decimal amount, Guid recordedByUserId, string description)
+    {
+        if (account is null || amount <= 0) return;
+
+        // Never waive more than what's actually still owed on this account.
+        var owing = account.TotalRequired - account.Transactions.Where(t => !t.IsVoided).Sum(t => t.Amount);
+        var capped = Math.Min(amount, Math.Max(owing, 0));
+        if (capped <= 0) return;
+
+        await AddTransactionAsync(account, capped, PaymentTransactionKind.Discount, recordedByUserId, description);
+    }
+
+    private async Task AddTransactionAsync(StudentAccount account, decimal amount, PaymentTransactionKind kind, Guid recordedByUserId, string description)
+    {
         await _paymentRepo.AddTransactionAsync(new PaymentTransaction
         {
             Id = Guid.NewGuid(),
             StudentAccountId = account.Id,
             Amount = amount,
-            Kind = PaymentTransactionKind.Payment,
+            Kind = kind,
             Description = description,
             TransactionDate = DateTime.UtcNow,
             RecordedByUserId = recordedByUserId,

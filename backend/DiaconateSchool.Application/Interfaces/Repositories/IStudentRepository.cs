@@ -27,7 +27,7 @@ public interface IStudentRepository
     // For the admin dashboard "birthdays this month" card — active students
     // only, with the includes needed for name/photo/grade/stage/class.
     Task<List<Student>> GetActiveStudentsWithBirthMonthIncludesAsync();
-    Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
+    Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, decimal TotalDiscounted, Dictionary<Guid, (decimal PaidAmount, decimal DiscountAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo);
 
     // Permanently removes a student and every record that references them

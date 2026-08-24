@@ -45,7 +45,7 @@ const RegisterStudentScreen = () => {
     college: '',
     isDeacon: false, deaconRank: null, fatherOfConfession: '',
     studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
-    address: '', landmark: '', hasPaidFees: false,
+    address: '', landmark: '', hasPaidFees: false, isDiscount: false, discountPaidAmount: '', isExempt: false,
     profilePictureUrl: '',
   });
 
@@ -110,12 +110,25 @@ const RegisterStudentScreen = () => {
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
   };
 
+  // "تم سداد" and "إعفاء" are mutually exclusive — a student is either
+  // billed (paid in full or with a discount) or has no fee obligation at all.
+  const handlePaidFeesChange = (e) => {
+    const checked = e.target.checked;
+    setFormData(prev => ({ ...prev, hasPaidFees: checked, isExempt: checked ? false : prev.isExempt }));
+  };
+  const handleExemptChange = (e) => {
+    const checked = e.target.checked;
+    setFormData(prev => ({ ...prev, isExempt: checked, hasPaidFees: checked ? false : prev.hasPaidFees, isDiscount: false, discountPaidAmount: '' }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
     try {
       const parts = formData.fullName.trim().split(/\s+/);
+      const discountAmount = formData.hasPaidFees && formData.isDiscount && formData.discountPaidAmount
+        ? parseFloat(formData.discountPaidAmount) : null;
       const payload = {
         ...formData,
         firstName:  parts[0] || '',
@@ -123,6 +136,7 @@ const RegisterStudentScreen = () => {
         thirdName:  parts[2] || '',
         lastName:   parts[3] || '',
         gradeId: currentStage.hasGrade ? formData.gradeId : null,
+        paidAmount: discountAmount && discountAmount > 0 ? discountAmount : null,
       };
       const response = await apiClient.post('/students/register', payload);
       setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
@@ -353,10 +367,41 @@ const RegisterStudentScreen = () => {
                 <input type="text" name="landmark" className="premium-input" onChange={handleChange} placeholder="اختياري" value={formData.landmark} />
               </div>
               <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
+                <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handlePaidFeesChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
                 <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>تم سداد المصاريف الإدارية للترم الحالي</label>
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>يُسجَّل المبلغ تلقائياً كاشتراك السنة الدراسية الحالية — تأكد من استلام الوصل قبل التحديد</p>
+              {formData.hasPaidFees && (
+                <div style={{ marginTop: '0.75rem', marginRight: '2rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', gap: '1.25rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="radio" name="feePlan" checked={!formData.isDiscount} onChange={() => setFormData(p => ({ ...p, isDiscount: false, discountPaidAmount: '' }))} style={{ accentColor: 'var(--accent-gold)' }} />
+                      دفع المبلغ كاملاً
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="radio" name="feePlan" checked={formData.isDiscount} onChange={() => setFormData(p => ({ ...p, isDiscount: true }))} style={{ accentColor: 'var(--accent-gold)' }} />
+                      تم تطبيق خصم
+                    </label>
+                  </div>
+                  {formData.isDiscount && (
+                    <div style={{ position: 'relative', maxWidth: '250px' }}>
+                      <input type="number" name="discountPaidAmount" className="premium-input" placeholder="المبلغ الذي دفعه الطالب فعلياً" step="0.01" min="0"
+                        onChange={handleChange} value={formData.discountPaidAmount} style={{ textAlign: 'center', fontWeight: 700, padding: '0.65rem 1rem' }} />
+                      <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ج.م</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', marginRight: '2rem' }}>
+                {formData.hasPaidFees && !formData.isDiscount ? 'يُسجَّل المبلغ تلقائياً كاشتراك السنة الدراسية الحالية — تأكد من استلام الوصل قبل التحديد' : 'تأكد من استلام الوصل قبل التحديد'}
+              </p>
+
+              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <input type="checkbox" name="isExempt" checked={formData.isExempt} onChange={handleExemptChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
+                <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>إعفاء من الرسوم</label>
+              </div>
+              {formData.isExempt && (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>لن يُسجَّل أي مبلغ مستحق على هذا الطالب</p>
+              )}
             </div>
           )}
 

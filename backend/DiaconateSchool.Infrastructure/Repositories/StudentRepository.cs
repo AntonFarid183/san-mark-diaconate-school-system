@@ -199,7 +199,7 @@ public class StudentRepository : IStudentRepository
         return Task.CompletedTask;
     }
 
-    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, Dictionary<Guid, (decimal PaidAmount, string Status)> Payments)> GetPaymentReportAsync(
+    public async Task<(List<Student> Items, int TotalCount, int PaidCount, decimal TotalCollected, decimal TotalDiscounted, Dictionary<Guid, (decimal PaidAmount, decimal DiscountAmount, string Status)> Payments)> GetPaymentReportAsync(
         string? nameFilter, Guid? stageId, Guid? gradeId, string? paymentStatus, DateTime? dateFrom, DateTime? dateTo)
     {
         // Payment status/amounts come from the ledger (StudentAccount/PaymentTransaction) — the
@@ -240,10 +240,11 @@ public class StudentRepository : IStudentRepository
             .Where(a => studentIds.Contains(a.StudentId))
             .ToDictionaryAsync(a => a.StudentId);
 
-        var payments = new Dictionary<Guid, (decimal PaidAmount, string Status)>();
+        var payments = new Dictionary<Guid, (decimal PaidAmount, decimal DiscountAmount, string Status)>();
         foreach (var s in matching)
         {
             decimal paid = 0;
+            decimal discount = 0;
             var status = "exempted"; // no fee obligation recorded for this student
             if (accountsByStudent.TryGetValue(s.Id, out var account))
             {
@@ -252,21 +253,23 @@ public class StudentRepository : IStudentRepository
                 // balance too, so they count toward "paid" status, but they must stay out
                 // of `paid` itself -- that figure is summed into TotalCollected below.
                 paid = live.Where(t => t.Kind == PaymentTransactionKind.Payment).Sum(t => t.Amount);
-                var settled = paid + live.Where(t => t.Kind == PaymentTransactionKind.Discount).Sum(t => t.Amount);
+                discount = live.Where(t => t.Kind == PaymentTransactionKind.Discount).Sum(t => t.Amount);
+                var settled = paid + discount;
                 if (account.TotalRequired > 0)
                     status = settled >= account.TotalRequired ? "paid" : "not_paid";
             }
-            payments[s.Id] = (paid, status);
+            payments[s.Id] = (paid, discount, status);
         }
 
         var paidCount = payments.Values.Count(p => p.Status == "paid");
         var totalCollected = payments.Values.Sum(p => p.PaidAmount);
+        var totalDiscounted = payments.Values.Sum(p => p.DiscountAmount);
 
         var items = matching;
         if (!string.IsNullOrWhiteSpace(paymentStatus))
             items = items.Where(s => payments[s.Id].Status == paymentStatus).ToList();
 
-        return (items, items.Count, paidCount, totalCollected, payments);
+        return (items, items.Count, paidCount, totalCollected, totalDiscounted, payments);
     }
 
     // Deletes in leaf-to-root order inside one transaction. Bulk

@@ -219,7 +219,9 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
               </div>
             )}
 
-            {/* Add payment */}
+            {/* Add payment — discounts are no longer added here; they're recorded
+                automatically (as "خصم عند التفعيل/التسجيل") when the admin marks
+                a partial amount paid at activation/registration time. */}
             {!showAddForm ? (
               <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <button
@@ -230,28 +232,11 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
                   إضافة دفعة
                 </button>
-                <button
-                  onClick={() => { setAddKind(KIND_DISCOUNT); setForm({ ...emptyForm, description: 'خصم' }); setShowAddForm(true); }}
-                  disabled={account.remainingBalance <= 0}
-                  title={account.remainingBalance <= 0 ? 'لا يوجد مبلغ متبقٍ لخصمه' : undefined}
-                  style={{
-                    flex: '1 1 150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                    padding: '0.7rem 1rem', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 700,
-                    background: 'rgba(96,165,250,0.1)', border: '1px solid var(--c-blue)', color: 'var(--c-blue)',
-                    cursor: account.remainingBalance <= 0 ? 'not-allowed' : 'pointer',
-                    opacity: account.remainingBalance <= 0 ? 0.45 : 1,
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>percent</span>
-                  إضافة خصم
-                </button>
               </div>
             ) : (
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: addKind === KIND_DISCOUNT ? 'rgba(96,165,250,0.06)' : 'rgba(251,191,36,0.05)', border: `1px solid ${addKind === KIND_DISCOUNT ? 'rgba(96,165,250,0.3)' : 'rgba(251,191,36,0.2)'}`, marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.75rem', color: addKind === KIND_DISCOUNT ? 'var(--c-blue)' : 'var(--accent-gold)' }}>
-                  {addKind === KIND_DISCOUNT
-                    ? `تسجيل خصم — المتبقي حالياً ${formatAmount(account.remainingBalance)}`
-                    : 'تسجيل دفعة'}
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--accent-gold)' }}>
+                  تسجيل دفعة
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
                   <input className="premium-input" type="number" step="0.01" min="0.01" placeholder="المبلغ" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} style={{ flex: 1 }} />
@@ -259,7 +244,7 @@ export default function StudentPaymentModal({ studentId, studentName, onClose })
                 </div>
                 <input
                   className="premium-input"
-                  placeholder={addKind === KIND_DISCOUNT ? 'سبب الخصم (مثال: حالة اجتماعية، أخوة في المدرسة)' : 'الوصف (مثال: رحلة الكنيسة، كتب، تبرع)'}
+                  placeholder="الوصف (مثال: رحلة الكنيسة، كتب، تبرع)"
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   style={{ width: '100%', marginBottom: '0.75rem' }}

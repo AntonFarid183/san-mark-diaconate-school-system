@@ -11,6 +11,9 @@ export default function PendingApprovalsScreen() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
+  const [feeModal, setFeeModal] = useState(null); // { id } while the paid-vs-discount choice is open
+  const [isDiscount, setIsDiscount] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -27,17 +30,42 @@ export default function PendingApprovalsScreen() {
   useEffect(() => { load(); }, []);
 
   // withFees=true charges the current academic year's term fee automatically —
-  // no amount to type, it's just whatever the year's subscription fee already is.
-  const activate = async (id, withFees) => {
+  // no amount to type unless it's a discount, then paidAmount is the actual
+  // amount collected and the gap is recorded as a discount, not just skipped.
+  // isExempt=true skips charging entirely — no debt on record at all.
+  const activate = async (id, { withFees = false, isExempt = false, paidAmount = null } = {}) => {
     setActivating(id);
     try {
-      await apiClient.post(`/students/${id}/activate`, { withFees });
+      await apiClient.post(`/students/${id}/activate`, { withFees, isExempt, paidAmount });
       setStudents(prev => prev.filter(s => s.id !== id));
     } catch {
       alert('حدث خطأ أثناء تفعيل الحساب، حاول مرة أخرى.');
     } finally {
       setActivating(null);
     }
+  };
+
+  const openFeeModal = (id) => {
+    setIsDiscount(false);
+    setDiscountAmount('');
+    setFeeModal({ id });
+  };
+
+  const confirmFullPayment = () => {
+    const id = feeModal.id;
+    setFeeModal(null);
+    activate(id, { withFees: true });
+  };
+
+  const confirmDiscountPayment = () => {
+    const amount = parseFloat(discountAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('يرجى إدخال مبلغ صحيح.');
+      return;
+    }
+    const id = feeModal.id;
+    setFeeModal(null);
+    activate(id, { withFees: true, paidAmount: amount });
   };
 
   return (
@@ -97,7 +125,7 @@ export default function PendingApprovalsScreen() {
                   </button>
                   <button
                     disabled={activating === s.id}
-                    onClick={() => activate(s.id, true)}
+                    onClick={() => openFeeModal(s.id)}
                     style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', background: activating === s.id ? 'rgba(16,185,129,0.4)' : 'var(--success)', color: '#fff', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                       {activating === s.id ? 'hourglass_empty' : 'payments'}
@@ -106,7 +134,7 @@ export default function PendingApprovalsScreen() {
                   </button>
                   <button
                     disabled={activating === s.id}
-                    onClick={() => activate(s.id, false)}
+                    onClick={() => activate(s.id, { isExempt: true })}
                     style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.5)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>volunteer_activism</span>
                     إعفاء — تفعيل
@@ -119,6 +147,59 @@ export default function PendingApprovalsScreen() {
         </div>
       )}
 
+      {/* Paid-in-full vs discount choice */}
+      {feeModal && (
+        <div className="payment-overlay" onClick={() => setFeeModal(null)}>
+          <div className="payment-modal" onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--success)', marginBottom: '0.5rem', display: 'block' }}>payments</span>
+              <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>تفاصيل السداد</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>هل تم سداد المبلغ كاملاً أم تم تطبيق خصم؟</p>
+            </div>
+
+            {!isDiscount ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button onClick={confirmFullPayment} className="btn-primary" style={{ padding: '0.75rem' }}>
+                  دفع المبلغ كاملاً
+                </button>
+                <button onClick={() => setIsDiscount(true)} style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600 }}>
+                  تطبيق خصم
+                </button>
+                <button onClick={() => setFeeModal(null)} style={{ padding: '0.5rem', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>
+                  إلغاء
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+                  <input
+                    autoFocus
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="المبلغ الذي دفعه الطالب فعلياً"
+                    value={discountAmount}
+                    onChange={e => setDiscountAmount(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') confirmDiscountPayment(); }}
+                    className="premium-input"
+                    style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, padding: '1rem' }}
+                  />
+                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.9rem' }}>ج.م</span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-1rem', marginBottom: '1rem', textAlign: 'center' }}>الفرق بين هذا المبلغ والرسم الكامل يُسجَّل كخصم</p>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={() => setIsDiscount(false)} style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600 }}>
+                    رجوع
+                  </button>
+                  <button onClick={confirmDiscountPayment} className="btn-primary" style={{ flex: 1 }}>
+                    تأكيد
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

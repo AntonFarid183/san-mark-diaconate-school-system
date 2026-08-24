@@ -107,15 +107,24 @@ public class StudentRegistrationService : IStudentRegistrationService
         // Only an admin registering a student as immediately Active charges/records a
         // fee here — a self-registered student starts Suspended and gets charged (and
         // its "تم السداد" payment recorded) later, on activation, exactly like the
-        // pending-approvals flow. Same ledger, same source of truth, no admin-typed
-        // amount: "تم سداد المصاريف" always means the current year's full term fee.
-        if (!dto.SelfRegistered)
+        // pending-approvals flow. Same ledger, same source of truth.
+        // IsExempt skips charging entirely (no debt at all); otherwise HasPaidFees
+        // means the full term fee unless PaidAmount says otherwise (a discount —
+        // the gap is recorded separately so it shows up in the discounts breakdown).
+        if (!dto.SelfRegistered && !dto.IsExempt)
         {
             var account = await _feeService.ChargeTermFeeAsync(studentId);
             if (dto.HasPaidFees)
             {
-                student.PaidAmount = account?.TotalRequired;
-                await _feeService.RecordPaymentAsync(account, null, recordedByUserId ?? userId, "دفعة تسجيل الطالب");
+                var amountToRecord = dto.PaidAmount ?? account?.TotalRequired;
+                student.PaidAmount = amountToRecord;
+                await _feeService.RecordPaymentAsync(account, amountToRecord, recordedByUserId ?? userId, "دفعة تسجيل الطالب");
+
+                if (account != null && amountToRecord.HasValue && amountToRecord.Value < account.TotalRequired)
+                {
+                    var discount = account.TotalRequired - amountToRecord.Value;
+                    await _feeService.RecordDiscountAsync(account, discount, recordedByUserId ?? userId, "خصم عند التسجيل");
+                }
             }
         }
 

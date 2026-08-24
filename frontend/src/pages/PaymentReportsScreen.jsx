@@ -13,6 +13,7 @@ const PAYMENT_EXPORT_COLUMNS = [
   { key: 'registeredDate', label: 'تاريخ التسجيل' },
   { key: 'paymentStatusLabel', label: 'حالة الدفع' },
   { key: 'paidAmount', label: 'المبلغ المدفوع' },
+  { key: 'discountAmount', label: 'الخصم' },
 ];
 
 const ALL_STAGES = [
@@ -141,6 +142,7 @@ export default function PaymentReportsScreen() {
         {statCard('payments', 'مدفوع', data?.paidCount ?? '—', 'var(--success)')}
         {statCard('volunteer_activism', 'معفى', data?.items?.filter(i => i.paymentStatus === 'exempted').length ?? '—', 'var(--accent-gold)')}
         {statCard('account_balance', 'الإجمالي المحصل', data ? formatAmount(data.totalCollected) : '—', 'var(--success)')}
+        {statCard('percent', 'إجمالي الخصومات', data ? formatAmount(data.totalDiscounted) : '—', 'var(--c-blue)')}
       </div>
 
       {/* Filters */}
@@ -228,6 +230,7 @@ export default function PaymentReportsScreen() {
                   <th style={thStyle}>تاريخ التسجيل</th>
                   <th style={thStyle}>الحالة</th>
                   <th style={thStyle}>المبلغ</th>
+                  <th style={thStyle}>الخصم</th>
                   <th style={thStyle}></th>
                 </tr>
               </thead>
@@ -252,6 +255,9 @@ export default function PaymentReportsScreen() {
                       <td style={{ ...tdStyle, fontWeight: 700, color: item.paidAmount ? 'var(--success)' : 'var(--text-muted)' }}>
                         {item.paymentStatus === 'paid' ? formatAmount(item.paidAmount) : '—'}
                       </td>
+                      <td style={{ ...tdStyle, fontWeight: 700, color: item.discountAmount > 0 ? 'var(--c-blue)' : 'var(--text-muted)' }}>
+                        {item.discountAmount > 0 ? formatAmount(item.discountAmount) : '—'}
+                      </td>
                       <td style={tdStyle}>
                         <button onClick={() => setPaymentModalStudent(item)} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}>
                           <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>payments</span>
@@ -265,7 +271,7 @@ export default function PaymentReportsScreen() {
             </table>
           </div>
           <div style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--glass-border)', textAlign: 'center' }}>
-            إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.items.filter(i => i.paymentStatus === 'exempted').length} معفى — إجمالي محصل {formatAmount(data.totalCollected)}
+            إجمالي {data.totalCount} طالب — {data.paidCount} مدفوع — {data.items.filter(i => i.paymentStatus === 'exempted').length} معفى — إجمالي محصل {formatAmount(data.totalCollected)} — إجمالي خصومات {formatAmount(data.totalDiscounted)}
           </div>
         </div>
       )}

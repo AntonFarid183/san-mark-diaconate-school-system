@@ -28,9 +28,15 @@ public class RegisterStudentDto
     public required string Address { get; set; }
     public string? Landmark { get; set; }
 
-    // "تم سداد المصاريف الإدارية للترم الحالي" — always means the current
-    // year's full term fee; there's no admin-typed amount here anymore.
+    // "تم سداد المصاريف الإدارية للترم الحالي" — means the current year's
+    // full term fee unless PaidAmount says otherwise (a discount: the gap
+    // between PaidAmount and the full fee is recorded as waived, not just a
+    // smaller payment, so it shows up in the discounts breakdown).
     public bool HasPaidFees { get; set; }
+    public decimal? PaidAmount { get; set; }
+    // "إعفاء من الرسوم" — no fee obligation at all, mutually exclusive with
+    // HasPaidFees. Not "paid 0"; the student simply has no balance.
+    public bool IsExempt { get; set; }
     public bool SelfRegistered { get; set; } = false;
 
     // Uploaded (via /file/upload-registration-photo for self-registration, or

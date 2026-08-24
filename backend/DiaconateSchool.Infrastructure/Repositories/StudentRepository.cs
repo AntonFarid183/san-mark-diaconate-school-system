@@ -81,7 +81,8 @@ public class StudentRepository : IStudentRepository
                 s.StudentCode.Contains(filter));
         }
 
-        return await query.OrderByDescending(s => s.RegisteredDate)
+        return await query
+            .OrderBy(s => s.User.FirstName).ThenBy(s => s.User.MiddleName).ThenBy(s => s.User.ThirdName).ThenBy(s => s.User.LastName)
             .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
@@ -137,7 +138,7 @@ public class StudentRepository : IStudentRepository
             .Include(s => s.Grade)
                 .ThenInclude(g => g.Stage)
             .Where(s => !s.User.IsActive)
-            .OrderByDescending(s => s.RegisteredDate)
+            .OrderBy(s => s.User.FirstName).ThenBy(s => s.User.MiddleName).ThenBy(s => s.User.ThirdName).ThenBy(s => s.User.LastName)
             .ToListAsync();
     }
 
@@ -229,7 +230,9 @@ public class StudentRepository : IStudentRepository
         if (dateTo.HasValue)
             query = query.Where(s => s.RegisteredDate <= dateTo.Value);
 
-        var matching = await query.OrderByDescending(s => s.RegisteredDate).ToListAsync();
+        var matching = await query
+            .OrderBy(s => s.User.FirstName).ThenBy(s => s.User.MiddleName).ThenBy(s => s.User.ThirdName).ThenBy(s => s.User.LastName)
+            .ToListAsync();
         var studentIds = matching.Select(s => s.Id).ToList();
 
         var accountsByStudent = await _context.StudentAccounts

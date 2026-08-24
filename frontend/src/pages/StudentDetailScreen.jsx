@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import StudentPaymentModal from '../components/StudentPaymentModal';
+import { toAbsoluteBackendUrl } from '../config';
 
 const genderLabels = { Male: 'ذكر', Female: 'أنثى' };
 const deaconRankLabels = {
@@ -58,6 +59,7 @@ export default function StudentDetailScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -237,8 +239,8 @@ export default function StudentDetailScreen() {
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {student.profilePictureUrl ? (
-                <img src={student.profilePictureUrl} alt="" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }} />
+              {student.profilePictureUrl && !photoFailed ? (
+                <img src={toAbsoluteBackendUrl(student.profilePictureUrl)} alt="" onError={() => setPhotoFailed(true)} style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }} />
               ) : (
                 <span className="material-symbols-outlined" style={{ fontSize: '52px', color: 'var(--accent-gold)' }}>account_circle</span>
               )}

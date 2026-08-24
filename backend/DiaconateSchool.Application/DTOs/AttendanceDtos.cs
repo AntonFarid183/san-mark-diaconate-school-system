@@ -90,6 +90,30 @@ public class RecordClassAttendanceDto
     public List<RecordClassAttendanceEntryDto> Entries { get; set; } = new();
 }
 
+// ── Stage-wide roster: same "this day, who was here" flow as the class
+// roster above, but spanning every class in every grade under one Stage —
+// so a secretary can take attendance for a whole stage in one pass instead
+// of repeating the class-roster flow once per class. ──
+public class StageRosterEntryDto
+{
+    public Guid StudentId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public Guid ClassId { get; set; }
+    public string ClassName { get; set; } = string.Empty;
+    public string GradeName { get; set; } = string.Empty;
+    public AttendanceStatus? Status { get; set; } // null = not marked yet
+}
+
+public class RecordStageAttendanceDto
+{
+    public Guid StageId { get; set; }
+    public Guid AcademicYearId { get; set; }
+    public StudentLevel Level { get; set; } = StudentLevel.Level1;
+    public DateOnly Date { get; set; }
+    public List<RecordClassAttendanceEntryDto> Entries { get; set; } = new();
+}
+
 // ── QR scan — an extra way to mark Present on top of the same simplified
 // class+date flow above. Reuses the same auto-created-per-day session
 // underneath; nothing session-shaped is exposed to the UI. ──

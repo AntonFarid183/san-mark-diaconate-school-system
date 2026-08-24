@@ -159,6 +159,30 @@ public class AttendanceRepository : IAttendanceRepository
             .ToListAsync();
     }
 
+    public async Task<List<Student>> GetActiveStudentsByStageAsync(Guid stageId, Guid academicYearId, StudentLevel level)
+    {
+        return await _context.Students
+            .Include(s => s.User)
+            .Include(s => s.Class).ThenInclude(c => c.Grade)
+            .Where(s => s.Status == StudentStatus.Active
+                && s.Class != null
+                && s.Class.AcademicYearId == academicYearId
+                && s.Class.Level == level
+                && s.Class.Grade.StageId == stageId)
+            .ToListAsync();
+    }
+
+    public async Task<List<AttendanceSession>> GetSessionsByClassIdsAndDateAsync(IEnumerable<Guid> classIds, DateOnly date)
+    {
+        var ids = classIds.ToList();
+        var start = date.ToDateTime(TimeOnly.MinValue);
+        var end = date.ToDateTime(TimeOnly.MaxValue);
+        return await _context.AttendanceSessions
+            .Include(s => s.Records)
+            .Where(s => ids.Contains(s.ClassId) && s.StartsAt >= start && s.StartsAt <= end)
+            .ToListAsync();
+    }
+
     public async Task<int> GetOpenSessionsCountAsync()
         => await _context.AttendanceSessions.CountAsync(s => s.Status == AttendanceSessionStatus.Open);
 

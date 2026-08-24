@@ -24,6 +24,10 @@ public interface IAttendanceService
     Task<List<ClassRosterEntryDto>> GetClassRosterAsync(Guid classId, DateOnly date);
     Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId);
 
+    // Same flow, spanning every class in every grade under one Stage.
+    Task<List<StageRosterEntryDto>> GetStageRosterAsync(Guid stageId, Guid academicYearId, StudentLevel level, DateOnly date);
+    Task<List<AttendanceRecordDto>> RecordStageAttendanceAsync(RecordStageAttendanceDto dto, Guid recordedByUserId);
+
     // QR is just another way to record Present on the same class+day flow above.
     Task<QrScanResultDto> ScanQrAsync(QrScanDto dto, Guid recordedByUserId);
 

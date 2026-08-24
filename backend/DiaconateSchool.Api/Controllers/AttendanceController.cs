@@ -137,6 +137,31 @@ public class AttendanceController : ControllerBase
         }
     }
 
+    // Same simplified flow as class-roster above, spanning every class in
+    // every grade under one Stage — for taking attendance stage-wide.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("stage-roster")]
+    public async Task<IActionResult> GetStageRoster([FromQuery] Guid stageId, [FromQuery] Guid academicYearId, [FromQuery] StudentLevel level, [FromQuery] DateOnly date)
+    {
+        var result = await _service.GetStageRosterAsync(stageId, academicYearId, level, date);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("record-stage")]
+    public async Task<IActionResult> RecordStageAttendance([FromBody] RecordStageAttendanceDto dto)
+    {
+        try
+        {
+            var result = await _service.RecordStageAttendanceAsync(dto, GetUserId());
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
     // QR is an extra way to mark Present on the same class-roster flow — the
     // frontend still shows the class+date roster, this just fills in one row.
     [Authorize(Policy = "AdminOnly")]

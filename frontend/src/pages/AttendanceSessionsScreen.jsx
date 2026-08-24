@@ -43,6 +43,9 @@ const AttendanceSessionsScreen = () => {
   const [level, setLevel] = useState(1);
   const [classId, setClassId] = useState('');
   const [date, setDate] = useState(todayStr());
+  // 'class': pick grade + class as before. 'stage': skip grade/class and
+  // take attendance for every class in every grade under the stage at once.
+  const [scope, setScope] = useState('class');
 
   const [roster, setRoster] = useState([]);
   const [statusByStudent, setStatusByStudent] = useState({});
@@ -98,17 +101,38 @@ const AttendanceSessionsScreen = () => {
     }
   }, [gradeId, academicYearId, level]);
 
-  // Class or date -> roster for that day
+  // Class or date -> roster for that day (class scope)
   useEffect(() => {
+    if (scope !== 'class') return;
     if (classId && date) fetchRoster();
     else { setRoster([]); setStatusByStudent({}); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classId, date]);
+  }, [scope, classId, date]);
+
+  // Stage + year + level + date -> roster for the whole stage
+  useEffect(() => {
+    if (scope !== 'stage') return;
+    if (stageId && academicYearId && date) fetchStageRoster();
+    else { setRoster([]); setStatusByStudent({}); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope, stageId, academicYearId, level, date]);
 
   const fetchRoster = async () => {
     setLoading(true);
     try {
       const r = await apiClient.get('/attendance/class-roster', { params: { classId, date } });
+      setRoster(r.data);
+      const map = {};
+      r.data.forEach(s => { if (s.status !== null && s.status !== undefined) map[s.studentId] = s.status; });
+      setStatusByStudent(map);
+    } catch { setMsg({ type: 'error', text: 'فشل تحميل كشف الطلاب.' }); }
+    finally { setLoading(false); }
+  };
+
+  const fetchStageRoster = async () => {
+    setLoading(true);
+    try {
+      const r = await apiClient.get('/attendance/stage-roster', { params: { stageId, academicYearId, level, date } });
       setRoster(r.data);
       const map = {};
       r.data.forEach(s => { if (s.status !== null && s.status !== undefined) map[s.studentId] = s.status; });
@@ -171,7 +195,11 @@ const AttendanceSessionsScreen = () => {
     setSaving(true);
     try {
       const entries = Object.entries(statusByStudent).map(([studentId, status]) => ({ studentId, status }));
-      await apiClient.post('/attendance/record-class', { classId, date, entries });
+      if (scope === 'stage') {
+        await apiClient.post('/attendance/record-stage', { stageId, academicYearId, level, date, entries });
+      } else {
+        await apiClient.post('/attendance/record-class', { classId, date, entries });
+      }
       setMsg({ type: 'success', text: 'تم حفظ الحضور بنجاح.' });
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل حفظ الحضور.' });
@@ -179,6 +207,8 @@ const AttendanceSessionsScreen = () => {
       setSaving(false);
     }
   };
+
+  const ready = scope === 'stage' ? !!(stageId && academicYearId) : !!classId;
 
   return (
     <>
@@ -191,6 +221,22 @@ const AttendanceSessionsScreen = () => {
 
       {/* Cascading filters: Academic Year → Stage → Grade → Class, plus the day */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => setScope('class')}
+            style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${scope === 'class' ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: scope === 'class' ? 'rgba(251,191,36,0.12)' : 'transparent', color: scope === 'class' ? 'var(--accent-gold)' : 'var(--text-secondary)' }}
+          >
+            فصل واحد
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope('stage')}
+            style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${scope === 'stage' ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: scope === 'stage' ? 'rgba(251,191,36,0.12)' : 'transparent', color: scope === 'stage' ? 'var(--accent-gold)' : 'var(--text-secondary)' }}
+          >
+            المرحلة كاملة
+          </button>
+        </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ minWidth: '160px' }}>
             <label style={labelStyle}>السنة الدراسية</label>
@@ -206,13 +252,15 @@ const AttendanceSessionsScreen = () => {
               {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div style={{ minWidth: '180px' }}>
-            <label style={labelStyle}>الصف</label>
-            <select className="premium-input" value={gradeId} onChange={e => setGradeId(e.target.value)} disabled={!stageId}>
-              <option value="">اختر الصف</option>
-              {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </div>
+          {scope === 'class' && (
+            <div style={{ minWidth: '180px' }}>
+              <label style={labelStyle}>الصف</label>
+              <select className="premium-input" value={gradeId} onChange={e => setGradeId(e.target.value)} disabled={!stageId}>
+                <option value="">اختر الصف</option>
+                {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </div>
+          )}
           <div style={{ minWidth: '140px' }}>
             <label style={labelStyle}>المستوى</label>
             <select className="premium-input" value={level} onChange={e => setLevel(Number(e.target.value))}>
@@ -220,13 +268,15 @@ const AttendanceSessionsScreen = () => {
               <option value={2}>المستوى 2</option>
             </select>
           </div>
-          <div style={{ minWidth: '140px' }}>
-            <label style={labelStyle}>الفصل</label>
-            <select className="premium-input" value={classId} onChange={e => setClassId(e.target.value)} disabled={!gradeId}>
-              <option value="">اختر الفصل</option>
-              {classes.map(c => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
-            </select>
-          </div>
+          {scope === 'class' && (
+            <div style={{ minWidth: '140px' }}>
+              <label style={labelStyle}>الفصل</label>
+              <select className="premium-input" value={classId} onChange={e => setClassId(e.target.value)} disabled={!gradeId}>
+                <option value="">اختر الفصل</option>
+                {classes.map(c => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
+              </select>
+            </div>
+          )}
           <div style={{ minWidth: '150px' }}>
             <label style={labelStyle}>اليوم</label>
             <input className="premium-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
@@ -234,17 +284,21 @@ const AttendanceSessionsScreen = () => {
         </div>
       </div>
 
-      {!classId ? (
+      {!ready ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>groups</span>
-          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>اختر السنة الدراسية والمرحلة والصف والفصل لعرض الطلاب وتسجيل حضورهم</p>
+          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
+            {scope === 'stage'
+              ? 'اختر السنة الدراسية والمرحلة لعرض طلاب المرحلة كاملة وتسجيل حضورهم'
+              : 'اختر السنة الدراسية والمرحلة والصف والفصل لعرض الطلاب وتسجيل حضورهم'}
+          </p>
         </div>
       ) : loading ? (
         <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>
       ) : roster.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>event_busy</span>
-          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>لا يوجد طلاب في هذا الفصل</p>
+          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>{scope === 'stage' ? 'لا يوجد طلاب في هذه المرحلة' : 'لا يوجد طلاب في هذا الفصل'}</p>
         </div>
       ) : (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
@@ -266,13 +320,15 @@ const AttendanceSessionsScreen = () => {
               >
                 تغييب الجميع
               </button>
-              <button
-                onClick={() => setScannerOpen(true)}
-                style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>qr_code_scanner</span>
-                مسح كارنيه الطالب
-              </button>
+              {scope === 'class' && (
+                <button
+                  onClick={() => setScannerOpen(true)}
+                  style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>qr_code_scanner</span>
+                  مسح كارنيه الطالب
+                </button>
+              )}
             </div>
           </div>
 
@@ -294,6 +350,9 @@ const AttendanceSessionsScreen = () => {
                   <div>
                     <span style={{ fontSize: '0.9rem' }}>{student.studentName}</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>({student.studentCode})</span>
+                    {scope === 'stage' && (
+                      <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold)', marginRight: '0.5rem' }}>{student.gradeName} — فصل {student.className}</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                     {STATUS_LABELS.map((label, st) => (

@@ -299,9 +299,21 @@ public class AttendanceService : IAttendanceService
     public async Task<List<AttendanceRecordDto>> RecordClassAttendanceAsync(RecordClassAttendanceDto dto, Guid recordedByUserId)
     {
         var session = await GetOrCreateSessionAsync(dto.ClassId, dto.Date, recordedByUserId);
+        await UpsertEntriesAsync(session, dto.Entries, recordedByUserId);
+        await _uow.SaveChangesAsync();
+
+        var studentIds = dto.Entries.Select(e => e.StudentId).ToHashSet();
+        var allRecords = await _repo.GetRecordsBySessionAsync(session.Id);
+        return allRecords.Where(r => studentIds.Contains(r.StudentId)).Select(MapToRecordDto).ToList();
+    }
+
+    // Shared by the single-class and whole-stage flows — same "upsert one
+    // record per (session, student) entry" logic either way.
+    private async Task UpsertEntriesAsync(AttendanceSession session, List<RecordClassAttendanceEntryDto> entries, Guid recordedByUserId)
+    {
         var existingMap = session.Records.ToDictionary(r => r.StudentId);
 
-        foreach (var entry in dto.Entries)
+        foreach (var entry in entries)
         {
             if (existingMap.TryGetValue(entry.StudentId, out var existing))
             {
@@ -326,12 +338,62 @@ public class AttendanceService : IAttendanceService
                 await _repo.AddRecordAsync(record);
             }
         }
+    }
+
+    // ── Stage-wide roster — reuses the per-class "one session per day"
+    // model underneath (one session per class, transparently), it just
+    // fetches/saves across every class in the stage in one call so the UI
+    // doesn't have to loop the class-roster flow itself. ──
+    public async Task<List<StageRosterEntryDto>> GetStageRosterAsync(Guid stageId, Guid academicYearId, StudentLevel level, DateOnly date)
+    {
+        var students = await _repo.GetActiveStudentsByStageAsync(stageId, academicYearId, level);
+        var classIds = students.Select(s => s.ClassId!.Value).Distinct().ToList();
+        var sessions = await _repo.GetSessionsByClassIdsAndDateAsync(classIds, date);
+        var statusByStudent = sessions
+            .SelectMany(s => s.Records)
+            .ToDictionary(r => r.StudentId, r => r.Status);
+
+        return students
+            .Select(s => new StageRosterEntryDto
+            {
+                StudentId = s.Id,
+                StudentName = s.User.FirstName + " " + s.User.LastName,
+                StudentCode = s.StudentCode,
+                ClassId = s.ClassId!.Value,
+                ClassName = s.Class!.Name,
+                GradeName = s.Class!.Grade.Name,
+                Status = statusByStudent.TryGetValue(s.Id, out var st) ? st : null
+            })
+            .OrderBy(s => s.GradeName).ThenBy(s => s.ClassName).ThenBy(s => s.StudentName)
+            .ToList();
+    }
+
+    public async Task<List<AttendanceRecordDto>> RecordStageAttendanceAsync(RecordStageAttendanceDto dto, Guid recordedByUserId)
+    {
+        var students = await _repo.GetActiveStudentsByStageAsync(dto.StageId, dto.AcademicYearId, dto.Level);
+        var classByStudent = students.ToDictionary(s => s.Id, s => s.ClassId!.Value);
+
+        var entriesByClass = dto.Entries
+            .Where(e => classByStudent.ContainsKey(e.StudentId))
+            .GroupBy(e => classByStudent[e.StudentId]);
+
+        var sessionIds = new List<Guid>();
+        foreach (var group in entriesByClass)
+        {
+            var session = await GetOrCreateSessionAsync(group.Key, dto.Date, recordedByUserId);
+            await UpsertEntriesAsync(session, group.ToList(), recordedByUserId);
+            sessionIds.Add(session.Id);
+        }
 
         await _uow.SaveChangesAsync();
 
         var studentIds = dto.Entries.Select(e => e.StudentId).ToHashSet();
-        var allRecords = await _repo.GetRecordsBySessionAsync(session.Id);
-        return allRecords.Where(r => studentIds.Contains(r.StudentId)).Select(MapToRecordDto).ToList();
+        var allRecords = (await Task.WhenAll(sessionIds.Select(_repo.GetRecordsBySessionAsync)))
+            .SelectMany(r => r)
+            .Where(r => studentIds.Contains(r.StudentId))
+            .Select(MapToRecordDto)
+            .ToList();
+        return allRecords;
     }
 
     public async Task<QrScanResultDto> ScanQrAsync(QrScanDto dto, Guid recordedByUserId)

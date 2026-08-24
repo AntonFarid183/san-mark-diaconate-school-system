@@ -27,6 +27,8 @@ public interface IAttendanceRepository
     Task<List<AttendanceAuditLog>> GetAuditLogsAsync(Guid recordId);
 
     Task<List<Student>> GetActiveStudentsByClassAsync(Guid classId);
+    Task<List<Student>> GetActiveStudentsByStageAsync(Guid stageId, Guid academicYearId, StudentLevel level);
+    Task<List<AttendanceSession>> GetSessionsByClassIdsAndDateAsync(IEnumerable<Guid> classIds, DateOnly date);
     Task<int> GetOpenSessionsCountAsync();
     Task<AttendanceSession?> GetFirstOpenSessionAsync();
 }

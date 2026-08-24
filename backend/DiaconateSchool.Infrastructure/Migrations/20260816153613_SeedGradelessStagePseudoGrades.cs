@@ -13,17 +13,31 @@ namespace DiaconateSchool.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.InsertData(
-                table: "Grades",
-                columns: new[] { "Id", "AcademicYearId", "Level", "Name", "StageId" },
-                values: new object[,]
-                {
-                    { new Guid("00000000-0000-0000-0000-000000000011"), null, 1, "KG1", new Guid("00000000-0000-0000-0000-000000000001") },
-                    { new Guid("00000000-0000-0000-0000-000000000012"), null, 2, "KG2", new Guid("00000000-0000-0000-0000-000000000001") },
-                    { new Guid("00000000-0000-0000-0004-000000000011"), null, 1, "جامعة", new Guid("00000000-0000-0000-0004-000000000001") },
-                    { new Guid("00000000-0000-0000-0005-000000000011"), null, 1, "خريجون", new Guid("00000000-0000-0000-0005-000000000001") },
-                    { new Guid("00000000-0000-0000-0006-000000000011"), null, 1, "كبار", new Guid("00000000-0000-0000-0006-000000000001") }
-                });
+            // Guarded with IF NOT EXISTS: some databases already had these
+            // pseudo-grade rows seeded outside this migration (e.g. manual
+            // seed runs), so a plain InsertData throws a duplicate-key error
+            // on those environments.
+            migrationBuilder.Sql(@"
+IF NOT EXISTS (SELECT 1 FROM [Grades] WHERE [Id] = '00000000-0000-0000-0000-000000000011')
+INSERT INTO [Grades] ([Id], [AcademicYearId], [Level], [Name], [StageId])
+VALUES ('00000000-0000-0000-0000-000000000011', NULL, 1, N'KG1', '00000000-0000-0000-0000-000000000001');
+
+IF NOT EXISTS (SELECT 1 FROM [Grades] WHERE [Id] = '00000000-0000-0000-0000-000000000012')
+INSERT INTO [Grades] ([Id], [AcademicYearId], [Level], [Name], [StageId])
+VALUES ('00000000-0000-0000-0000-000000000012', NULL, 2, N'KG2', '00000000-0000-0000-0000-000000000001');
+
+IF NOT EXISTS (SELECT 1 FROM [Grades] WHERE [Id] = '00000000-0000-0000-0004-000000000011')
+INSERT INTO [Grades] ([Id], [AcademicYearId], [Level], [Name], [StageId])
+VALUES ('00000000-0000-0000-0004-000000000011', NULL, 1, N'جامعة', '00000000-0000-0000-0004-000000000001');
+
+IF NOT EXISTS (SELECT 1 FROM [Grades] WHERE [Id] = '00000000-0000-0000-0005-000000000011')
+INSERT INTO [Grades] ([Id], [AcademicYearId], [Level], [Name], [StageId])
+VALUES ('00000000-0000-0000-0005-000000000011', NULL, 1, N'خريجون', '00000000-0000-0000-0005-000000000001');
+
+IF NOT EXISTS (SELECT 1 FROM [Grades] WHERE [Id] = '00000000-0000-0000-0006-000000000011')
+INSERT INTO [Grades] ([Id], [AcademicYearId], [Level], [Name], [StageId])
+VALUES ('00000000-0000-0000-0006-000000000011', NULL, 1, N'كبار', '00000000-0000-0000-0006-000000000001');
+");
         }
 
         /// <inheritdoc />

@@ -42,14 +42,19 @@ const SourceModal = ({ onPickFile, onPickCamera, onCancel }) => (
 );
 
 // ── Step 2a: live camera, capture a frame ───────────────────────────────────
+// Starts on the back (environment) camera — admins are photographing the
+// student standing in front of them, not taking a selfie — with a flip
+// button to switch to the front camera when that's actually what's needed.
 const CameraModal = ({ onCapture, onCancel }) => {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [error, setError] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment');
 
   useEffect(() => {
     let cancelled = false;
-    navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+    setError(null);
+    navigator.mediaDevices?.getUserMedia({ video: { facingMode }, audio: false })
       .then(s => {
         if (cancelled) { s.getTracks().forEach(t => t.stop()); return; }
         setStream(s);
@@ -61,7 +66,7 @@ const CameraModal = ({ onCapture, onCancel }) => {
       stream?.getTracks().forEach(t => t.stop());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [facingMode]);
 
   const capture = () => {
     const video = videoRef.current;
@@ -69,7 +74,13 @@ const CameraModal = ({ onCapture, onCancel }) => {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
+    const ctx = canvas.getContext('2d');
+    if (facingMode === 'user') {
+      // Mirror back to a natural (non-selfie) orientation on capture.
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0);
     stream?.getTracks().forEach(t => t.stop());
     onCapture(canvas.toDataURL('image/jpeg', 0.95));
   };
@@ -77,6 +88,12 @@ const CameraModal = ({ onCapture, onCancel }) => {
   const cancel = () => {
     stream?.getTracks().forEach(t => t.stop());
     onCancel();
+  };
+
+  const flip = () => {
+    stream?.getTracks().forEach(t => t.stop());
+    setStream(null);
+    setFacingMode(m => (m === 'user' ? 'environment' : 'user'));
   };
 
   return (
@@ -87,7 +104,17 @@ const CameraModal = ({ onCapture, onCancel }) => {
           {error ? (
             <p style={{ color: 'var(--danger)', textAlign: 'center', padding: '1.5rem', fontSize: '0.88rem' }}>{error}</p>
           ) : (
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }} />
+          )}
+          {!error && (
+            <button
+              type="button"
+              onClick={flip}
+              title="تبديل الكاميرا"
+              style={{ position: 'absolute', top: '10px', left: '10px', width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#fff' }}>cameraswitch</span>
+            </button>
           )}
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>

@@ -251,7 +251,7 @@ const StudentDashboard = () => {
 
 // ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
-const BIRTHDAYS_PREVIEW_COUNT = 5;
+const BIRTHDAYS_PAGE_SIZE = 3;
 const MONTH_DAY_LABEL = (isoDate) => new Date(isoDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
 
 const AdminDashboard = () => {
@@ -259,7 +259,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(null);
   const [birthdays, setBirthdays] = useState(null); // null = loading
-  const [showAllBirthdays, setShowAllBirthdays] = useState(false);
+  const [birthdayPage, setBirthdayPage] = useState(0);
 
   useEffect(() => {
     apiClient.get('/students/pending')
@@ -270,7 +270,8 @@ const AdminDashboard = () => {
       .catch(() => setBirthdays([]));
   }, []);
 
-  const visibleBirthdays = showAllBirthdays ? birthdays : (birthdays || []).slice(0, BIRTHDAYS_PREVIEW_COUNT);
+  const birthdayPageCount = Math.ceil((birthdays?.length || 0) / BIRTHDAYS_PAGE_SIZE);
+  const visibleBirthdays = (birthdays || []).slice(birthdayPage * BIRTHDAYS_PAGE_SIZE, (birthdayPage + 1) * BIRTHDAYS_PAGE_SIZE);
 
   const quickActions = [
     { icon: 'person_add',          title: 'تسجيل طالب جديد',     desc: 'إضافة بيانات عضو جديد للمدرسة',          path: '/register-student',        btnLabel: 'إضافة طالب' },
@@ -296,11 +297,22 @@ const AdminDashboard = () => {
           <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>cake</span>
             أعياد الميلاد
+            {birthdays && birthdays.length > 0 && (
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>({birthdays.length})</span>
+            )}
           </h3>
-          {birthdays && birthdays.length > BIRTHDAYS_PREVIEW_COUNT && (
-            <button onClick={() => setShowAllBirthdays(v => !v)} style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
-              {showAllBirthdays ? 'عرض أقل' : 'عرض الكل'}
-            </button>
+          {birthdayPageCount > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button onClick={() => setBirthdayPage(p => Math.max(0, p - 1))} disabled={birthdayPage === 0}
+                style={{ background: 'none', border: 'none', color: birthdayPage === 0 ? 'var(--text-muted)' : 'var(--accent-gold)', cursor: birthdayPage === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_right</span>
+              </button>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{birthdayPage + 1} / {birthdayPageCount}</span>
+              <button onClick={() => setBirthdayPage(p => Math.min(birthdayPageCount - 1, p + 1))} disabled={birthdayPage === birthdayPageCount - 1}
+                style={{ background: 'none', border: 'none', color: birthdayPage === birthdayPageCount - 1 ? 'var(--text-muted)' : 'var(--accent-gold)', cursor: birthdayPage === birthdayPageCount - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_left</span>
+              </button>
+            </div>
           )}
         </div>
 

@@ -45,7 +45,7 @@ const RegisterStudentScreen = () => {
     college: '',
     isDeacon: false, deaconRank: null, fatherOfConfession: '',
     studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
-    address: '', landmark: '', hasPaidFees: false, paidAmount: '',
+    address: '', landmark: '', hasPaidFees: false,
     profilePictureUrl: '',
   });
 
@@ -116,7 +116,6 @@ const RegisterStudentScreen = () => {
     setIsLoading(true);
     try {
       const parts = formData.fullName.trim().split(/\s+/);
-      const paidAmount = formData.hasPaidFees && formData.paidAmount ? parseFloat(formData.paidAmount) : null;
       const payload = {
         ...formData,
         firstName:  parts[0] || '',
@@ -124,7 +123,6 @@ const RegisterStudentScreen = () => {
         thirdName:  parts[2] || '',
         lastName:   parts[3] || '',
         gradeId: currentStage.hasGrade ? formData.gradeId : null,
-        paidAmount: paidAmount && paidAmount > 0 ? paidAmount : null,
       };
       const response = await apiClient.post('/students/register', payload);
       setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
@@ -358,16 +356,7 @@ const RegisterStudentScreen = () => {
                 <input type="checkbox" name="hasPaidFees" checked={formData.hasPaidFees} onChange={handleChange} style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
                 <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>تم سداد المصاريف الإدارية للترم الحالي</label>
               </div>
-              {formData.hasPaidFees && (
-                <div style={{ marginTop: '0.75rem', marginRight: '2rem' }}>
-                  <div style={{ position: 'relative', maxWidth: '250px' }}>
-                    <input type="number" name="paidAmount" className="premium-input" placeholder="المبلغ المدفوع" step="0.01" min="0"
-                      onChange={handleChange} value={formData.paidAmount} style={{ textAlign: 'center', fontWeight: 700, padding: '0.65rem 1rem' }} />
-                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ج.م</span>
-                  </div>
-                </div>
-              )}
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>تأكد من استلام الوصل قبل التحديد</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginRight: '2rem' }}>يُسجَّل المبلغ تلقائياً كاشتراك السنة الدراسية الحالية — تأكد من استلام الوصل قبل التحديد</p>
             </div>
           )}
 

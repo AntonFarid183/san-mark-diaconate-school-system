@@ -18,22 +18,25 @@ public class StudentRegistrationService : IStudentRegistrationService
     private readonly IUnitOfWork _uow;
     private readonly IPasswordHasher _hasher;
     private readonly IStudentCodeGenerator _codeGenerator;
+    private readonly IStudentFeeService _feeService;
 
     public StudentRegistrationService(
         IStudentRepository studentRepo,
         IUserRepository userRepo,
         IUnitOfWork uow,
         IPasswordHasher hasher,
-        IStudentCodeGenerator codeGenerator)
+        IStudentCodeGenerator codeGenerator,
+        IStudentFeeService feeService)
     {
         _studentRepo = studentRepo;
         _userRepo = userRepo;
         _uow = uow;
         _hasher = hasher;
         _codeGenerator = codeGenerator;
+        _feeService = feeService;
     }
 
-    public async Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto)
+    public async Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto, Guid? recordedByUserId = null)
     {
         bool exists = await _studentRepo.ExistsAsync(
             dto.FirstName, dto.SecondName, dto.ThirdName, dto.LastName, dto.DateOfBirth);
@@ -92,7 +95,6 @@ public class StudentRegistrationService : IStudentRegistrationService
             Address = dto.Address,
             Landmark = dto.Landmark,
             FeesPaid = dto.HasPaidFees,
-            PaidAmount = dto.HasPaidFees ? dto.PaidAmount : null,
             ProfilePictureUrl = dto.ProfilePictureUrl,
             UserId = userId,
             RegisteredByUserId = userId,
@@ -101,6 +103,22 @@ public class StudentRegistrationService : IStudentRegistrationService
 
         await _userRepo.AddAsync(user);
         await _studentRepo.AddAsync(student);
+
+        // Only an admin registering a student as immediately Active charges/records a
+        // fee here — a self-registered student starts Suspended and gets charged (and
+        // its "تم السداد" payment recorded) later, on activation, exactly like the
+        // pending-approvals flow. Same ledger, same source of truth, no admin-typed
+        // amount: "تم سداد المصاريف" always means the current year's full term fee.
+        if (!dto.SelfRegistered)
+        {
+            var account = await _feeService.ChargeTermFeeAsync(studentId);
+            if (dto.HasPaidFees)
+            {
+                student.PaidAmount = account?.TotalRequired;
+                await _feeService.RecordPaymentAsync(account, null, recordedByUserId ?? userId, "دفعة تسجيل الطالب");
+            }
+        }
+
         await _uow.SaveChangesAsync();
 
         return new RegistrationResultDto

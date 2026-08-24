@@ -37,6 +37,11 @@ public class StudentsController : ControllerBase
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    // /register is [AllowAnonymous] (public self-registration reuses it), so unlike
+    // GetUserId() this must tolerate there being no authenticated caller at all.
+    private Guid? TryGetUserId() =>
+        Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+
     // ── Lookup endpoints ──────────────────────────────────────────────
 
     [Authorize(Policy = "AdminOnly")]
@@ -162,7 +167,7 @@ public class StudentsController : ControllerBase
     {
         try
         {
-            var result = await _registrationService.RegisterStudentAsync(dto);
+            var result = await _registrationService.RegisterStudentAsync(dto, TryGetUserId());
             return Ok(result);
         }
         catch (InvalidOperationException ex)

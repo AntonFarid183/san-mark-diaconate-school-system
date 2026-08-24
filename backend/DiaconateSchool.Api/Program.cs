@@ -89,6 +89,7 @@ builder.Services.AddScoped<IPublicFeedbackRepository, PublicFeedbackRepository>(
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IStudentCodeGenerator, StudentCodeGenerator>();
+builder.Services.AddScoped<IStudentFeeService, StudentFeeService>();
 builder.Services.AddScoped<IStudentRegistrationService, StudentRegistrationService>();
 builder.Services.AddScoped<IStudentQueryService, StudentQueryService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

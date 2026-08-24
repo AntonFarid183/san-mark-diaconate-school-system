@@ -8,7 +8,7 @@ namespace DiaconateSchool.Application.Interfaces.Services;
 
 public interface IStudentRegistrationService
 {
-    Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto);
+    Task<RegistrationResultDto> RegisterStudentAsync(RegisterStudentDto dto, Guid? recordedByUserId = null);
     Task<IEnumerable<Grade>> GetGradesByStageAsync(Guid stageId);
     Task<IEnumerable<Stage>> GetAllStagesAsync();
     Task DeleteStudentAsync(Guid studentId);

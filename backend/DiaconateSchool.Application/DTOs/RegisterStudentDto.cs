@@ -28,8 +28,9 @@ public class RegisterStudentDto
     public required string Address { get; set; }
     public string? Landmark { get; set; }
 
+    // "تم سداد المصاريف الإدارية للترم الحالي" — always means the current
+    // year's full term fee; there's no admin-typed amount here anymore.
     public bool HasPaidFees { get; set; }
-    public decimal? PaidAmount { get; set; }
     public bool SelfRegistered { get; set; } = false;
 
     // Uploaded (via /file/upload-registration-photo for self-registration, or

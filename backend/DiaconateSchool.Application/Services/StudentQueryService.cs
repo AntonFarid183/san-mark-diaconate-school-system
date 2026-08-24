@@ -17,8 +17,7 @@ public class StudentQueryService : IStudentQueryService
     private readonly IUserRepository _userRepo;
     private readonly IPasswordHasher _hasher;
     private readonly INotificationService _notificationService;
-    private readonly IAcademicYearRepository _academicYearRepo;
-    private readonly IPaymentRepository _paymentRepo;
+    private readonly IStudentFeeService _feeService;
     private readonly IUnitOfWork _uow;
 
     public StudentQueryService(
@@ -26,16 +25,14 @@ public class StudentQueryService : IStudentQueryService
         IUserRepository userRepo,
         IPasswordHasher hasher,
         INotificationService notificationService,
-        IAcademicYearRepository academicYearRepo,
-        IPaymentRepository paymentRepo,
+        IStudentFeeService feeService,
         IUnitOfWork uow)
     {
         _studentRepo = studentRepo;
         _userRepo = userRepo;
         _hasher = hasher;
         _notificationService = notificationService;
-        _academicYearRepo = academicYearRepo;
-        _paymentRepo = paymentRepo;
+        _feeService = feeService;
         _uow = uow;
     }
 
@@ -176,27 +173,16 @@ public class StudentQueryService : IStudentQueryService
 
         if (isActive && !wasActive)
         {
-            var account = await ChargeTermFeeAsync(studentId);
+            var account = await _feeService.ChargeTermFeeAsync(studentId);
 
             // "تم السداد" means the full term fee — the admin doesn't type an amount,
             // it's just whatever this year's subscription fee already is. An explicit
             // paidAmount (e.g. a partial/custom payment entered elsewhere) still wins.
-            var amountToRecord = paidAmount ?? (withFees ? account?.TotalRequired : null);
-
-            if (withFees && amountToRecord.HasValue && amountToRecord.Value > 0 && account != null)
+            if (withFees)
             {
-                student.PaidAmount = amountToRecord.Value;
-                await _paymentRepo.AddTransactionAsync(new PaymentTransaction
-                {
-                    Id = Guid.NewGuid(),
-                    StudentAccountId = account.Id,
-                    Amount = amountToRecord.Value,
-                    Kind = PaymentTransactionKind.Payment,
-                    Description = "دفعة تفعيل الحساب",
-                    TransactionDate = DateTime.UtcNow,
-                    RecordedByUserId = recordedByUserId ?? student.RegisteredByUserId,
-                    CreatedAt = DateTime.UtcNow
-                });
+                var amountToRecord = paidAmount ?? account?.TotalRequired;
+                if (amountToRecord.HasValue) student.PaidAmount = amountToRecord.Value;
+                await _feeService.RecordPaymentAsync(account, paidAmount, recordedByUserId ?? student.RegisteredByUserId, "دفعة تفعيل الحساب");
             }
         }
 
@@ -206,39 +192,6 @@ public class StudentQueryService : IStudentQueryService
             await _notificationService.NotifyAccountActivatedAsync(student.UserId);
 
         return true;
-    }
-
-    // Puts the current year's standard subscription fee on the student's account the
-    // moment they're accepted, so the admin never types the amount per student.
-    // Only ever sets a fee that isn't there yet: re-activating a suspended student must
-    // not silently re-charge them or overwrite a balance someone adjusted by hand.
-    // Returns the account so the caller can record a matching payment against it.
-    private async Task<StudentAccount?> ChargeTermFeeAsync(Guid studentId)
-    {
-        var year = await _academicYearRepo.GetCurrentAsync();
-        if (year is null || year.TermFee <= 0) return null;
-
-        var account = await _paymentRepo.GetAccountByStudentIdAsync(studentId);
-        if (account is null)
-        {
-            account = new StudentAccount
-            {
-                Id = Guid.NewGuid(),
-                StudentId = studentId,
-                TotalRequired = year.TermFee,
-                Description = $"اشتراك {year.Name}"
-            };
-            await _paymentRepo.AddAccountAsync(account);
-            return account;
-        }
-
-        if (account.TotalRequired <= 0)
-        {
-            account.TotalRequired = year.TermFee;
-            account.Description ??= $"اشتراك {year.Name}";
-        }
-
-        return account;
     }
 
     public async Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level)

@@ -11,8 +11,6 @@ export default function PendingApprovalsScreen() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
-  const [paymentModal, setPaymentModal] = useState(null); // { id } or null
-  const [paymentAmount, setPaymentAmount] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -28,32 +26,18 @@ export default function PendingApprovalsScreen() {
 
   useEffect(() => { load(); }, []);
 
-  const activate = async (id, withFees, amount = null) => {
+  // withFees=true charges the current academic year's term fee automatically —
+  // no amount to type, it's just whatever the year's subscription fee already is.
+  const activate = async (id, withFees) => {
     setActivating(id);
     try {
-      await apiClient.post(`/students/${id}/activate`, { withFees, paidAmount: amount });
+      await apiClient.post(`/students/${id}/activate`, { withFees });
       setStudents(prev => prev.filter(s => s.id !== id));
     } catch {
       alert('حدث خطأ أثناء تفعيل الحساب، حاول مرة أخرى.');
     } finally {
       setActivating(null);
     }
-  };
-
-  const openPaymentModal = (id) => {
-    setPaymentAmount('');
-    setPaymentModal({ id });
-  };
-
-  const confirmPayment = () => {
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('يرجى إدخال مبلغ صحيح.');
-      return;
-    }
-    const id = paymentModal.id;
-    setPaymentModal(null);
-    activate(id, true, amount);
   };
 
   return (
@@ -113,7 +97,7 @@ export default function PendingApprovalsScreen() {
                   </button>
                   <button
                     disabled={activating === s.id}
-                    onClick={() => openPaymentModal(s.id)}
+                    onClick={() => activate(s.id, true)}
                     style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', background: activating === s.id ? 'rgba(16,185,129,0.4)' : 'var(--success)', color: '#fff', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                       {activating === s.id ? 'hourglass_empty' : 'payments'}
@@ -135,45 +119,6 @@ export default function PendingApprovalsScreen() {
         </div>
       )}
 
-      {/* Payment amount modal */}
-      {paymentModal && (
-        <div className="payment-overlay" onClick={() => setPaymentModal(null)}>
-          <div className="payment-modal" onClick={e => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--success)', marginBottom: '0.5rem', display: 'block' }}>payments</span>
-              <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>المبلغ المدفوع</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>أدخل المبلغ الذي دفعه الطالب</p>
-            </div>
-            <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-              <input
-                autoFocus
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="مثال: 500"
-                value={paymentAmount}
-                onChange={e => setPaymentAmount(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') confirmPayment(); }}
-                className="premium-input"
-                style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 700, padding: '1rem' }}
-              />
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.9rem' }}>ج.م</span>
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button
-                onClick={() => setPaymentModal(null)}
-                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600 }}>
-                إلغاء
-              </button>
-              <button
-                onClick={confirmPayment}
-                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--success-solid)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 700 }}>
-                تأكيد الدفع
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

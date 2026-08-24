@@ -168,11 +168,7 @@ public class StudentQueryService : IStudentQueryService
         student.User.IsActive = isActive;
         student.Status = isActive ? StudentStatus.Active : StudentStatus.Suspended;
         if (isActive && withFees)
-        {
             student.FeesPaid = true;
-            if (paidAmount.HasValue)
-                student.PaidAmount = paidAmount.Value;
-        }
         student.User.UpdatedAt = DateTime.UtcNow;
 
         await _studentRepo.UpdateAsync(student);
@@ -182,17 +178,19 @@ public class StudentQueryService : IStudentQueryService
         {
             var account = await ChargeTermFeeAsync(studentId);
 
-            // The admin just told us this amount was actually collected — the ledger
-            // (StudentAccount/PaymentTransaction) is what the payment report and every
-            // balance screen actually read, so without this the student shows Active
-            // with FeesPaid=true yet the report still lists the full fee as unpaid.
-            if (withFees && paidAmount.HasValue && paidAmount.Value > 0 && account != null)
+            // "تم السداد" means the full term fee — the admin doesn't type an amount,
+            // it's just whatever this year's subscription fee already is. An explicit
+            // paidAmount (e.g. a partial/custom payment entered elsewhere) still wins.
+            var amountToRecord = paidAmount ?? (withFees ? account?.TotalRequired : null);
+
+            if (withFees && amountToRecord.HasValue && amountToRecord.Value > 0 && account != null)
             {
+                student.PaidAmount = amountToRecord.Value;
                 await _paymentRepo.AddTransactionAsync(new PaymentTransaction
                 {
                     Id = Guid.NewGuid(),
                     StudentAccountId = account.Id,
-                    Amount = paidAmount.Value,
+                    Amount = amountToRecord.Value,
                     Kind = PaymentTransactionKind.Payment,
                     Description = "دفعة تفعيل الحساب",
                     TransactionDate = DateTime.UtcNow,

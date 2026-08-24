@@ -14,6 +14,8 @@ export default function PendingApprovalsScreen() {
   const [feeModal, setFeeModal] = useState(null); // { id } while the paid-vs-discount choice is open
   const [isDiscount, setIsDiscount] = useState(false);
   const [discountAmount, setDiscountAmount] = useState('');
+  const [payLaterModal, setPayLaterModal] = useState(null); // { id } while the pay-later amount prompt is open
+  const [payLaterAmount, setPayLaterAmount] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -33,10 +35,10 @@ export default function PendingApprovalsScreen() {
   // no amount to type unless it's a discount, then paidAmount is the actual
   // amount collected and the gap is recorded as a discount, not just skipped.
   // isExempt=true skips charging entirely — no debt on record at all.
-  const activate = async (id, { withFees = false, isExempt = false, paidAmount = null } = {}) => {
+  const activate = async (id, { withFees = false, isExempt = false, paidAmount = null, amountDue = null } = {}) => {
     setActivating(id);
     try {
-      await apiClient.post(`/students/${id}/activate`, { withFees, isExempt, paidAmount });
+      await apiClient.post(`/students/${id}/activate`, { withFees, isExempt, paidAmount, amountDue });
       setStudents(prev => prev.filter(s => s.id !== id));
     } catch {
       alert('حدث خطأ أثناء تفعيل الحساب، حاول مرة أخرى.');
@@ -66,6 +68,29 @@ export default function PendingApprovalsScreen() {
     const id = feeModal.id;
     setFeeModal(null);
     activate(id, { withFees: true, paidAmount: amount });
+  };
+
+  const openPayLaterModal = (id) => {
+    setPayLaterAmount('');
+    setPayLaterModal({ id });
+  };
+
+  // Leaving the amount blank bills the standard current-year term fee;
+  // typing one bills exactly that instead (e.g. a special-case amount).
+  const confirmPayLater = () => {
+    const raw = payLaterAmount.trim();
+    let amountDue = null;
+    if (raw) {
+      const amount = parseFloat(raw);
+      if (isNaN(amount) || amount <= 0) {
+        alert('يرجى إدخال مبلغ صحيح، أو تركه فارغاً لاستخدام رسم الترم الحالي.');
+        return;
+      }
+      amountDue = amount;
+    }
+    const id = payLaterModal.id;
+    setPayLaterModal(null);
+    activate(id, { amountDue });
   };
 
   return (
@@ -134,7 +159,7 @@ export default function PendingApprovalsScreen() {
                   </button>
                   <button
                     disabled={activating === s.id}
-                    onClick={() => activate(s.id, {})}
+                    onClick={() => openPayLaterModal(s.id)}
                     title="تفعيل الحساب وتسجيل الرسوم كمبلغ مستحق، دون تحصيل الآن"
                     style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--c-blue)', background: 'rgba(96,165,250,0.08)', color: 'var(--c-blue)', cursor: activating === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>schedule</span>
@@ -205,6 +230,42 @@ export default function PendingApprovalsScreen() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Pay-later amount prompt */}
+      {payLaterModal && (
+        <div className="payment-overlay" onClick={() => setPayLaterModal(null)}>
+          <div className="payment-modal" onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--c-blue)', marginBottom: '0.5rem', display: 'block' }}>schedule</span>
+              <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>المبلغ المستحق</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>سيُفعَّل الحساب فوراً وسيُخطَر الطالب بهذا المبلغ. اتركه فارغاً لاستخدام رسم الترم الحالي.</p>
+            </div>
+            <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+              <input
+                autoFocus
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="مثال: 300 (اختياري)"
+                value={payLaterAmount}
+                onChange={e => setPayLaterAmount(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') confirmPayLater(); }}
+                className="premium-input"
+                style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, padding: '1rem' }}
+              />
+              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.9rem' }}>ج.م</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={() => setPayLaterModal(null)} style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600 }}>
+                إلغاء
+              </button>
+              <button onClick={confirmPayLater} className="btn-primary" style={{ flex: 1 }}>
+                تفعيل
+              </button>
+            </div>
           </div>
         </div>
       )}

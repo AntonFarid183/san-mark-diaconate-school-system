@@ -19,10 +19,25 @@ public class StudentFeeService : IStudentFeeService
         _paymentRepo = paymentRepo;
     }
 
-    public async Task<StudentAccount?> ChargeTermFeeAsync(Guid studentId)
+    public async Task<StudentAccount?> ChargeTermFeeAsync(Guid studentId, decimal? customAmount = null)
     {
-        var year = await _academicYearRepo.GetCurrentAsync();
-        if (year is null || year.TermFee <= 0) return null;
+        decimal amount;
+        string description;
+
+        // customAmount is only ever set for a "سداد لاحقاً" activation where the
+        // admin typed a specific amount instead of the standard term fee.
+        if (customAmount.HasValue && customAmount.Value > 0)
+        {
+            amount = customAmount.Value;
+            description = "مبلغ مستحق";
+        }
+        else
+        {
+            var year = await _academicYearRepo.GetCurrentAsync();
+            if (year is null || year.TermFee <= 0) return null;
+            amount = year.TermFee;
+            description = $"اشتراك {year.Name}";
+        }
 
         var account = await _paymentRepo.GetAccountByStudentIdAsync(studentId);
         if (account is null)
@@ -31,8 +46,8 @@ public class StudentFeeService : IStudentFeeService
             {
                 Id = Guid.NewGuid(),
                 StudentId = studentId,
-                TotalRequired = year.TermFee,
-                Description = $"اشتراك {year.Name}"
+                TotalRequired = amount,
+                Description = description
             };
             await _paymentRepo.AddAccountAsync(account);
             return account;
@@ -40,8 +55,8 @@ public class StudentFeeService : IStudentFeeService
 
         if (account.TotalRequired <= 0)
         {
-            account.TotalRequired = year.TermFee;
-            account.Description ??= $"اشتراك {year.Name}";
+            account.TotalRequired = amount;
+            account.Description ??= description;
         }
 
         return account;

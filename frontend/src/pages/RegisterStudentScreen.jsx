@@ -47,7 +47,7 @@ const RegisterStudentScreen = () => {
     studentMobile: '', fatherMobile: '', motherMobile: '', whatsAppNumber: '', landline: '',
     address: '', landmark: '',
     // feeStatus: 'later' (billed, nothing collected yet — the default) | 'paid' | 'exempt'
-    feeStatus: 'later', isDiscount: false, discountPaidAmount: '',
+    feeStatus: 'later', isDiscount: false, discountPaidAmount: '', amountDue: '',
     profilePictureUrl: '',
   });
 
@@ -114,7 +114,7 @@ const RegisterStudentScreen = () => {
 
   // "تم سداد" / "سداد لاحقاً" / "إعفاء" — exactly one applies to a student.
   const handleFeeStatusChange = (feeStatus) => {
-    setFormData(prev => ({ ...prev, feeStatus, isDiscount: false, discountPaidAmount: '' }));
+    setFormData(prev => ({ ...prev, feeStatus, isDiscount: false, discountPaidAmount: '', amountDue: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -125,6 +125,8 @@ const RegisterStudentScreen = () => {
       const parts = formData.fullName.trim().split(/\s+/);
       const discountAmount = formData.feeStatus === 'paid' && formData.isDiscount && formData.discountPaidAmount
         ? parseFloat(formData.discountPaidAmount) : null;
+      const amountDue = formData.feeStatus === 'later' && formData.amountDue
+        ? parseFloat(formData.amountDue) : null;
       const payload = {
         ...formData,
         firstName:  parts[0] || '',
@@ -135,6 +137,7 @@ const RegisterStudentScreen = () => {
         hasPaidFees: formData.feeStatus === 'paid',
         isExempt: formData.feeStatus === 'exempt',
         paidAmount: discountAmount && discountAmount > 0 ? discountAmount : null,
+        amountDue: amountDue && amountDue > 0 ? amountDue : null,
       };
       const response = await apiClient.post('/students/register', payload);
       setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
@@ -403,10 +406,18 @@ const RegisterStudentScreen = () => {
                   </div>
                 )}
 
+                {formData.feeStatus === 'later' && (
+                  <div style={{ marginTop: '0.75rem', marginRight: '2rem', position: 'relative', maxWidth: '250px' }}>
+                    <input type="number" name="amountDue" className="premium-input" placeholder="مثال: 300 (اختياري)" step="0.01" min="0"
+                      onChange={handleChange} value={formData.amountDue} style={{ textAlign: 'center', fontWeight: 700, padding: '0.65rem 1rem' }} />
+                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ج.م</span>
+                  </div>
+                )}
+
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                   {formData.feeStatus === 'paid' && !formData.isDiscount && 'يُسجَّل المبلغ تلقائياً كاشتراك السنة الدراسية الحالية — تأكد من استلام الوصل قبل التحديد'}
                   {formData.feeStatus === 'paid' && formData.isDiscount && 'تأكد من استلام الوصل قبل التحديد'}
-                  {formData.feeStatus === 'later' && 'يُفعَّل الحساب فوراً، ويُسجَّل المبلغ كمستحق على الطالب — سيصله إشعار بالمبلغ المطلوب سداده.'}
+                  {formData.feeStatus === 'later' && 'يُفعَّل الحساب فوراً، ويُسجَّل المبلغ كمستحق على الطالب (رسم الترم الحالي ما لم تُدخل مبلغاً مختلفاً) — سيصله إشعار بالمبلغ المطلوب سداده.'}
                   {formData.feeStatus === 'exempt' && 'لن يُسجَّل أي مبلغ مستحق على هذا الطالب'}
                 </p>
               </div>

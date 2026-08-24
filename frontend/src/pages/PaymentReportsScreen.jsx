@@ -30,7 +30,7 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: '', label: 'الكل' },
   { value: 'paid', label: 'مدفوع' },
   { value: 'exempted', label: 'معفى' },
-  { value: 'not_paid', label: 'غير مدفوع' },
+  { value: 'not_paid', label: 'سداد لاحقاً' },
 ];
 
 const formatAmount = (val) => {
@@ -45,7 +45,7 @@ const paymentBadge = (status) => {
     case 'exempted':
       return { label: 'معفى', color: 'var(--accent-gold)', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' };
     case 'not_paid':
-      return { label: 'غير مدفوع', color: 'var(--danger)', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' };
+      return { label: 'سداد لاحقاً', color: 'var(--danger)', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' };
     default:
       return { label: '—', color: 'var(--text-muted)', bg: 'transparent', border: 'transparent' };
   }

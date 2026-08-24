@@ -156,7 +156,7 @@ public class StudentQueryService : IStudentQueryService
         return students.Select(MapToDetailDto);
     }
 
-    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null, bool isExempt = false)
+    public async Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null, bool isExempt = false, decimal? amountDue = null)
     {
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return false;
@@ -179,7 +179,7 @@ public class StudentQueryService : IStudentQueryService
 
         if (isActive && !wasActive && !isExempt)
         {
-            var account = await _feeService.ChargeTermFeeAsync(studentId);
+            var account = await _feeService.ChargeTermFeeAsync(studentId, withFees ? null : amountDue);
             accountDescription = account?.Description;
 
             // "تم السداد" means the full term fee unless paidAmount says

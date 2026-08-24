@@ -119,7 +119,7 @@ public class StudentRegistrationService : IStudentRegistrationService
 
         if (!dto.SelfRegistered && !dto.IsExempt)
         {
-            var account = await _feeService.ChargeTermFeeAsync(studentId);
+            var account = await _feeService.ChargeTermFeeAsync(studentId, dto.HasPaidFees ? null : dto.AmountDue);
             accountDescription = account?.Description;
 
             if (dto.HasPaidFees)

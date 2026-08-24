@@ -55,6 +55,9 @@ public class ActivateStudentDto
     // True = no fee obligation is charged at all (not "paid 0") — the
     // student simply has no balance, same as an exempt direct registration.
     public bool IsExempt { get; set; } = false;
+    // "سداد لاحقاً" only — an admin-typed amount owed, instead of the
+    // standard current-year term fee. Ignored when WithFees/IsExempt is set.
+    public decimal? AmountDue { get; set; }
 }
 
 public class StudentListItemDto

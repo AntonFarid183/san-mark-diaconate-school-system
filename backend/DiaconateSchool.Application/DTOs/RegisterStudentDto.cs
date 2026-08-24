@@ -37,6 +37,9 @@ public class RegisterStudentDto
     // "إعفاء من الرسوم" — no fee obligation at all, mutually exclusive with
     // HasPaidFees. Not "paid 0"; the student simply has no balance.
     public bool IsExempt { get; set; }
+    // "سداد لاحقاً" only — an admin-typed amount owed, instead of the
+    // standard current-year term fee. Ignored when HasPaidFees/IsExempt is set.
+    public decimal? AmountDue { get; set; }
     public bool SelfRegistered { get; set; } = false;
 
     // Uploaded (via /file/upload-registration-photo for self-registration, or

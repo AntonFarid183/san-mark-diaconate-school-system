@@ -22,7 +22,17 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var result = await _authService.LoginAsync(dto);
+        // TEMP DIAGNOSTIC — surfaces the real exception for a prod-only 500 we can't
+        // otherwise see (no log access from here). Remove after root cause found.
+        AuthResultDto result;
+        try
+        {
+            result = await _authService.LoginAsync(dto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = ex.ToString() });
+        }
 
         if (!string.IsNullOrEmpty(result.ErrorMessage))
             return BadRequest(new { Message = result.ErrorMessage, MustChangePassword = result.MustChangePassword });

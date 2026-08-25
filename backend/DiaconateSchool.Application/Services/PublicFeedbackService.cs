@@ -48,4 +48,12 @@ public class PublicFeedbackService : IPublicFeedbackService
             CreatedAt = f.CreatedAt
         }).ToList();
     }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var feedback = await _repo.GetByIdAsync(id);
+        if (feedback == null) return;
+        _repo.Remove(feedback);
+        await _uow.SaveChangesAsync();
+    }
 }

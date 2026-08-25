@@ -14,4 +14,9 @@ public class PublicFeedbackRepository : IPublicFeedbackRepository
 
     public async Task<List<PublicFeedback>> GetAllAsync() =>
         await _ctx.PublicFeedbacks.OrderByDescending(f => f.CreatedAt).ToListAsync();
+
+    public async Task<PublicFeedback?> GetByIdAsync(Guid id) =>
+        await _ctx.PublicFeedbacks.FindAsync(id);
+
+    public void Remove(PublicFeedback feedback) => _ctx.PublicFeedbacks.Remove(feedback);
 }

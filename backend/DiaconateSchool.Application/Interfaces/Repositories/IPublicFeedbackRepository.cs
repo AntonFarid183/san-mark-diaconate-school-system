@@ -6,4 +6,6 @@ public interface IPublicFeedbackRepository
 {
     Task AddAsync(PublicFeedback feedback);
     Task<List<PublicFeedback>> GetAllAsync();
+    Task<PublicFeedback?> GetByIdAsync(Guid id);
+    void Remove(PublicFeedback feedback);
 }

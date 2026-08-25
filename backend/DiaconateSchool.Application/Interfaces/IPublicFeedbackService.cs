@@ -6,4 +6,5 @@ public interface IPublicFeedbackService
 {
     Task SubmitAsync(CreatePublicFeedbackDto dto);
     Task<List<PublicFeedbackItemDto>> GetAllAsync();
+    Task DeleteAsync(Guid id);
 }

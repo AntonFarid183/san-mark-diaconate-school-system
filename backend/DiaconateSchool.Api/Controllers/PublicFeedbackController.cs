@@ -30,4 +30,12 @@ public class PublicFeedbackController : ControllerBase
         var items = await _service.GetAllAsync();
         return Ok(items);
     }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _service.DeleteAsync(id);
+        return NoContent();
+    }
 }

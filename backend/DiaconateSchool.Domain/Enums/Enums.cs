@@ -173,7 +173,11 @@ public enum NotificationType
     AnnouncementPosted = 3,
     CurriculumPublished = 4,
     HymnLessonPublished = 5,
-    PaymentRecorded = 6
+    PaymentRecorded = 6,
+    // Admin-facing — a student did something that needs the admin's attention.
+    NewSelfRegistration = 7,
+    NewHymnSubmission = 8,
+    NewFeedback = 9
 }
 
 // Separates real money from waived money on the ledger. Both settle a student's

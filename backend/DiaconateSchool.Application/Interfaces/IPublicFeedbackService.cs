@@ -5,4 +5,5 @@ namespace DiaconateSchool.Application.Interfaces;
 public interface IPublicFeedbackService
 {
     Task SubmitAsync(CreatePublicFeedbackDto dto);
+    Task<List<PublicFeedbackItemDto>> GetAllAsync();
 }

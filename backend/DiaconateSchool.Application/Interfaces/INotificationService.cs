@@ -8,7 +8,7 @@ namespace DiaconateSchool.Application.Interfaces;
 public interface INotificationService
 {
     // Bell dropdown — role-aware summary (dynamic action items + latest unread persistent)
-    Task<NotificationSummaryDto> GetAdminSummaryAsync();
+    Task<NotificationSummaryDto> GetAdminSummaryAsync(Guid adminUserId);
     Task<NotificationSummaryDto> GetStudentSummaryAsync(Guid studentId, Guid userId);
 
     // "View All" page — persistent history only, filterable by read state
@@ -29,4 +29,10 @@ public interface INotificationService
     // student's account — the counterpart to NotifyAccountActivatedAsync's
     // "you owe X" message, telling them what just got settled instead.
     Task NotifyPaymentRecordedAsync(Guid studentUserId, decimal amount, PaymentTransactionKind kind, decimal remainingBalance, string? accountDescription);
+
+    // Admin-facing creation hooks — broadcast to every active Admin user so
+    // nothing needing attention only shows up as a live-computed count.
+    Task NotifyAdminsNewSelfRegistrationAsync(Guid studentId, string studentName);
+    Task NotifyAdminsNewHymnSubmissionAsync(Guid submissionId, string studentName, string hymnTitle);
+    Task NotifyAdminsNewFeedbackAsync(Guid feedbackId, string senderName);
 }

@@ -217,6 +217,7 @@ const Layout = () => {
     { path: '/curriculum-management', label: 'المناهج', icon: 'import_contacts' },
     { path: '/homework-management', label: 'إدارة الواجبات', icon: 'edit_note' },
     { path: '/announcements', label: 'الإعلانات', icon: 'campaign' },
+    { path: '/feedback', label: 'الاقتراحات والتعليقات', icon: 'forum' },
   ];
 
   const navGroups = [

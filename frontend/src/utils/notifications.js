@@ -1,7 +1,8 @@
 // Maps a persistent notification's (type, referenceId) to a frontend route.
 // Backend NotificationType enum values (numeric, as serialized by ASP.NET Core):
 // 0 AccountActivated, 1 HomeworkPublished, 2 HymnReviewed,
-// 3 AnnouncementPosted, 4 CurriculumPublished, 5 HymnLessonPublished, 6 PaymentRecorded
+// 3 AnnouncementPosted, 4 CurriculumPublished, 5 HymnLessonPublished, 6 PaymentRecorded,
+// 7 NewSelfRegistration, 8 NewHymnSubmission, 9 NewFeedback (7-9 are admin-facing)
 export const getNotificationRoute = (type, referenceId) => {
   switch (type) {
     case 0: return '/profile';
@@ -11,6 +12,9 @@ export const getNotificationRoute = (type, referenceId) => {
     case 4: return '/curriculum';
     case 5: return `/hymn-lessons/${referenceId}`;
     case 6: return '/profile';
+    case 7: return '/pending-approvals';
+    case 8: return '/hymn-submissions';
+    case 9: return '/feedback';
     default: return '/dashboard';
   }
 };
@@ -23,6 +27,9 @@ export const NOTIFICATION_ICONS = {
   4: 'import_contacts', // CurriculumPublished
   5: 'music_note',      // HymnLessonPublished
   6: 'payments',        // PaymentRecorded
+  7: 'person_add',      // NewSelfRegistration
+  8: 'graphic_eq',      // NewHymnSubmission
+  9: 'forum',           // NewFeedback
 };
 
 // Maps an admin dynamic action-item key to the management page that resolves it,

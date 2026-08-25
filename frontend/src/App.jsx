@@ -36,6 +36,7 @@ import HomeworkManagementScreen from './pages/HomeworkManagementScreen';
 import StudentHomeworkListScreen from './pages/StudentHomeworkListScreen';
 import StudentHomeworkDetailScreen from './pages/StudentHomeworkDetailScreen';
 import NotificationsScreen from './pages/NotificationsScreen';
+import PublicFeedbackScreen from './pages/PublicFeedbackScreen';
 import LandingPage from './pages/LandingPage';
 import StudentPerformanceScreen from './pages/StudentPerformanceScreen';
 import CurriculumBrowserPage from './pages/CurriculumBrowserPage';
@@ -94,6 +95,7 @@ function AppRoutes() {
                 <Route path="/class-distribution" element={<ProtectedRoute adminOnly><ClassDistributionScreen /></ProtectedRoute>} />
                 <Route path="/hymn-submissions" element={<ProtectedRoute adminOnly><HymnSubmissionsScreen /></ProtectedRoute>} />
                 <Route path="/homework-management" element={<ProtectedRoute adminOnly><HomeworkManagementScreen /></ProtectedRoute>} />
+                <Route path="/feedback" element={<ProtectedRoute adminOnly><PublicFeedbackScreen /></ProtectedRoute>} />
 
                 {/* Shared — genuinely render for both roles */}
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />

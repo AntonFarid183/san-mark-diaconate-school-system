@@ -13,12 +13,14 @@ namespace DiaconateSchool.Application.Services;
 public class HymnSubmissionService : IHymnSubmissionService
 {
     private readonly IHymnSubmissionRepository _repo;
+    private readonly IStudentRepository _studentRepo;
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _uow;
 
-    public HymnSubmissionService(IHymnSubmissionRepository repo, INotificationService notificationService, IUnitOfWork uow)
+    public HymnSubmissionService(IHymnSubmissionRepository repo, IStudentRepository studentRepo, INotificationService notificationService, IUnitOfWork uow)
     {
         _repo = repo;
+        _studentRepo = studentRepo;
         _notificationService = notificationService;
         _uow = uow;
     }
@@ -53,6 +55,7 @@ public class HymnSubmissionService : IHymnSubmissionService
             existing.ReviewedByUserId = null;
 
             await _uow.SaveChangesAsync();
+            await NotifyAdminsOfSubmissionAsync(existing.Id, studentId, existing.HymnLesson.Title);
             return (true, null, Map(existing));
         }
 
@@ -71,7 +74,17 @@ public class HymnSubmissionService : IHymnSubmissionService
         await _uow.SaveChangesAsync();
 
         var saved = await _repo.GetByStudentAndLessonAsync(studentId, hymnLessonId);
+        await NotifyAdminsOfSubmissionAsync(saved!.Id, studentId, saved!.HymnLesson.Title);
         return (true, null, Map(saved!));
+    }
+
+    private async Task NotifyAdminsOfSubmissionAsync(Guid submissionId, Guid studentId, string hymnTitle)
+    {
+        var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
+        if (student == null) return;
+
+        var studentName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim();
+        await _notificationService.NotifyAdminsNewHymnSubmissionAsync(submissionId, studentName, hymnTitle);
     }
 
     public async Task<List<HymnSubmissionRosterItemDto>> GetRosterAsync(Guid hymnLessonId, Guid gradeId, Guid? classId)

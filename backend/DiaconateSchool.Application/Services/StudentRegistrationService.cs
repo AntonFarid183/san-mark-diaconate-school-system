@@ -144,9 +144,13 @@ public class StudentRegistrationService : IStudentRegistrationService
         await _uow.SaveChangesAsync();
 
         // A self-registered student starts Suspended (pending review) — nothing to
-        // notify yet. An admin-registered student is Active immediately, so they
-        // need to know now, same as the pending-approvals activation flow.
-        if (!dto.SelfRegistered)
+        // notify the student yet, but the admin needs to know a new request came in
+        // instead of only ever seeing it as a live pending-approvals count.
+        // An admin-registered student is Active immediately, so the student is
+        // told now, same as the pending-approvals activation flow.
+        if (dto.SelfRegistered)
+            await _notificationService.NotifyAdminsNewSelfRegistrationAsync(studentId, $"{dto.FirstName} {dto.SecondName} {dto.ThirdName} {dto.LastName}".Trim());
+        else
             await _notificationService.NotifyAccountActivatedAsync(userId, remainingBalance > 0 ? remainingBalance : null, accountDescription);
 
         return new RegistrationResultDto

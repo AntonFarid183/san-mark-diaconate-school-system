@@ -16,6 +16,7 @@ public class NotificationService : INotificationService
 
     private readonly INotificationRepository _repo;
     private readonly IStudentRepository _studentRepo;
+    private readonly IUserRepository _userRepo;
     private readonly IHymnSubmissionRepository _hymnSubmissionRepo;
     private readonly IPaymentRepository _paymentRepo;
     private readonly IHomeworkRepository _homeworkRepo;
@@ -25,6 +26,7 @@ public class NotificationService : INotificationService
     public NotificationService(
         INotificationRepository repo,
         IStudentRepository studentRepo,
+        IUserRepository userRepo,
         IHymnSubmissionRepository hymnSubmissionRepo,
         IPaymentRepository paymentRepo,
         IHomeworkRepository homeworkRepo,
@@ -33,6 +35,7 @@ public class NotificationService : INotificationService
     {
         _repo = repo;
         _studentRepo = studentRepo;
+        _userRepo = userRepo;
         _hymnSubmissionRepo = hymnSubmissionRepo;
         _paymentRepo = paymentRepo;
         _homeworkRepo = homeworkRepo;
@@ -42,7 +45,7 @@ public class NotificationService : INotificationService
 
     // ── Summaries ────────────────────────────────────────────────────────
 
-    public async Task<NotificationSummaryDto> GetAdminSummaryAsync()
+    public async Task<NotificationSummaryDto> GetAdminSummaryAsync(Guid adminUserId)
     {
         var dynamicItems = new List<DynamicNotificationDto>();
 
@@ -134,7 +137,18 @@ public class NotificationService : INotificationService
             dynamicItems.Add(new DynamicNotificationDto { Key = "open-attendance-sessions", Title = "جلسات حضور مفتوحة لم تُغلق", Count = openSessions, Filters = filters });
         }
 
-        return new NotificationSummaryDto { DynamicItems = dynamicItems };
+        // Persistent, per-event admin notifications (new self-registration, new hymn
+        // submission, new homework submission, new feedback) — same bell/history
+        // surface a student gets, so the dynamic action counts aren't the only view.
+        var recent = await _repo.GetForUserAsync(adminUserId, null, 1, PreviewCount);
+        var unreadCount = await _repo.GetCountForUserAsync(adminUserId, false);
+
+        return new NotificationSummaryDto
+        {
+            DynamicItems = dynamicItems,
+            RecentPersistent = recent.Select(Map).ToList(),
+            UnreadPersistentCount = unreadCount
+        };
     }
 
     public async Task<NotificationSummaryDto> GetStudentSummaryAsync(Guid studentId, Guid userId)
@@ -332,6 +346,35 @@ public class NotificationService : INotificationService
             Title = "درس لحن جديد",
             Message = title,
             ReferenceId = hymnLessonId,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _repo.AddRangeAsync(notifications);
+        await _uow.SaveChangesAsync();
+    }
+
+    public Task NotifyAdminsNewSelfRegistrationAsync(Guid studentId, string studentName) =>
+        BroadcastToAdminsAsync(NotificationType.NewSelfRegistration, "طلب تسجيل جديد", $"{studentName} سجّل نفسه وبانتظار موافقتك على قبوله.", studentId);
+
+    public Task NotifyAdminsNewHymnSubmissionAsync(Guid submissionId, string studentName, string hymnTitle) =>
+        BroadcastToAdminsAsync(NotificationType.NewHymnSubmission, "تسجيل لحن جديد بانتظار المراجعة", $"{studentName} — {hymnTitle}", submissionId);
+
+    public Task NotifyAdminsNewFeedbackAsync(Guid feedbackId, string senderName) =>
+        BroadcastToAdminsAsync(NotificationType.NewFeedback, "اقتراح أو تعليق جديد", $"وصل اقتراح جديد من {senderName}.", feedbackId);
+
+    private async Task BroadcastToAdminsAsync(NotificationType type, string title, string message, Guid? referenceId)
+    {
+        var adminIds = await _userRepo.GetAdminUserIdsAsync();
+        if (adminIds.Count == 0) return;
+
+        var notifications = adminIds.Select(id => new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = id,
+            Type = type,
+            Title = title,
+            Message = message,
+            ReferenceId = referenceId,
             CreatedAt = DateTime.UtcNow
         });
 

@@ -22,4 +22,12 @@ public class PublicFeedbackController : ControllerBase
         await _service.SubmitAsync(dto);
         return Ok(new { Message = "تم إرسال رسالتك بنجاح." });
     }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var items = await _service.GetAllAsync();
+        return Ok(items);
+    }
 }

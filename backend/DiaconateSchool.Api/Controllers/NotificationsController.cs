@@ -30,7 +30,7 @@ public class NotificationsController : ControllerBase
     public async Task<IActionResult> GetSummary()
     {
         if (IsAdmin())
-            return Ok(await _service.GetAdminSummaryAsync());
+            return Ok(await _service.GetAdminSummaryAsync(GetUserId()));
 
         var student = await _studentRepo.GetByUserIdAsync(GetUserId());
         if (student == null) return Ok(new { dynamicItems = Array.Empty<object>(), recentPersistent = Array.Empty<object>(), unreadPersistentCount = 0 });

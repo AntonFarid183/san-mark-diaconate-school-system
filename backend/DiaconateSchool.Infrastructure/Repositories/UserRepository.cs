@@ -1,8 +1,11 @@
 using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
+using DiaconateSchool.Domain.Enums;
 using DiaconateSchool.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DiaconateSchool.Infrastructure.Repositories;
@@ -39,5 +42,13 @@ public class UserRepository : IUserRepository
     {
         _context.Users.Update(user);
         return Task.CompletedTask;
+    }
+
+    public async Task<List<Guid>> GetAdminUserIdsAsync()
+    {
+        return await _context.Users
+            .Where(u => u.Role == Role.Admin && u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync();
     }
 }

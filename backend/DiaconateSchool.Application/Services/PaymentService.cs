@@ -14,12 +14,14 @@ public class PaymentService : IPaymentService
     private readonly IPaymentRepository _repo;
     private readonly IStudentRepository _studentRepo;
     private readonly IUnitOfWork _uow;
+    private readonly INotificationService _notificationService;
 
-    public PaymentService(IPaymentRepository repo, IStudentRepository studentRepo, IUnitOfWork uow)
+    public PaymentService(IPaymentRepository repo, IStudentRepository studentRepo, IUnitOfWork uow, INotificationService notificationService)
     {
         _repo = repo;
         _studentRepo = studentRepo;
         _uow = uow;
+        _notificationService = notificationService;
     }
 
     public async Task<(bool Success, string? Error, StudentAccountDto? Result)> GetAccountAsync(Guid studentId)
@@ -99,7 +101,16 @@ public class PaymentService : IPaymentService
 
         // Re-fetch to include the new transaction with navigation properties
         var refreshed = await _repo.GetAccountByStudentIdAsync(studentId);
-        return (true, null, Map(refreshed!));
+        var mapped = Map(refreshed!);
+
+        var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
+        if (student != null)
+        {
+            await _notificationService.NotifyPaymentRecordedAsync(
+                student.UserId, dto.Amount, dto.Kind, mapped.RemainingBalance, refreshed!.Description);
+        }
+
+        return (true, null, mapped);
     }
 
     public async Task<(bool Success, string? Error, StudentAccountDto? Result)> UpdateTransactionAsync(

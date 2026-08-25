@@ -263,6 +263,28 @@ public class NotificationService : INotificationService
         await _uow.SaveChangesAsync();
     }
 
+    public async Task NotifyPaymentRecordedAsync(Guid studentUserId, decimal amount, PaymentTransactionKind kind, decimal remainingBalance, string? accountDescription)
+    {
+        var desc = string.IsNullOrWhiteSpace(accountDescription) ? "" : $" ({accountDescription})";
+        var action = kind == PaymentTransactionKind.Discount ? "تسجيل خصم" : "تسجيل دفعة";
+        var message = $"تم {action} بقيمة {amount:N0} ج.م{desc}.";
+        message += remainingBalance > 0
+            ? $" المتبقي عليك: {remainingBalance:N0} ج.م."
+            : " تم سداد المبلغ بالكامل.";
+
+        await _repo.AddAsync(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = studentUserId,
+            Type = NotificationType.PaymentRecorded,
+            Title = kind == PaymentTransactionKind.Discount ? "تم تسجيل خصم على حسابك" : "تم تسجيل دفعة على حسابك",
+            Message = message,
+            ReferenceId = null,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _uow.SaveChangesAsync();
+    }
+
     public async Task NotifyAnnouncementPostedAsync(Guid announcementId, Guid? targetStageId, string title)
     {
         var students = await _studentRepo.GetActiveStudentsForNotificationAsync(targetStageId, null);

@@ -172,7 +172,8 @@ public enum NotificationType
     HymnReviewed = 2,
     AnnouncementPosted = 3,
     CurriculumPublished = 4,
-    HymnLessonPublished = 5
+    HymnLessonPublished = 5,
+    PaymentRecorded = 6
 }
 
 // Separates real money from waived money on the ledger. Both settle a student's

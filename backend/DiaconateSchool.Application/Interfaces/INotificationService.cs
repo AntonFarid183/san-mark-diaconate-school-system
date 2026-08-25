@@ -1,4 +1,5 @@
 using DiaconateSchool.Application.DTOs;
+using DiaconateSchool.Domain.Enums;
 using System;
 using System.Threading.Tasks;
 
@@ -23,4 +24,9 @@ public interface INotificationService
     Task NotifyAnnouncementPostedAsync(Guid announcementId, Guid? targetStageId, string title);
     Task NotifyCurriculumPublishedAsync(Guid curriculumId, Guid stageId, Guid? gradeId, string title);
     Task NotifyHymnLessonPublishedAsync(Guid hymnLessonId, Guid stageId, Guid? gradeId, string title);
+
+    // Fires whenever a Payment or Discount transaction is recorded against a
+    // student's account — the counterpart to NotifyAccountActivatedAsync's
+    // "you owe X" message, telling them what just got settled instead.
+    Task NotifyPaymentRecordedAsync(Guid studentUserId, decimal amount, PaymentTransactionKind kind, decimal remainingBalance, string? accountDescription);
 }

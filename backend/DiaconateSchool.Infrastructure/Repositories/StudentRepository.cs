@@ -142,12 +142,14 @@ public class StudentRepository : IStudentRepository
             .ToListAsync();
     }
 
-    // Fan-out target list for notifications: by grade, by stage, or everyone (both null)
+    // Fan-out target list for notifications: by grade, by stage, or everyone (both null).
+    // Gated on StudentStatus.Active, not just User.IsActive — a suspended/withdrawn/
+    // transferred student can still have an active login and must not be broadcast to.
     public async Task<List<Student>> GetActiveStudentsForNotificationAsync(Guid? stageId, Guid? gradeId)
     {
         var query = _context.Students
             .Include(s => s.User)
-            .Where(s => s.User.IsActive)
+            .Where(s => s.User.IsActive && s.Status == StudentStatus.Active)
             .AsQueryable();
 
         if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);

@@ -12,9 +12,11 @@ public class LocalFileStorageService : IFileStorageService
 
     public LocalFileStorageService(IConfiguration configuration)
     {
-        var contentRoot = configuration["ContentRoot"]
-            ?? AppContext.BaseDirectory;
-        _basePath = Path.Combine(contentRoot, "uploads");
+        // UploadsPath is resolved once during startup (see Program.cs) to keep the
+        // write location and the /uploads static-file route in sync. The fallback
+        // only applies to hosts that never ran that startup code, e.g. tests.
+        _basePath = configuration["UploadsPath"]
+            ?? Path.Combine(AppContext.BaseDirectory, "uploads");
         Directory.CreateDirectory(_basePath);
     }
 

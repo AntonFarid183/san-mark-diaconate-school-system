@@ -14,8 +14,21 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Inject content root so LocalFileStorageService can resolve upload path
-builder.Configuration["ContentRoot"] = builder.Environment.ContentRootPath;
+// Uploaded files must NOT live inside the deployable folder. On App Service a
+// deploy replaces /home/site/wwwroot wholesale, so an uploads/ directory
+// underneath it is one deploy away from being erased. /home itself is a
+// persistent share, so production sets UploadsPath=/home/data/uploads, which
+// survives both deploys and restarts.
+//
+// Resolved once, here, and written back into configuration so the storage
+// service (which writes files) and the /uploads static-file route (which serves
+// them) read the same value and cannot drift apart. Left unset -- local dev --
+// it falls back to the original {ContentRoot}/uploads, so nothing changes there.
+var legacyUploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+var configuredUploadsPath = builder.Configuration["UploadsPath"];
+var uploadsPath = Path.GetFullPath(
+    string.IsNullOrWhiteSpace(configuredUploadsPath) ? legacyUploadsPath : configuredUploadsPath);
+builder.Configuration["UploadsPath"] = uploadsPath;
 
 // 1. Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -157,14 +170,20 @@ app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 app.UseStaticFiles();
 
-// Serve uploaded files from {ContentRoot}/uploads/ at /uploads/
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+// Serve uploaded files from the resolved uploads root (see the top of this file)
+// at /uploads/. Stored URLs stay "/uploads/{category}/{name}", so moving the
+// physical directory does not invalidate anything already in the database.
 Directory.CreateDirectory(uploadsPath);
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
+
+// Rescues files still sitting in the pre-fix location inside the deployable
+// folder. No-op once they have been copied, and a no-op locally where both
+// paths are the same.
+UploadsLocationMigrator.MigrateLegacyUploads(legacyUploadsPath, uploadsPath, app.Logger);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

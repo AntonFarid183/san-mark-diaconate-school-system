@@ -30,6 +30,17 @@ var uploadsPath = Path.GetFullPath(
     string.IsNullOrWhiteSpace(configuredUploadsPath) ? legacyUploadsPath : configuredUploadsPath);
 builder.Configuration["UploadsPath"] = uploadsPath;
 
+// Marker recording which schema was last applied (see DbInitializer). It must
+// survive restarts, so it sits on the same persistent storage as the uploads --
+// but one level up, since everything under uploadsPath is served publicly at
+// /uploads. Derived rather than configured so production needs no extra setting.
+var migrationStatePath = builder.Configuration["MigrationStatePath"];
+if (string.IsNullOrWhiteSpace(migrationStatePath))
+{
+    var persistentRoot = Directory.GetParent(uploadsPath)?.FullName ?? uploadsPath;
+    migrationStatePath = Path.Combine(persistentRoot, ".migrations-applied");
+}
+
 // 1. Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -196,12 +207,19 @@ app.MapControllers();
 // need well over ten times that).
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 
+// Migrations and seeding run only when the compiled schema differs from what was
+// last applied, so an ordinary restart does not wake the serverless database.
+// Set ForceMigrationsOnStartup=true for one boot to override the marker.
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     var hasher = services.GetRequiredService<IPasswordHasher>();
-    await DbInitializer.SeedAsync(context, hasher);
+    var forceMigrations = string.Equals(
+        builder.Configuration["ForceMigrationsOnStartup"], "true", StringComparison.OrdinalIgnoreCase);
+
+    await DbInitializer.SeedIfSchemaChangedAsync(
+        context, hasher, migrationStatePath, forceMigrations, app.Logger);
 }
 
 app.Run();

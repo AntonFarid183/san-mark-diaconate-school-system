@@ -2,6 +2,7 @@ using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DiaconateSchool.Infrastructure.Data;
 
@@ -100,5 +101,88 @@ public static class DbInitializer
 
         await context.Grades.AddRangeAsync(grades);
         await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Applies migrations and seeds, but only when the schema the compiled code
+    /// expects differs from what was last applied.
+    ///
+    /// Why this gate exists: the App Service Free plan has no "Always On", so the
+    /// process is unloaded and restarted repeatedly through the day. MigrateAsync
+    /// plus the seed's existence checks are several queries, and any one of them
+    /// wakes the serverless database -- which then stays billable for its entire
+    /// auto-pause delay. Restarts alone can therefore burn through the free
+    /// database allowance while nobody is using the site at all. With the gate
+    /// closed, a normal restart never contacts the database.
+    ///
+    /// The marker is a small file on persistent storage holding a fingerprint of
+    /// the migrations compiled into this build. A matching fingerprint means the
+    /// schema is already current. A missing or differing marker -- fresh database,
+    /// a deployment that added a migration, or wiped storage -- opens the gate.
+    /// Both MigrateAsync and the seed are idempotent, so opening the gate
+    /// unnecessarily is safe; it just is not free.
+    ///
+    /// If the schema is ever changed out of band and the marker goes stale, set
+    /// ForceMigrationsOnStartup=true for one boot to force a full check.
+    /// </summary>
+    public static async Task SeedIfSchemaChangedAsync(
+        ApplicationDbContext context,
+        IPasswordHasher passwordHasher,
+        string markerPath,
+        bool force,
+        ILogger logger)
+    {
+        // Reads the migrations compiled into the assembly. Unlike
+        // GetAppliedMigrationsAsync, this does not contact the database.
+        var migrations = context.Database.GetMigrations().ToList();
+        var fingerprint = $"{migrations.Count}:{migrations.LastOrDefault() ?? "none"}";
+
+        if (!force && ReadMarker(markerPath) == fingerprint)
+        {
+            logger.LogInformation(
+                "Database schema already at {Fingerprint}. Skipping migration and seed, so this restart does not wake the database.",
+                fingerprint);
+            return;
+        }
+
+        logger.LogInformation(
+            "Schema fingerprint is {Fingerprint}{Forced}. Applying migrations and seed.",
+            fingerprint, force ? " (forced)" : "");
+
+        await SeedAsync(context, passwordHasher);
+        WriteMarker(markerPath, fingerprint, logger);
+    }
+
+    /// <summary>An unreadable marker is treated as a missing one: check again rather than assume.</summary>
+    private static string? ReadMarker(string path)
+    {
+        try
+        {
+            return File.Exists(path) ? File.ReadAllText(path).Trim() : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void WriteMarker(string path, string fingerprint, ILogger logger)
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllText(path, fingerprint);
+        }
+        catch (Exception ex)
+        {
+            // Not fatal: without a marker the next start simply re-checks, which
+            // costs one database wake rather than breaking anything.
+            logger.LogWarning(ex,
+                "Could not write the migration marker to {Path}. Migrations will be re-checked on the next start.",
+                path);
+        }
     }
 }

@@ -429,3 +429,7 @@ backend.err
 
 # Uploads
 backend/DiaconateSchool.Api/uploads/
+
+# Records which schema was last applied so ordinary restarts skip the migration
+# check (see DbInitializer.SeedIfSchemaChangedAsync). Local runtime state.
+.migrations-applied

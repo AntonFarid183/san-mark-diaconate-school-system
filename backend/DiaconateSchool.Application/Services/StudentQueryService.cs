@@ -144,6 +144,25 @@ public class StudentQueryService : IStudentQueryService
         return true;
     }
 
+    // Same 6-digit format as the temporary password issued at registration
+    // (StudentRegistrationService.GenerateRandomPassword) -- for when an admin
+    // forgot to hand a student their login and needs a fresh one to give them,
+    // without having to think one up themselves. Returned once, plaintext;
+    // only the hash is ever persisted.
+    public async Task<string?> RegeneratePasswordAsync(Guid studentId)
+    {
+        var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
+        if (student == null) return null;
+
+        var newPassword = Random.Shared.Next(100000, 999999).ToString();
+        student.User.PasswordHash = _hasher.HashPassword(newPassword);
+        student.User.UpdatedAt = DateTime.UtcNow;
+
+        await _userRepo.UpdateAsync(student.User);
+        await _uow.SaveChangesAsync();
+        return newPassword;
+    }
+
     public async Task<IEnumerable<object>> GetAllGradesAsync()
     {
         var grades = await _studentRepo.GetAllGradesAsync();

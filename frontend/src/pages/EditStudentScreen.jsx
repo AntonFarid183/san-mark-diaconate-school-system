@@ -60,6 +60,7 @@ const EditStudentScreen = () => {
   const [saving, setSaving] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
 
   useEffect(() => {
     const loadStudent = async () => {
@@ -118,6 +119,18 @@ const EditStudentScreen = () => {
     }
   };
 
+  // For "I forgot to give the student their login at registration" -- generates a
+  // fresh one instead of making the admin think one up. Shown once; it isn't stored
+  // anywhere retrievable after this, so the admin needs to copy/write it down now.
+  const regeneratePassword = async () => {
+    try {
+      const res = await apiClient.post(`/students/${id}/regenerate-password`);
+      setGeneratedPassword(res.data.newPassword);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل توليد كلمة مرور جديدة.' });
+    }
+  };
+
   const resetPassword = async () => {
     if (newPassword.length < 8) { setMsg({ type: 'error', text: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.' }); return; }
     try {
@@ -169,12 +182,12 @@ const EditStudentScreen = () => {
           </div>
 
           <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>البيانات الشخصية</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
             {PERSONAL_FIELDS.map(renderField)}
           </div>
 
           <h3 style={{ color: 'var(--accent-gold)', margin: '1.5rem 0 1rem' }}>معلومات التواصل</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
             {CONTACT_FIELDS.map(renderField)}
           </div>
 
@@ -192,6 +205,10 @@ const EditStudentScreen = () => {
               <button onClick={() => setShowReset(true)} style={resetPasswordButtonStyle}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>lock_reset</span>
                 إعادة تعيين كلمة المرور
+              </button>
+              <button onClick={regeneratePassword} style={resetPasswordButtonStyle}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>autorenew</span>
+                توليد كلمة مرور جديدة (نسيت إعطاء الطالب بياناته)
               </button>
             </div>
           </div>
@@ -217,6 +234,27 @@ const EditStudentScreen = () => {
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
               <button className="btn-primary" style={{ flex: 1 }} onClick={resetPassword} disabled={newPassword.length < 8}>تعيين</button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowReset(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {generatedPassword && (
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '400px', direction: 'rtl', textAlign: 'center' }}>
+            <h3 style={{ color: 'var(--accent-gold)', marginBottom: '0.5rem' }}>كلمة المرور الجديدة</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              انسخها الآن أو اكتبها للطالب — لن تظهر مرة أخرى بعد إغلاق هذه النافذة.
+            </p>
+            <div style={{ fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.15em', direction: 'ltr', padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)', color: 'var(--accent-gold)', marginBottom: '1.5rem' }}>
+              {generatedPassword}
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-primary" style={{ flex: 1 }} onClick={() => {
+                navigator.clipboard?.writeText(generatedPassword);
+                setMsg({ type: 'success', text: 'تم نسخ كلمة المرور.' });
+              }}>نسخ</button>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setGeneratedPassword('')}>تم</button>
             </div>
           </div>
         </div>

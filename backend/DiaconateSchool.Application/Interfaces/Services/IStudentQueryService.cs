@@ -15,6 +15,7 @@ public interface IStudentQueryService
     Task<StudentDetailDto?> GetStudentByUserIdAsync(Guid userId);
     Task<StudentDetailDto?> UpdateStudentAsync(Guid id, UpdateStudentDto dto);
     Task<bool> ResetPasswordAsync(Guid studentId, string newPassword);
+    Task<string?> RegeneratePasswordAsync(Guid studentId);
     Task<bool> SetActiveStatusAsync(Guid studentId, bool isActive, bool withFees = false, decimal? paidAmount = null, Guid? recordedByUserId = null, bool isExempt = false, decimal? amountDue = null);
     Task<(bool Success, string? Error)> SetStudentsLevelAsync(List<Guid> studentIds, StudentLevel level);
     Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter);

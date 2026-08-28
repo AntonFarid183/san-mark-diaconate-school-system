@@ -239,6 +239,23 @@ public class StudentsController : ControllerBase
         return Ok(new { Message = "تم إعادة تعيين كلمة المرور." });
     }
 
+    // Generates a fresh password instead of requiring the admin to type one --
+    // for "I forgot to give the student their login at registration" recovery.
+    // Returns the plaintext once; it is never stored or retrievable again after this.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/regenerate-password")]
+    public async Task<IActionResult> RegeneratePassword(string id)
+    {
+        if (!Guid.TryParse(id, out var parsedId))
+            return BadRequest(new { Message = "Invalid student ID format." });
+
+        var newPassword = await _queryService.RegeneratePasswordAsync(parsedId);
+        if (newPassword == null)
+            return NotFound(new { Message = "Student not found." });
+
+        return Ok(new { NewPassword = newPassword });
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{id}/deactivate")]
     public async Task<IActionResult> Deactivate(string id)

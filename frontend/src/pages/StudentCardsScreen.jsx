@@ -281,7 +281,7 @@ const StudentCardsScreen = () => {
           <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>لا يوجد طلاب مطابقين لهذا الفلتر</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: '1.25rem' }}>
           {students.map(s => (
             <div key={s.id} className="glass-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', fontSize: '0.8rem', cursor: 'pointer' }}>

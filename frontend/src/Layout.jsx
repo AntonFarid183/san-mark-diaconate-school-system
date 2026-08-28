@@ -9,6 +9,23 @@ import { PageTitleProvider } from './context/PageTitleContext';
 
 const COLLAPSED_WIDTH = '64px';
 const EXPANDED_WIDTH = '260px';
+const MOBILE_BREAKPOINT = 860; // below this the sidebar becomes an off-canvas drawer for every role
+
+// Tracks whether the viewport is narrow enough to need the drawer sidebar,
+// kept in one hook so it's a single source of truth for both the sidebar
+// itself and the main-content margin/padding that has to match it.
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+};
 
 const NavButton = ({ icon, label, isActive, open, onClick, indent = false, badge }) => (
   <button
@@ -139,6 +156,10 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(true);
+  const isMobile = useIsMobile();
+  // Separate from `open` (which controls the desktop icon-strip collapse):
+  // on mobile the sidebar is off-canvas entirely, shown/hidden by this instead.
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [gradesOpen, setGradesOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [grades, setGrades] = useState([]);
@@ -147,9 +168,20 @@ const Layout = () => {
 
   const roleLabels = { Admin: 'مدير النظام', Student: 'طالب' };
   const isStudent = user?.role === 'Student';
-  // Students always see the full sidebar — collapsing to a bare icon strip
-  // adds a decision a young student shouldn't have to make.
+  // Students always see the full sidebar on desktop — collapsing to a bare icon
+  // strip adds a decision a young student shouldn't have to make. On mobile this
+  // distinction doesn't apply: the sidebar is off-canvas for every role instead.
   const sidebarWidth = isStudent ? EXPANDED_WIDTH : (open ? EXPANDED_WIDTH : COLLAPSED_WIDTH);
+  // The mobile drawer is always full-width when shown, so nav items should
+  // render "expanded" (labels visible, not just icons) regardless of the
+  // desktop icon-strip collapse state.
+  const navOpen = isMobile || open;
+
+  // Auto-close the mobile drawer on every navigation, so tapping a link doesn't
+  // leave the drawer covering the page it just navigated to.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // All stages — same order as registration form
   const ALL_STAGES = [
@@ -269,9 +301,23 @@ const Layout = () => {
           (see .app-backdrop) rather than just hidden under a heavy wash. */}
       <div className="app-backdrop" aria-hidden="true" />
 
-      {/* Sidebar */}
+      {/* Backdrop behind the mobile drawer — tapping it closes the sidebar,
+          same as tapping outside any off-canvas panel. Desktop never renders it. */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }}
+        />
+      )}
+
+      {/* Sidebar — on mobile this is always full EXPANDED_WIDTH but slides
+          off-canvas (translateX) when closed, instead of the desktop
+          collapse-to-icon-strip behavior, so every role gets the same
+          full-width, easy-to-read drawer regardless of the admin/student split. */}
       <aside style={{
-        width: sidebarWidth,
+        width: isMobile ? EXPANDED_WIDTH : sidebarWidth,
+        maxWidth: isMobile ? '85vw' : undefined,
         background: 'var(--app-sidebar-bg)',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         borderLeft: '1px solid var(--gold-tint)',
@@ -280,22 +326,26 @@ const Layout = () => {
         position: 'fixed', top: 0, right: 0,
         height: '100vh', zIndex: 100,
         overflowY: 'auto', overflowX: 'hidden',
-        transition: 'width 0.25s ease',
+        transform: isMobile ? `translateX(${mobileOpen ? '0' : '100%'})` : 'none',
+        transition: isMobile ? 'transform 0.25s ease' : 'width 0.25s ease',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
           {/* Logo */}
           <div style={{ borderBottom: '1px solid var(--surface-2)', position: 'relative' }}>
-            {!isStudent && (
-              <button onClick={() => setOpen(o => !o)} className="tap-target" style={{ position: 'absolute', top: '0.75rem', left: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
+            {/* On mobile this is a close (X) button, shown for every role since the
+                drawer covers the whole page. On desktop it's the existing
+                collapse-to-icon-strip toggle, still hidden for students. */}
+            {(isMobile || !isStudent) && (
+              <button onClick={() => isMobile ? setMobileOpen(false) : setOpen(o => !o)} className="tap-target" style={{ position: 'absolute', top: '0.75rem', left: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-gold)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>{open ? 'menu_open' : 'menu'}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isMobile ? 'close' : (open ? 'menu_open' : 'menu')}</span>
               </button>
             )}
-            <div onClick={() => navigate('/dashboard')} style={{ padding: open ? '1.25rem 1rem' : '1rem 0', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <ChurchLogo size={open ? 52 : 36} />
-              {open && (
+            <div onClick={() => navigate('/dashboard')} style={{ padding: navOpen ? '1.25rem 1rem' : '1rem 0', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <ChurchLogo size={navOpen ? 52 : 36} />
+              {navOpen && (
                 <>
                   <h2 style={{ color: 'var(--accent-gold)', marginTop: '0.4rem', fontSize: '0.88rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h2>
                   <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
@@ -305,14 +355,14 @@ const Layout = () => {
           </div>
 
           {/* Nav */}
-          <nav aria-label={isStudent ? 'التنقل الرئيسي للطالب' : 'التنقل الرئيسي'} style={{ flex: 1, padding: isStudent ? '1rem 0.85rem' : (open ? '1rem' : '0.75rem 0.5rem'), display: 'flex', flexDirection: 'column', gap: isStudent ? 0 : '0.25rem' }}>
+          <nav aria-label={isStudent ? 'التنقل الرئيسي للطالب' : 'التنقل الرئيسي'} style={{ flex: 1, padding: isStudent ? '1rem 0.85rem' : (navOpen ? '1rem' : '0.75rem 0.5rem'), display: 'flex', flexDirection: 'column', gap: isStudent ? 0 : '0.25rem' }}>
 
             {isStudent && (
               <StudentNavButton icon="home" label="الرئيسية" color={STUDENT_COLORS.home} isActive={location.pathname === '/dashboard'} onClick={() => navigate('/dashboard')} />
             )}
 
             {!isStudent && (
-              <NavButton icon="dashboard" label="لوحة التحكم" isActive={location.pathname === '/dashboard'} open={open} onClick={() => navigate('/dashboard')} />
+              <NavButton icon="dashboard" label="لوحة التحكم" isActive={location.pathname === '/dashboard'} open={navOpen} onClick={() => navigate('/dashboard')} />
             )}
 
             {isStudent ? (
@@ -338,13 +388,13 @@ const Layout = () => {
                 {/* شؤون الطلاب collapsible group */}
                 <div>
                   <button
-                    onClick={() => open && setGradesOpen(o => !o)}
-                    title={!open ? 'شؤون الطلاب' : undefined}
+                    onClick={() => navOpen && setGradesOpen(o => !o)}
+                    title={!navOpen ? 'شؤون الطلاب' : undefined}
                     style={{
                       display: 'flex', alignItems: 'center',
-                      gap: open ? '0.75rem' : '0',
-                      justifyContent: open ? 'flex-start' : 'center',
-                      padding: open ? '0.65rem 1rem' : '0.75rem',
+                      gap: navOpen ? '0.75rem' : '0',
+                      justifyContent: navOpen ? 'flex-start' : 'center',
+                      padding: navOpen ? '0.65rem 1rem' : '0.75rem',
                       borderRadius: 'var(--radius-sm)', border: 'none',
                       background: isStudentsActive ? 'rgba(251,191,36,0.1)' : 'transparent',
                       color: isStudentsActive ? 'var(--accent-gold)' : 'var(--text-secondary)',
@@ -357,16 +407,16 @@ const Layout = () => {
                       <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: '3px', height: '60%', background: 'var(--accent-gold)', borderRadius: '0 3px 3px 0' }} />
                     )}
                     <span className="material-symbols-outlined" style={{ fontSize: '22px', flexShrink: 0 }}>school</span>
-                    {open && <span style={{ flex: 1 }}>شؤون الطلاب</span>}
-                    {open && <span className="material-symbols-outlined" style={{ fontSize: '18px', transition: 'transform 0.2s', transform: gradesOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>chevron_left</span>}
+                    {navOpen && <span style={{ flex: 1 }}>شؤون الطلاب</span>}
+                    {navOpen && <span className="material-symbols-outlined" style={{ fontSize: '18px', transition: 'transform 0.2s', transform: gradesOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>chevron_left</span>}
                   </button>
 
                   {/* Sub-items */}
-                  {open && gradesOpen && (
+                  {navOpen && gradesOpen && (
                     <div style={{ marginTop: '0.15rem', marginBottom: '0.15rem' }}>
                       {/* Fixed links */}
                       {studentItems.map(item => (
-                        <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path && !activeGradeId} open={open} onClick={() => navigate(item.path)} indent />
+                        <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path && !activeGradeId} open={navOpen} onClick={() => navigate(item.path)} indent />
                       ))}
 
                       {/* Stages + grades */}
@@ -388,7 +438,7 @@ const Layout = () => {
                                   icon="class"
                                   label={grade.name}
                                   isActive={activeGradeId === grade.id}
-                                  open={open}
+                                  open={navOpen}
                                   onClick={() => navigate(`/students?gradeId=${grade.id}&gradeName=${encodeURIComponent(grade.name)}`)}
                                   indent
                                 />
@@ -403,7 +453,7 @@ const Layout = () => {
                             icon="class"
                             label={stage.label}
                             isActive={isStageActive}
-                            open={open}
+                            open={navOpen}
                             onClick={() => navigate(`/students?stageId=${stage.id}&gradeName=${encodeURIComponent(stage.label)}`)}
                             indent
                           />
@@ -414,7 +464,7 @@ const Layout = () => {
                 </div>
 
                 {adminItems.map(item => (
-                  <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path} open={open} onClick={() => navigate(item.path)} />
+                  <NavButton key={item.path} icon={item.icon} label={item.label} isActive={location.pathname === item.path} open={navOpen} onClick={() => navigate(item.path)} />
                 ))}
 
                 {navGroups.map(group => (
@@ -424,7 +474,7 @@ const Layout = () => {
                     icon={group.icon}
                     label={group.label}
                     items={group.items}
-                    open={open}
+                    open={navOpen}
                     isActive={group.items.some(i => i.path === location.pathname)}
                     location={location}
                     navigate={navigate}
@@ -437,7 +487,7 @@ const Layout = () => {
           </nav>
 
           {/* Logout */}
-          <div style={{ padding: open ? '1rem' : '0.75rem 0.5rem', borderTop: '1px solid var(--surface-2)' }}>
+          <div style={{ padding: navOpen ? '1rem' : '0.75rem 0.5rem', borderTop: '1px solid var(--surface-2)' }}>
             <button onClick={() => {
               logout();
               // Deferred: logging out flips ProtectedRoute's redirect-to-/login for the
@@ -445,25 +495,37 @@ const Layout = () => {
               // after that settles, ensures landing-page is the final destination.
               setTimeout(() => navigate('/'), 0);
             }}
-              title={!open ? 'تسجيل الخروج' : undefined}
+              title={!navOpen ? 'تسجيل الخروج' : undefined}
               style={{
-                display: 'flex', alignItems: 'center', gap: open ? '0.75rem' : '0',
-                justifyContent: open ? 'flex-start' : 'center',
-                padding: open ? '0.75rem 1rem' : '0.75rem',
+                display: 'flex', alignItems: 'center', gap: navOpen ? '0.75rem' : '0',
+                justifyContent: navOpen ? 'flex-start' : 'center',
+                padding: navOpen ? '0.75rem 1rem' : '0.75rem',
                 borderRadius: 'var(--radius-sm)', border: 'none',
                 background: 'transparent', color: 'var(--danger)',
                 fontFamily: 'inherit', fontSize: '0.93rem', fontWeight: 600,
                 cursor: 'pointer', width: '100%', textAlign: 'right',
               }}>
               <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>logout</span>
-              {open && 'تسجيل الخروج'}
+              {navOpen && 'تسجيل الخروج'}
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main style={{ flex: 1, marginRight: sidebarWidth, padding: '2rem', minHeight: '100vh', transition: 'margin-right 0.25s ease', position: 'relative', zIndex: 1 }}>
+      {/* Main content — full width on mobile regardless of role, since the
+          sidebar is off-canvas there rather than pushing content over. Padding
+          also shrinks on mobile: 2rem on both sides was eating a big chunk of
+          an already-narrow screen for no reason. */}
+      <main style={{
+        flex: 1,
+        marginRight: isMobile ? 0 : sidebarWidth,
+        padding: isMobile ? '1rem' : '2rem',
+        minHeight: '100vh',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        transition: 'margin-right 0.25s ease',
+        position: 'relative', zIndex: 1,
+      }}>
         {isStudent && !hasProfilePhoto && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem',
@@ -476,19 +538,31 @@ const Layout = () => {
             </span>
           </div>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
-          <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.5rem' }}>{title || ''}</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+            {/* The only way to open the drawer on mobile -- the in-sidebar toggle
+                is unreachable while the sidebar itself is off-canvas. Shown for
+                every role, unlike the desktop collapse toggle. */}
+            {isMobile && (
+              <button onClick={() => setMobileOpen(true)} className="tap-target" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>menu</span>
+              </button>
+            )}
+            <h1 style={{ color: 'var(--accent-gold)', fontSize: isMobile ? '1.15rem' : '1.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title || ''}</h1>
+          </div>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <ThemeToggle />
               <NotificationBell />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', background: 'var(--glass-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>account_circle</span>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user.fullName || user.userName}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{roleLabels[user.role] || user.role}</div>
+              {!isMobile && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', background: 'var(--glass-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent-gold)' }}>account_circle</span>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user.fullName || user.userName}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{roleLabels[user.role] || user.role}</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

@@ -27,8 +27,15 @@ const PAL = {
 // "download" requirement without extra tooling. Mirrors StudentIdCard.jsx's
 // markup/design 1:1 — this used to be a separate old placeholder layout that
 // never got updated when the card's visual design landed.
-async function buildCardHtml(student) {
-  const photoUrl = toAbsUrl(student.profilePictureUrl);
+// cacheBust: true (capture path only) appends a unique query param to the
+// photo URL so the very first request the browser makes for it is already
+// distinct from any plain (non-CORS) cached copy the on-screen student grid
+// left behind -- appending it later, after the HTML is already inserted,
+// is too late: the browser starts loading the un-busted src the instant
+// innerHTML is parsed, firing a doomed extra request before any JS runs.
+async function buildCardHtml(student, { cacheBust = false } = {}) {
+  let photoUrl = toAbsUrl(student.profilePictureUrl);
+  if (photoUrl && cacheBust) photoUrl += (photoUrl.includes('?') ? '&' : '?') + '_dl=' + Date.now();
   const qrDataUrl = student.qrToken ? await QRCode.toDataURL(student.qrToken, { width: 200, margin: 0 }) : '';
   const levelText = LEVEL_LABELS[student.level] ?? '—';
   const name = student.fullName || '—';
@@ -232,22 +239,13 @@ function ensureCaptureStyle() {
 // response instead of revalidating with the right headers.
 async function captureCardBlob(student) {
   ensureCaptureStyle();
-  const cardHtml = await buildCardHtml(student);
+  const cardHtml = await buildCardHtml(student, { cacheBust: true });
   const container = document.createElement('div');
   container.className = 'card-capture-scope';
   container.style.cssText = 'position:fixed; left:-99999px; top:0; z-index:-1;';
   container.innerHTML = cardHtml;
   document.body.appendChild(container);
   try {
-    // The photo is very likely already cached plain (no CORS) from the
-    // on-screen student grid rendering the same URL moments earlier --
-    // browsers can reuse that cached response for this crossorigin-mode
-    // request instead of properly revalidating it, which then fails
-    // html2canvas's pixel read even though the crossorigin attribute and
-    // useCORS are both set correctly. A harmless cache-busting query
-    // param forces a distinct, genuinely fresh CORS-mode request.
-    const photoImg = container.querySelector('.photo-frame img');
-    if (photoImg) photoImg.src += (photoImg.src.includes('?') ? '&' : '?') + '_dl=' + Date.now();
     await waitForImages(container);
     const canvas = await html2canvas(container.querySelector('.card'), {
       scale: 3,

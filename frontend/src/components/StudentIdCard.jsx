@@ -45,26 +45,41 @@ const PALETTE = {
   },
 };
 
-// One accent color per stage, replacing gold/goldSoft/goldFaint/panelBorder
-// so cards sort visually by stage at a glance -- the rest of the palette
-// (background, text) stays identical across stages. Same soft/faint/border
-// alpha ratios as the original gold (0.35 / 0.14 / 0.22). Kept in sync by
-// hand with the identical map in StudentCardsScreen.jsx (print/download
-// build the card as a plain HTML string, not through this component).
-const STAGE_ACCENTS = {
-  'طفولة': { gold: '#fb7185', goldSoft: 'rgba(251,113,133,0.35)', goldFaint: 'rgba(251,113,133,0.14)', panelBorder: 'rgba(251,113,133,0.22)' },
-  'ابتدائي': { gold: '#38bdf8', goldSoft: 'rgba(56,189,248,0.35)', goldFaint: 'rgba(56,189,248,0.14)', panelBorder: 'rgba(56,189,248,0.22)' },
-  'إعدادي': { gold: '#34d399', goldSoft: 'rgba(52,211,153,0.35)', goldFaint: 'rgba(52,211,153,0.14)', panelBorder: 'rgba(52,211,153,0.22)' },
-  'ثانوي': { gold: '#a78bfa', goldSoft: 'rgba(167,139,250,0.35)', goldFaint: 'rgba(167,139,250,0.14)', panelBorder: 'rgba(167,139,250,0.22)' },
-  'جامعة': { gold: '#fb923c', goldSoft: 'rgba(251,146,60,0.35)', goldFaint: 'rgba(251,146,60,0.14)', panelBorder: 'rgba(251,146,60,0.22)' },
-  'خريجون': { gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
-  'كبار': { gold: '#f87171', goldSoft: 'rgba(248,113,113,0.35)', goldFaint: 'rgba(248,113,113,0.14)', panelBorder: 'rgba(248,113,113,0.22)' },
+// A full theme (dark tinted background + a brighter accent in the same hue)
+// per grade -- the whole card background changes now, not just the trim.
+// KG1/KG2 and each primary grade (1st-6th) get their own color; إعدادي
+// (Middle) and ثانوي (High) are grouped -- every grade within either stage
+// shares one color rather than splitting further; جامعة (University) and
+// كبار (Adult) each get one too. Same soft/faint/border alpha ratios as the
+// original gold (0.35/0.14/0.22). Kept in sync by hand with the identical
+// map in StudentCardsScreen.jsx (print/download build the card as a plain
+// HTML string, not through this component).
+const GRADE_ACCENTS = {
+  'KG1': { bgFrom: '#2a0f16', bgTo: '#3a1620', gold: '#fb7185', goldSoft: 'rgba(251,113,133,0.35)', goldFaint: 'rgba(251,113,133,0.14)', panelBorder: 'rgba(251,113,133,0.22)' },
+  'KG2': { bgFrom: '#2a1608', bgTo: '#3a1f0e', gold: '#fb923c', goldSoft: 'rgba(251,146,60,0.35)', goldFaint: 'rgba(251,146,60,0.14)', panelBorder: 'rgba(251,146,60,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#241a05', bgTo: '#33260a', gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)', panelBorder: 'rgba(251,191,36,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#16220a', bgTo: '#1e2e10', gold: '#a3e635', goldSoft: 'rgba(163,230,53,0.35)', goldFaint: 'rgba(163,230,53,0.14)', panelBorder: 'rgba(163,230,53,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#06231a', bgTo: '#0a3024', gold: '#34d399', goldSoft: 'rgba(52,211,153,0.35)', goldFaint: 'rgba(52,211,153,0.14)', panelBorder: 'rgba(52,211,153,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#052224', bgTo: '#093034', gold: '#22d3ee', goldSoft: 'rgba(34,211,238,0.35)', goldFaint: 'rgba(34,211,238,0.14)', panelBorder: 'rgba(34,211,238,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0a1a2e', bgTo: '#0f2340', gold: '#38bdf8', goldSoft: 'rgba(56,189,248,0.35)', goldFaint: 'rgba(56,189,248,0.14)', panelBorder: 'rgba(56,189,248,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#180f2e', bgTo: '#221640', gold: '#a78bfa', goldSoft: 'rgba(167,139,250,0.35)', goldFaint: 'rgba(167,139,250,0.14)', panelBorder: 'rgba(167,139,250,0.22)' },
+  'إعدادي': { bgFrom: '#26092a', bgTo: '#341040', gold: '#e879f9', goldSoft: 'rgba(232,121,249,0.35)', goldFaint: 'rgba(232,121,249,0.14)', panelBorder: 'rgba(232,121,249,0.22)' },
+  'ثانوي': { bgFrom: '#2a0a0f', bgTo: '#3a0f16', gold: '#f87171', goldSoft: 'rgba(248,113,113,0.35)', goldFaint: 'rgba(248,113,113,0.14)', panelBorder: 'rgba(248,113,113,0.22)' },
+  'جامعة': { bgFrom: '#10151f', bgTo: '#1a212f', gold: '#94a3b8', goldSoft: 'rgba(148,163,184,0.35)', goldFaint: 'rgba(148,163,184,0.14)', panelBorder: 'rgba(148,163,184,0.22)' },
+  'كبار': { bgFrom: '#1a1712', bgTo: '#262019', gold: '#d4af37', goldSoft: 'rgba(212,175,55,0.35)', goldFaint: 'rgba(212,175,55,0.14)', panelBorder: 'rgba(212,175,55,0.22)' },
 };
+// إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
+// other stage has exactly one grade per student anyway, so keying by grade
+// name works for all of them, including future grades this map hasn't seen.
+function gradeColorKey(student) {
+  if (student?.stageName === 'إعدادي' || student?.stageName === 'ثانوي') return student.stageName;
+  return student?.gradeName || student?.stageName;
+}
 
 export default function StudentIdCard({ student, className = '', theme = 'dark' }) {
   const qrRef = useRef(null);
   const base = theme === 'light' ? PALETTE.light : PALETTE.dark;
-  const p = { ...base, ...STAGE_ACCENTS[student?.stageName] };
+  const p = { ...base, ...GRADE_ACCENTS[gradeColorKey(student)] };
 
   useEffect(() => {
     const canvas = qrRef.current;

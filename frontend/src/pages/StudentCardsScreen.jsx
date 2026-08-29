@@ -13,33 +13,48 @@ const LEVEL_LABELS = { 1: 'المستوى 1', 2: 'المستوى 2' };
 
 // Same dark palette as StudentIdCard.jsx's PALETTE.dark — kept in sync by
 // hand since this build's a plain HTML string for window.print(), not React.
-// gold/goldSoft/goldFaint/panelBorder are the *default* accent (used when a
-// student's stage isn't in STAGE_ACCENTS below) — everything else (the dark
-// navy background, text colors) stays the same across every stage.
+// bgFrom/bgTo/gold/goldSoft/goldFaint/panelBorder are the *default* theme
+// (used when a student's grade/stage isn't in GRADE_ACCENTS below, e.g.
+// خريجون -- graduates weren't given their own color) — text colors and
+// everything else stay the same across every grade.
 const PAL = {
   bgFrom: '#0f172a', bgTo: '#111c34', text: '#f1f5f9', subtext: '#93a1b8',
   gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)',
   panel: 'rgba(255,255,255,0.04)', panelBorder: 'rgba(251,191,36,0.22)', chipBg: 'rgba(255,255,255,0.06)',
 };
 
-// One accent color per stage, replacing the gold trim (border, name-plate
-// gradient, labels) with a stage-specific hue so cards sort visually by
-// stage at a glance -- the dark navy card body stays identical across all
-// of them, only the accent changes. Same soft/faint/border alpha ratios as
-// the original gold (0.35 / 0.14 / 0.22) so contrast stays consistent.
+// A full theme (dark tinted background + a brighter accent in the same hue,
+// for the border/name-plate/glow/footer-rule) per grade -- the whole card
+// background changes now, not just the trim. KG1/KG2 and each primary grade
+// (1st-6th) get their own color; إعدادي (Middle) and ثانوي (High) are
+// grouped -- every grade within either stage shares one color rather than
+// splitting further; جامعة (University) and كبار (Adult) each get one too.
+// Same soft/faint/border alpha ratios as the original gold (0.35/0.14/0.22).
 // Kept in sync by hand with the identical map in StudentIdCard.jsx (same
 // "plain string vs React" reason as the PAL duplication above).
-const STAGE_ACCENTS = {
-  'طفولة': { color: '#fb7185', soft: 'rgba(251,113,133,0.35)', faint: 'rgba(251,113,133,0.14)', border: 'rgba(251,113,133,0.22)' },
-  'ابتدائي': { color: '#38bdf8', soft: 'rgba(56,189,248,0.35)', faint: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.22)' },
-  'إعدادي': { color: '#34d399', soft: 'rgba(52,211,153,0.35)', faint: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.22)' },
-  'ثانوي': { color: '#a78bfa', soft: 'rgba(167,139,250,0.35)', faint: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.22)' },
-  'جامعة': { color: '#fb923c', soft: 'rgba(251,146,60,0.35)', faint: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.22)' },
-  'خريجون': { color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
-  'كبار': { color: '#f87171', soft: 'rgba(248,113,113,0.35)', faint: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.22)' },
+const GRADE_ACCENTS = {
+  'KG1': { bgFrom: '#2a0f16', bgTo: '#3a1620', color: '#fb7185', soft: 'rgba(251,113,133,0.35)', faint: 'rgba(251,113,133,0.14)', border: 'rgba(251,113,133,0.22)' },
+  'KG2': { bgFrom: '#2a1608', bgTo: '#3a1f0e', color: '#fb923c', soft: 'rgba(251,146,60,0.35)', faint: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#241a05', bgTo: '#33260a', color: '#fbbf24', soft: 'rgba(251,191,36,0.35)', faint: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#16220a', bgTo: '#1e2e10', color: '#a3e635', soft: 'rgba(163,230,53,0.35)', faint: 'rgba(163,230,53,0.14)', border: 'rgba(163,230,53,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#06231a', bgTo: '#0a3024', color: '#34d399', soft: 'rgba(52,211,153,0.35)', faint: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#052224', bgTo: '#093034', color: '#22d3ee', soft: 'rgba(34,211,238,0.35)', faint: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0a1a2e', bgTo: '#0f2340', color: '#38bdf8', soft: 'rgba(56,189,248,0.35)', faint: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#180f2e', bgTo: '#221640', color: '#a78bfa', soft: 'rgba(167,139,250,0.35)', faint: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.22)' },
+  'إعدادي': { bgFrom: '#26092a', bgTo: '#341040', color: '#e879f9', soft: 'rgba(232,121,249,0.35)', faint: 'rgba(232,121,249,0.14)', border: 'rgba(232,121,249,0.22)' },
+  'ثانوي': { bgFrom: '#2a0a0f', bgTo: '#3a0f16', color: '#f87171', soft: 'rgba(248,113,113,0.35)', faint: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.22)' },
+  'جامعة': { bgFrom: '#10151f', bgTo: '#1a212f', color: '#94a3b8', soft: 'rgba(148,163,184,0.35)', faint: 'rgba(148,163,184,0.14)', border: 'rgba(148,163,184,0.22)' },
+  'كبار': { bgFrom: '#1a1712', bgTo: '#262019', color: '#d4af37', soft: 'rgba(212,175,55,0.35)', faint: 'rgba(212,175,55,0.14)', border: 'rgba(212,175,55,0.22)' },
 };
-function stageAccent(stageName) {
-  return STAGE_ACCENTS[stageName] || { color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
+// إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
+// other stage has exactly one grade per student anyway, so keying by grade
+// name works for all of them, including future grades this map hasn't seen.
+function gradeColorKey(student) {
+  if (student?.stageName === 'إعدادي' || student?.stageName === 'ثانوي') return student.stageName;
+  return student?.gradeName || student?.stageName;
+}
+function gradeAccent(student) {
+  return GRADE_ACCENTS[gradeColorKey(student)] || { bgFrom: PAL.bgFrom, bgTo: PAL.bgTo, color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
 }
 
 // ── Print rendering ──────────────────────────────────────────────────────
@@ -63,10 +78,10 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
   const levelText = LEVEL_LABELS[student.level] ?? '—';
   const name = student.fullName || '—';
   const initials = name.trim().charAt(0) || 'ط';
-  const accent = stageAccent(student.stageName);
+  const accent = gradeAccent(student);
 
   return `
-    <div class="card" style="--accent:${accent.color}; --accent-soft:${accent.soft}; --accent-faint:${accent.faint}; --accent-border:${accent.border};">
+    <div class="card" style="--bg-from:${accent.bgFrom}; --bg-to:${accent.bgTo}; --accent:${accent.color}; --accent-soft:${accent.soft}; --accent-faint:${accent.faint}; --accent-border:${accent.border};">
       <div class="glow-top"></div>
       <div class="glow-bottom"></div>
       <div class="header">
@@ -150,7 +165,7 @@ function buildSheetsHtml(cardHtmls) {
 // One source of truth, optionally prefixed, so the two never drift apart.
 function cardCss() {
   return `
-    .card { position: relative; width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm; border-radius: 3.18mm; overflow: hidden; background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%); border: 0.28mm solid var(--accent-border); display: flex; flex-direction: column; }
+    .card { position: relative; width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm; border-radius: 3.18mm; overflow: hidden; background: linear-gradient(155deg, var(--bg-from) 0%, var(--bg-to) 60%, var(--bg-from) 100%); border: 0.28mm solid var(--accent-border); display: flex; flex-direction: column; }
     .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, var(--accent-faint) 0%, transparent 70%); }
     .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, var(--accent-faint) 0%, transparent 70%); }
     .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid var(--accent-soft); }

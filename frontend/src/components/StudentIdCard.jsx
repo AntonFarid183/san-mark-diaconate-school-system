@@ -54,19 +54,27 @@ const PALETTE = {
 // original gold (0.35/0.14/0.22). Kept in sync by hand with the identical
 // map in StudentCardsScreen.jsx (print/download build the card as a plain
 // HTML string, not through this component).
+// v2: the first pass (near-black tints) read as muddy/burgundy and all
+// looked too similar -- especially the youngest grades, which is exactly
+// where a parent needs the color to pop most. bgFrom/bgTo are now Tailwind's
+// 600/700 shades (the ones Tailwind itself uses for solid buttons with white
+// text -- already proven to keep white text readable), so the background
+// itself reads as a clearly distinct, vivid color instead of a dark tint;
+// the accent is the matching pastel 300 shade, bright enough to still pop
+// as trim against the now-lighter background.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#2a0f16', bgTo: '#3a1620', gold: '#fb7185', goldSoft: 'rgba(251,113,133,0.35)', goldFaint: 'rgba(251,113,133,0.14)', panelBorder: 'rgba(251,113,133,0.22)' },
-  'KG2': { bgFrom: '#2a1608', bgTo: '#3a1f0e', gold: '#fb923c', goldSoft: 'rgba(251,146,60,0.35)', goldFaint: 'rgba(251,146,60,0.14)', panelBorder: 'rgba(251,146,60,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#241a05', bgTo: '#33260a', gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)', panelBorder: 'rgba(251,191,36,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#16220a', bgTo: '#1e2e10', gold: '#a3e635', goldSoft: 'rgba(163,230,53,0.35)', goldFaint: 'rgba(163,230,53,0.14)', panelBorder: 'rgba(163,230,53,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#06231a', bgTo: '#0a3024', gold: '#34d399', goldSoft: 'rgba(52,211,153,0.35)', goldFaint: 'rgba(52,211,153,0.14)', panelBorder: 'rgba(52,211,153,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#052224', bgTo: '#093034', gold: '#22d3ee', goldSoft: 'rgba(34,211,238,0.35)', goldFaint: 'rgba(34,211,238,0.14)', panelBorder: 'rgba(34,211,238,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0a1a2e', bgTo: '#0f2340', gold: '#38bdf8', goldSoft: 'rgba(56,189,248,0.35)', goldFaint: 'rgba(56,189,248,0.14)', panelBorder: 'rgba(56,189,248,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#180f2e', bgTo: '#221640', gold: '#a78bfa', goldSoft: 'rgba(167,139,250,0.35)', goldFaint: 'rgba(167,139,250,0.14)', panelBorder: 'rgba(167,139,250,0.22)' },
-  'إعدادي': { bgFrom: '#26092a', bgTo: '#341040', gold: '#e879f9', goldSoft: 'rgba(232,121,249,0.35)', goldFaint: 'rgba(232,121,249,0.14)', panelBorder: 'rgba(232,121,249,0.22)' },
-  'ثانوي': { bgFrom: '#2a0a0f', bgTo: '#3a0f16', gold: '#f87171', goldSoft: 'rgba(248,113,113,0.35)', goldFaint: 'rgba(248,113,113,0.14)', panelBorder: 'rgba(248,113,113,0.22)' },
-  'جامعة': { bgFrom: '#10151f', bgTo: '#1a212f', gold: '#94a3b8', goldSoft: 'rgba(148,163,184,0.35)', goldFaint: 'rgba(148,163,184,0.14)', panelBorder: 'rgba(148,163,184,0.22)' },
-  'كبار': { bgFrom: '#1a1712', bgTo: '#262019', gold: '#d4af37', goldSoft: 'rgba(212,175,55,0.35)', goldFaint: 'rgba(212,175,55,0.14)', panelBorder: 'rgba(212,175,55,0.22)' },
+  'KG1': { bgFrom: '#e11d48', bgTo: '#be123c', gold: '#fda4af', goldSoft: 'rgba(253,164,175,0.35)', goldFaint: 'rgba(253,164,175,0.14)', panelBorder: 'rgba(253,164,175,0.22)' },
+  'KG2': { bgFrom: '#ea580c', bgTo: '#c2410c', gold: '#fdba74', goldSoft: 'rgba(253,186,116,0.35)', goldFaint: 'rgba(253,186,116,0.14)', panelBorder: 'rgba(253,186,116,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#d97706', bgTo: '#b45309', gold: '#fcd34d', goldSoft: 'rgba(252,211,77,0.35)', goldFaint: 'rgba(252,211,77,0.14)', panelBorder: 'rgba(252,211,77,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#65a30d', bgTo: '#4d7c0f', gold: '#bef264', goldSoft: 'rgba(190,242,100,0.35)', goldFaint: 'rgba(190,242,100,0.14)', panelBorder: 'rgba(190,242,100,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#059669', bgTo: '#047857', gold: '#6ee7b7', goldSoft: 'rgba(110,231,183,0.35)', goldFaint: 'rgba(110,231,183,0.14)', panelBorder: 'rgba(110,231,183,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#0d9488', bgTo: '#0f766e', gold: '#5eead4', goldSoft: 'rgba(94,234,212,0.35)', goldFaint: 'rgba(94,234,212,0.14)', panelBorder: 'rgba(94,234,212,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0284c7', bgTo: '#0369a1', gold: '#7dd3fc', goldSoft: 'rgba(125,211,252,0.35)', goldFaint: 'rgba(125,211,252,0.14)', panelBorder: 'rgba(125,211,252,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#7c3aed', bgTo: '#6d28d9', gold: '#c4b5fd', goldSoft: 'rgba(196,181,253,0.35)', goldFaint: 'rgba(196,181,253,0.14)', panelBorder: 'rgba(196,181,253,0.22)' },
+  'إعدادي': { bgFrom: '#c026d3', bgTo: '#a21caf', gold: '#f0abfc', goldSoft: 'rgba(240,171,252,0.35)', goldFaint: 'rgba(240,171,252,0.14)', panelBorder: 'rgba(240,171,252,0.22)' },
+  'ثانوي': { bgFrom: '#dc2626', bgTo: '#b91c1c', gold: '#fca5a5', goldSoft: 'rgba(252,165,165,0.35)', goldFaint: 'rgba(252,165,165,0.14)', panelBorder: 'rgba(252,165,165,0.22)' },
+  'جامعة': { bgFrom: '#475569', bgTo: '#334155', gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
+  'كبار': { bgFrom: '#57534e', bgTo: '#44403c', gold: '#d6d3d1', goldSoft: 'rgba(214,211,209,0.35)', goldFaint: 'rgba(214,211,209,0.14)', panelBorder: 'rgba(214,211,209,0.22)' },
 };
 // إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
 // other stage has exactly one grade per student anyway, so keying by grade
@@ -161,26 +169,26 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
         </div>
 
         {/* Name + meta grid */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.8mm' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.6mm' }}>
           <div style={{ fontSize: '3.4mm', fontWeight: 800, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} title={name}>
             {name || '—'}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '2mm', rowGap: '1.3mm' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '2.2mm', rowGap: '1.6mm' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
-              <span style={{ fontSize: '1.7mm', fontWeight: 600, color: p.subtext }}>المرحلة</span>
-              <span style={{ fontSize: '2.1mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.stageName || '—'}</span>
+              <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>المرحلة</span>
+              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.stageName || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
-              <span style={{ fontSize: '1.7mm', fontWeight: 600, color: p.subtext }}>الصف</span>
-              <span style={{ fontSize: '2.1mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.gradeName || '—'}</span>
+              <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الصف</span>
+              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.gradeName || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
-              <span style={{ fontSize: '1.7mm', fontWeight: 600, color: p.subtext }}>الفصل</span>
-              <span style={{ fontSize: '2.1mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.className || '—'}</span>
+              <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الفصل</span>
+              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.className || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
-              <span style={{ fontSize: '1.7mm', fontWeight: 600, color: p.subtext }}>المستوى</span>
-              <span style={{ fontSize: '2.1mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{levelLabel(student.level) || '—'}</span>
+              <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>المستوى</span>
+              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{levelLabel(student.level) || '—'}</span>
             </div>
           </div>
         </div>

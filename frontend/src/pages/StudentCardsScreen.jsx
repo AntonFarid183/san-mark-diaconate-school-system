@@ -32,19 +32,27 @@ const PAL = {
 // Same soft/faint/border alpha ratios as the original gold (0.35/0.14/0.22).
 // Kept in sync by hand with the identical map in StudentIdCard.jsx (same
 // "plain string vs React" reason as the PAL duplication above).
+// v2: the first pass (near-black tints) read as muddy/burgundy and all
+// looked too similar -- especially the youngest grades, which is exactly
+// where a parent needs the color to pop most. bgFrom/bgTo are now Tailwind's
+// 600/700 shades (the ones Tailwind itself uses for solid buttons with white
+// text -- already proven to keep white text readable), so the background
+// itself reads as a clearly distinct, vivid color instead of a dark tint;
+// the accent is the matching pastel 300 shade, bright enough to still pop
+// as trim against the now-lighter background.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#2a0f16', bgTo: '#3a1620', color: '#fb7185', soft: 'rgba(251,113,133,0.35)', faint: 'rgba(251,113,133,0.14)', border: 'rgba(251,113,133,0.22)' },
-  'KG2': { bgFrom: '#2a1608', bgTo: '#3a1f0e', color: '#fb923c', soft: 'rgba(251,146,60,0.35)', faint: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#241a05', bgTo: '#33260a', color: '#fbbf24', soft: 'rgba(251,191,36,0.35)', faint: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#16220a', bgTo: '#1e2e10', color: '#a3e635', soft: 'rgba(163,230,53,0.35)', faint: 'rgba(163,230,53,0.14)', border: 'rgba(163,230,53,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#06231a', bgTo: '#0a3024', color: '#34d399', soft: 'rgba(52,211,153,0.35)', faint: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#052224', bgTo: '#093034', color: '#22d3ee', soft: 'rgba(34,211,238,0.35)', faint: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0a1a2e', bgTo: '#0f2340', color: '#38bdf8', soft: 'rgba(56,189,248,0.35)', faint: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#180f2e', bgTo: '#221640', color: '#a78bfa', soft: 'rgba(167,139,250,0.35)', faint: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.22)' },
-  'إعدادي': { bgFrom: '#26092a', bgTo: '#341040', color: '#e879f9', soft: 'rgba(232,121,249,0.35)', faint: 'rgba(232,121,249,0.14)', border: 'rgba(232,121,249,0.22)' },
-  'ثانوي': { bgFrom: '#2a0a0f', bgTo: '#3a0f16', color: '#f87171', soft: 'rgba(248,113,113,0.35)', faint: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.22)' },
-  'جامعة': { bgFrom: '#10151f', bgTo: '#1a212f', color: '#94a3b8', soft: 'rgba(148,163,184,0.35)', faint: 'rgba(148,163,184,0.14)', border: 'rgba(148,163,184,0.22)' },
-  'كبار': { bgFrom: '#1a1712', bgTo: '#262019', color: '#d4af37', soft: 'rgba(212,175,55,0.35)', faint: 'rgba(212,175,55,0.14)', border: 'rgba(212,175,55,0.22)' },
+  'KG1': { bgFrom: '#e11d48', bgTo: '#be123c', color: '#fda4af', soft: 'rgba(253,164,175,0.35)', faint: 'rgba(253,164,175,0.14)', border: 'rgba(253,164,175,0.22)' },
+  'KG2': { bgFrom: '#ea580c', bgTo: '#c2410c', color: '#fdba74', soft: 'rgba(253,186,116,0.35)', faint: 'rgba(253,186,116,0.14)', border: 'rgba(253,186,116,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#d97706', bgTo: '#b45309', color: '#fcd34d', soft: 'rgba(252,211,77,0.35)', faint: 'rgba(252,211,77,0.14)', border: 'rgba(252,211,77,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#65a30d', bgTo: '#4d7c0f', color: '#bef264', soft: 'rgba(190,242,100,0.35)', faint: 'rgba(190,242,100,0.14)', border: 'rgba(190,242,100,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#059669', bgTo: '#047857', color: '#6ee7b7', soft: 'rgba(110,231,183,0.35)', faint: 'rgba(110,231,183,0.14)', border: 'rgba(110,231,183,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#0d9488', bgTo: '#0f766e', color: '#5eead4', soft: 'rgba(94,234,212,0.35)', faint: 'rgba(94,234,212,0.14)', border: 'rgba(94,234,212,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0284c7', bgTo: '#0369a1', color: '#7dd3fc', soft: 'rgba(125,211,252,0.35)', faint: 'rgba(125,211,252,0.14)', border: 'rgba(125,211,252,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#7c3aed', bgTo: '#6d28d9', color: '#c4b5fd', soft: 'rgba(196,181,253,0.35)', faint: 'rgba(196,181,253,0.14)', border: 'rgba(196,181,253,0.22)' },
+  'إعدادي': { bgFrom: '#c026d3', bgTo: '#a21caf', color: '#f0abfc', soft: 'rgba(240,171,252,0.35)', faint: 'rgba(240,171,252,0.14)', border: 'rgba(240,171,252,0.22)' },
+  'ثانوي': { bgFrom: '#dc2626', bgTo: '#b91c1c', color: '#fca5a5', soft: 'rgba(252,165,165,0.35)', faint: 'rgba(252,165,165,0.14)', border: 'rgba(252,165,165,0.22)' },
+  'جامعة': { bgFrom: '#475569', bgTo: '#334155', color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
+  'كبار': { bgFrom: '#57534e', bgTo: '#44403c', color: '#d6d3d1', soft: 'rgba(214,211,209,0.35)', faint: 'rgba(214,211,209,0.14)', border: 'rgba(214,211,209,0.22)' },
 };
 // إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
 // other stage has exactly one grade per student anyway, so keying by grade
@@ -181,12 +189,12 @@ function cardCss() {
     .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
     .initials { font-size: 5mm; font-weight: 800; color: var(--accent); }
     .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid var(--accent-soft); border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
-    .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.8mm; }
+    .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.6mm; }
     .name { font-size: 3.4mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2mm; row-gap: 1.3mm; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.2mm; row-gap: 1.6mm; }
     .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
-    .meta-label { font-size: 1.7mm; font-weight: 600; color: ${PAL.subtext}; }
-    .meta-value { font-size: 2.1mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta-label { font-size: 2mm; font-weight: 600; color: ${PAL.subtext}; }
+    .meta-value { font-size: 2.6mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid var(--accent-soft); padding: 1.1mm; box-sizing: border-box; }
     .qr-chip img { width: 100%; height: 100%; display: block; }

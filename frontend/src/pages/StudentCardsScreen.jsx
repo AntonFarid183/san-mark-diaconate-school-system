@@ -49,7 +49,7 @@ async function buildCardHtml(student) {
       <div class="body">
         <div class="photo-col">
           <div class="photo-frame">
-            ${photoUrl ? `<img src="${photoUrl}" />` : `<span class="initials">${initials}</span>`}
+            ${photoUrl ? `<img src="${photoUrl}" crossorigin="anonymous" />` : `<span class="initials">${initials}</span>`}
           </div>
           <div class="code-chip">${student.studentCode || ''}</div>
         </div>
@@ -216,41 +216,20 @@ function ensureCaptureStyle() {
   captureStyleInjected = true;
 }
 
-// html2canvas re-fetches every <img> itself (crossOrigin="anonymous") to
-// read its pixels, separately from the browser's normal <img> load -- and
-// that re-fetch can fail under CORS/HTTPS-redirect setups even when the
-// plain <img> tag (used by print and the on-screen preview) loads the same
-// URL fine. Swapping each src for a data: URL first sidesteps that
-// entirely -- a data: URL is never cross-origin, so it always captures.
-async function inlineImagesAsDataUrls(root) {
-  const imgs = Array.from(root.querySelectorAll('img'));
-  await Promise.all(imgs.map(async (img) => {
-    if (img.src.startsWith('data:')) return; // the QR chip is already inline
-    try {
-      const res = await fetch(img.src);
-      const blob = await res.blob();
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      await new Promise((resolve) => {
-        img.onload = resolve;
-        img.onerror = resolve;
-        img.src = dataUrl;
-      });
-    } catch {
-      // Leave the original src -- that one image renders blank in the
-      // capture rather than failing the whole card.
-    }
-  }));
-}
-
 // Renders one student's card offscreen (in the live app page, not a popup --
 // this is what lets "download" skip the print dialog entirely) and rasterizes
 // it to a JPG blob via html2canvas. scale:3 gives ~300dpi-equivalent output
 // so photos/text stay crisp if Bishoy resizes or edits the file afterwards.
+//
+// The student photo's <img> (see buildCardHtml) carries crossorigin="anonymous"
+// from the moment it's created -- that's what lets html2canvas's useCORS read
+// its pixels. An earlier version fetched each photo manually and swapped in a
+// data: URL instead; that broke silently for every photo in production
+// (print, which never touches html2canvas, kept working throughout, which is
+// what pointed at this code path specifically). crossorigin has to be set
+// before the browser's *first* request for that URL -- setting it only on a
+// later re-fetch risks the browser reusing an already-cached, non-CORS
+// response instead of revalidating with the right headers.
 async function captureCardBlob(student) {
   ensureCaptureStyle();
   const cardHtml = await buildCardHtml(student);
@@ -261,9 +240,9 @@ async function captureCardBlob(student) {
   document.body.appendChild(container);
   try {
     await waitForImages(container);
-    await inlineImagesAsDataUrls(container);
     const canvas = await html2canvas(container.querySelector('.card'), {
       scale: 3,
+      useCORS: true,
       backgroundColor: null,
     });
     return await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));

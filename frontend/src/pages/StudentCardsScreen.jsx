@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
+import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import StudentIdCard, { CARD_WIDTH_MM, CARD_HEIGHT_MM } from '../components/StudentIdCard';
@@ -76,8 +78,8 @@ async function buildCardHtml(student) {
 // loaded yet, so they print as empty boxes while everything else (borders,
 // text, the QR, which is an inline data URL) renders fine. Resolves on error
 // too, so one broken/missing photo doesn't hang the whole print job.
-function waitForImages(doc) {
-  const imgs = Array.from(doc.images);
+function waitForImages(root) {
+  const imgs = Array.from(root.querySelectorAll('img'));
   return Promise.all(
     imgs.map((img) =>
       img.complete
@@ -109,6 +111,53 @@ function buildSheetsHtml(cardHtmls) {
     .join('');
 }
 
+// The card's own look (everything from .card down to .footer-rule) is
+// shared between the print window (a fresh, isolated document -- safe to
+// leave unscoped) and the offscreen capture container used for JPG/ZIP
+// downloads (rendered inside the live app page, where bare names like
+// .header or .body could collide with the app's own CSS -- must be scoped).
+// One source of truth, optionally prefixed, so the two never drift apart.
+function cardCss() {
+  return `
+    .card { position: relative; width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm; border-radius: 3.18mm; overflow: hidden; background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%); border: 0.28mm solid ${PAL.panelBorder}; display: flex; flex-direction: column; }
+    .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
+    .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
+    .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid ${PAL.goldSoft}; }
+    .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
+    .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
+    .church-name { font-size: 2.1mm; font-weight: 600; color: ${PAL.subtext}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-name { font-size: 2.6mm; font-weight: 800; color: ${PAL.gold}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid ${PAL.goldSoft}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+    .school-badge img { width: 100%; height: 100%; object-fit: cover; }
+    .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }
+    .photo-col { display: flex; flex-direction: column; align-items: center; gap: 1.3mm; flex-shrink: 0; }
+    .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid ${PAL.goldSoft}; background: ${PAL.panel}; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+    .initials { font-size: 5mm; font-weight: 800; color: ${PAL.gold}; }
+    .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid ${PAL.goldSoft}; border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
+    .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.8mm; }
+    .name { font-size: 3.4mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2mm; row-gap: 1.3mm; }
+    .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
+    .meta-label { font-size: 1.7mm; font-weight: 600; color: ${PAL.subtext}; }
+    .meta-value { font-size: 2.1mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid ${PAL.goldSoft}; padding: 1.1mm; box-sizing: border-box; }
+    .qr-chip img { width: 100%; height: 100%; display: block; }
+    .footer-rule { height: 1.4mm; background: linear-gradient(90deg, transparent, ${PAL.gold}, transparent); opacity: 0.5; }
+  `;
+}
+
+// Prefixes every rule above with `scope` (e.g. ".card-capture-scope") so it
+// only ever applies inside that container. Each rule lives on its own line
+// as ".selector { ... }", so prefixing the text before the first "{" on
+// each line is enough -- no manual second copy of the CSS to keep in sync.
+function scopedCardCss(scope) {
+  const css = cardCss();
+  if (!scope) return css;
+  return css.replace(/^(\s*)(\.[^\n{]+)\{/gm, (_m, indent, selector) => `${indent}${scope} ${selector.trim()} {`);
+}
+
 function openPrintWindow(cardHtmls) {
   const w = window.open('', '_blank');
   w.document.write(`
@@ -137,39 +186,7 @@ function openPrintWindow(cardHtmls) {
         border: 0.15mm dashed #999;
         display: flex; align-items: center; justify-content: center;
       }
-      .card {
-        position: relative;
-        width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm;
-        border-radius: 3.18mm; overflow: hidden;
-        background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%);
-        border: 0.28mm solid ${PAL.panelBorder};
-        display: flex; flex-direction: column;
-      }
-      .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
-      .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
-      .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid ${PAL.goldSoft}; }
-      .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
-      .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
-      .church-name { font-size: 2.1mm; font-weight: 600; color: ${PAL.subtext}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .school-name { font-size: 2.6mm; font-weight: 800; color: ${PAL.gold}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid ${PAL.goldSoft}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
-      .school-badge img { width: 100%; height: 100%; object-fit: cover; }
-      .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }
-      .photo-col { display: flex; flex-direction: column; align-items: center; gap: 1.3mm; flex-shrink: 0; }
-      .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid ${PAL.goldSoft}; background: ${PAL.panel}; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-      .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-      .initials { font-size: 5mm; font-weight: 800; color: ${PAL.gold}; }
-      .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid ${PAL.goldSoft}; border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
-      .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.8mm; }
-      .name { font-size: 3.4mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2mm; row-gap: 1.3mm; }
-      .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
-      .meta-label { font-size: 1.7mm; font-weight: 600; color: ${PAL.subtext}; }
-      .meta-value { font-size: 2.1mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-      .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid ${PAL.goldSoft}; padding: 1.1mm; box-sizing: border-box; }
-      .qr-chip img { width: 100%; height: 100%; display: block; }
-      .footer-rule { height: 1.4mm; background: linear-gradient(90deg, transparent, ${PAL.gold}, transparent); opacity: 0.5; }
+      ${scopedCardCss()}
     </style></head>
     <body>${buildSheetsHtml(cardHtmls)}</body></html>
   `);
@@ -178,6 +195,92 @@ function openPrintWindow(cardHtmls) {
     w.focus();
     w.print();
   });
+}
+
+// Filesystem-safe filename for one student's card: code first (always
+// unique, plain ASCII) so files sort/identify cleanly even if two students
+// share a name; Arabic name kept for readability, just stripped of
+// characters Windows/macOS reject in filenames.
+function cardFileName(student) {
+  const safeName = (student.fullName || 'طالب').replace(/[\\/:*?"<>|]/g, '').trim();
+  return `${student.studentCode || student.id}_${safeName}.jpg`;
+}
+
+let captureStyleInjected = false;
+function ensureCaptureStyle() {
+  if (captureStyleInjected) return;
+  const styleEl = document.createElement('style');
+  styleEl.id = 'card-capture-style';
+  styleEl.textContent = scopedCardCss('.card-capture-scope');
+  document.head.appendChild(styleEl);
+  captureStyleInjected = true;
+}
+
+// html2canvas re-fetches every <img> itself (crossOrigin="anonymous") to
+// read its pixels, separately from the browser's normal <img> load -- and
+// that re-fetch can fail under CORS/HTTPS-redirect setups even when the
+// plain <img> tag (used by print and the on-screen preview) loads the same
+// URL fine. Swapping each src for a data: URL first sidesteps that
+// entirely -- a data: URL is never cross-origin, so it always captures.
+async function inlineImagesAsDataUrls(root) {
+  const imgs = Array.from(root.querySelectorAll('img'));
+  await Promise.all(imgs.map(async (img) => {
+    if (img.src.startsWith('data:')) return; // the QR chip is already inline
+    try {
+      const res = await fetch(img.src);
+      const blob = await res.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = dataUrl;
+      });
+    } catch {
+      // Leave the original src -- that one image renders blank in the
+      // capture rather than failing the whole card.
+    }
+  }));
+}
+
+// Renders one student's card offscreen (in the live app page, not a popup --
+// this is what lets "download" skip the print dialog entirely) and rasterizes
+// it to a JPG blob via html2canvas. scale:3 gives ~300dpi-equivalent output
+// so photos/text stay crisp if Bishoy resizes or edits the file afterwards.
+async function captureCardBlob(student) {
+  ensureCaptureStyle();
+  const cardHtml = await buildCardHtml(student);
+  const container = document.createElement('div');
+  container.className = 'card-capture-scope';
+  container.style.cssText = 'position:fixed; left:-99999px; top:0; z-index:-1;';
+  container.innerHTML = cardHtml;
+  document.body.appendChild(container);
+  try {
+    await waitForImages(container);
+    await inlineImagesAsDataUrls(container);
+    const canvas = await html2canvas(container.querySelector('.card'), {
+      scale: 3,
+      backgroundColor: null,
+    });
+    return await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  } finally {
+    container.remove();
+  }
+}
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 const StudentCardsScreen = () => {
@@ -198,6 +301,7 @@ const StudentCardsScreen = () => {
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
@@ -268,6 +372,32 @@ const StudentCardsScreen = () => {
     }
   };
 
+  // Separate from printing entirely -- no print dialog, no "Save as PDF"
+  // detour. Each card comes out as its own JPG so it can be resized/edited
+  // individually (Photoshop, etc.) afterwards. One student downloads
+  // straight as a .jpg; more than one gets zipped so the browser doesn't
+  // fire off a dozen simultaneous downloads.
+  const downloadStudents = async (list) => {
+    if (list.length === 0) return;
+    setDownloading(true);
+    try {
+      if (list.length === 1) {
+        const blob = await captureCardBlob(list[0]);
+        triggerBlobDownload(blob, cardFileName(list[0]));
+        return;
+      }
+      const zip = new JSZip();
+      for (const student of list) {
+        const blob = await captureCardBlob(student);
+        zip.file(cardFileName(student), blob);
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      triggerBlobDownload(zipBlob, 'كارنيهات الطلاب.zip');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
       {/* Filters */}
@@ -329,6 +459,22 @@ const StudentCardsScreen = () => {
           >
             طباعة الكل ({students.length})
           </button>
+          <button
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+            disabled={selected.size === 0 || downloading}
+            onClick={() => downloadStudents(students.filter(s => selected.has(s.id)))}
+          >
+            تنزيل المحدد ({selected.size})
+          </button>
+          <button
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+            disabled={students.length === 0 || downloading}
+            onClick={() => downloadStudents(students)}
+          >
+            تنزيل الكل ({students.length})
+          </button>
         </div>
       </div>
 
@@ -351,15 +497,26 @@ const StudentCardsScreen = () => {
 
               <StudentIdCard student={s} />
 
-              <button
-                className="btn-secondary"
-                style={{ width: '100%' }}
-                disabled={printing}
-                onClick={() => printStudents([s])}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>print</span>
-                طباعة / تنزيل PDF
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                <button
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                  disabled={printing}
+                  onClick={() => printStudents([s])}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>print</span>
+                  طباعة
+                </button>
+                <button
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                  disabled={downloading}
+                  onClick={() => downloadStudents([s])}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>download</span>
+                  تنزيل JPG
+                </button>
+              </div>
             </div>
           ))}
         </div>

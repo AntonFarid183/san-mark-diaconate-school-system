@@ -239,6 +239,15 @@ async function captureCardBlob(student) {
   container.innerHTML = cardHtml;
   document.body.appendChild(container);
   try {
+    // The photo is very likely already cached plain (no CORS) from the
+    // on-screen student grid rendering the same URL moments earlier --
+    // browsers can reuse that cached response for this crossorigin-mode
+    // request instead of properly revalidating it, which then fails
+    // html2canvas's pixel read even though the crossorigin attribute and
+    // useCORS are both set correctly. A harmless cache-busting query
+    // param forces a distinct, genuinely fresh CORS-mode request.
+    const photoImg = container.querySelector('.photo-frame img');
+    if (photoImg) photoImg.src += (photoImg.src.includes('?') ? '&' : '?') + '_dl=' + Date.now();
     await waitForImages(container);
     const canvas = await html2canvas(container.querySelector('.card'), {
       scale: 3,

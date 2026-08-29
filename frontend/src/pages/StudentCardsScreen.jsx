@@ -90,16 +90,53 @@ function waitForImages(doc) {
   );
 }
 
-function openPrintWindow(cardsHtml) {
+// Chunks flat card-HTML strings into sheets of 10 (2 cols × 5 rows — the
+// layout that fits exactly 10 real ID-1 cards, 85.6×53.98mm each, onto one
+// A4 sheet in portrait with room left for the recess+gap below). Each card
+// is wrapped in a slightly bigger .card-cell so the printed card sits
+// recessed 1mm inside a dashed cut-guide line -- a scissor/cutter running a
+// bit wide only clips blank paper, never the card's border/text/photo. Only
+// the last sheet may end up partially empty (e.g. printing 13 students ->
+// sheet 2 has 3 cards + 7 blank grid cells), which is fine to cut around.
+const CARDS_PER_SHEET = 10;
+function buildSheetsHtml(cardHtmls) {
+  const sheets = [];
+  for (let i = 0; i < cardHtmls.length; i += CARDS_PER_SHEET) {
+    sheets.push(cardHtmls.slice(i, i + CARDS_PER_SHEET));
+  }
+  return sheets
+    .map((sheetCards) => `<div class="sheet">${sheetCards.map((c) => `<div class="card-cell">${c}</div>`).join('')}</div>`)
+    .join('');
+}
+
+function openPrintWindow(cardHtmls) {
   const w = window.open('', '_blank');
   w.document.write(`
     <!DOCTYPE html><html lang="ar" dir="rtl">
     <head><meta charset="UTF-8"><title>كارنيهات الطلاب</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      @page { size: ${CARD_WIDTH_MM}mm ${CARD_HEIGHT_MM}mm; margin: 0; }
+      /* A4 portrait, 5mm margin -- safe minimum for virtually all printers.
+         Grid below (2 cols x 5 rows of 87.6x55.98mm cells, 3mm/1.5mm gaps)
+         totals 178.2 x 285.9mm, fitting inside the 200x287mm printable area
+         with margin to spare -- verified by hand, not eyeballed. */
+      @page { size: A4; margin: 5mm; }
       * { box-sizing: border-box; }
-      body { font-family: 'Cairo', 'Segoe UI', sans-serif; margin: 0; background: #05070d; }
+      body { font-family: 'Cairo', 'Segoe UI', sans-serif; margin: 0; background: #fff; }
+      .sheet {
+        display: grid;
+        grid-template-columns: repeat(2, ${CARD_WIDTH_MM + 2}mm);
+        grid-template-rows: repeat(5, ${CARD_HEIGHT_MM + 2}mm);
+        column-gap: 3mm; row-gap: 1.5mm;
+        justify-content: center;
+        page-break-after: always;
+      }
+      .sheet:last-child { page-break-after: auto; }
+      .card-cell {
+        width: ${CARD_WIDTH_MM + 2}mm; height: ${CARD_HEIGHT_MM + 2}mm;
+        border: 0.15mm dashed #999;
+        display: flex; align-items: center; justify-content: center;
+      }
       .card {
         position: relative;
         width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm;
@@ -107,7 +144,6 @@ function openPrintWindow(cardsHtml) {
         background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%);
         border: 0.28mm solid ${PAL.panelBorder};
         display: flex; flex-direction: column;
-        page-break-after: always;
       }
       .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
       .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
@@ -135,7 +171,7 @@ function openPrintWindow(cardsHtml) {
       .qr-chip img { width: 100%; height: 100%; display: block; }
       .footer-rule { height: 1.4mm; background: linear-gradient(90deg, transparent, ${PAL.gold}, transparent); opacity: 0.5; }
     </style></head>
-    <body>${cardsHtml}</body></html>
+    <body>${buildSheetsHtml(cardHtmls)}</body></html>
   `);
   w.document.close();
   waitForImages(w.document).then(() => {
@@ -225,8 +261,8 @@ const StudentCardsScreen = () => {
     if (list.length === 0) return;
     setPrinting(true);
     try {
-      const cardsHtml = (await Promise.all(list.map(buildCardHtml))).join('');
-      openPrintWindow(cardsHtml);
+      const cardHtmls = await Promise.all(list.map(buildCardHtml));
+      openPrintWindow(cardHtmls);
     } finally {
       setPrinting(false);
     }

@@ -68,6 +68,28 @@ async function buildCardHtml(student) {
     </div>`;
 }
 
+// Waits for every <img> in the print window to finish loading (or fail) before
+// calling print(). Without this, w.print() fires synchronously right after
+// document.write() — local assets like the two logos are usually cached and
+// make it in time, but each student's photo is a fresh network request per
+// card, and with "Print All" firing dozens of them at once most haven't
+// loaded yet, so they print as empty boxes while everything else (borders,
+// text, the QR, which is an inline data URL) renders fine. Resolves on error
+// too, so one broken/missing photo doesn't hang the whole print job.
+function waitForImages(doc) {
+  const imgs = Array.from(doc.images);
+  return Promise.all(
+    imgs.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((resolve) => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+          })
+    )
+  );
+}
+
 function openPrintWindow(cardsHtml) {
   const w = window.open('', '_blank');
   w.document.write(`
@@ -116,8 +138,10 @@ function openPrintWindow(cardsHtml) {
     <body>${cardsHtml}</body></html>
   `);
   w.document.close();
-  w.focus();
-  w.print();
+  waitForImages(w.document).then(() => {
+    w.focus();
+    w.print();
+  });
 }
 
 const StudentCardsScreen = () => {

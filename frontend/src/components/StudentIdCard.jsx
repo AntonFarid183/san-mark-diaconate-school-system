@@ -45,9 +45,26 @@ const PALETTE = {
   },
 };
 
+// One accent color per stage, replacing gold/goldSoft/goldFaint/panelBorder
+// so cards sort visually by stage at a glance -- the rest of the palette
+// (background, text) stays identical across stages. Same soft/faint/border
+// alpha ratios as the original gold (0.35 / 0.14 / 0.22). Kept in sync by
+// hand with the identical map in StudentCardsScreen.jsx (print/download
+// build the card as a plain HTML string, not through this component).
+const STAGE_ACCENTS = {
+  'طفولة': { gold: '#fb7185', goldSoft: 'rgba(251,113,133,0.35)', goldFaint: 'rgba(251,113,133,0.14)', panelBorder: 'rgba(251,113,133,0.22)' },
+  'ابتدائي': { gold: '#38bdf8', goldSoft: 'rgba(56,189,248,0.35)', goldFaint: 'rgba(56,189,248,0.14)', panelBorder: 'rgba(56,189,248,0.22)' },
+  'إعدادي': { gold: '#34d399', goldSoft: 'rgba(52,211,153,0.35)', goldFaint: 'rgba(52,211,153,0.14)', panelBorder: 'rgba(52,211,153,0.22)' },
+  'ثانوي': { gold: '#a78bfa', goldSoft: 'rgba(167,139,250,0.35)', goldFaint: 'rgba(167,139,250,0.14)', panelBorder: 'rgba(167,139,250,0.22)' },
+  'جامعة': { gold: '#fb923c', goldSoft: 'rgba(251,146,60,0.35)', goldFaint: 'rgba(251,146,60,0.14)', panelBorder: 'rgba(251,146,60,0.22)' },
+  'خريجون': { gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
+  'كبار': { gold: '#f87171', goldSoft: 'rgba(248,113,113,0.35)', goldFaint: 'rgba(248,113,113,0.14)', panelBorder: 'rgba(248,113,113,0.22)' },
+};
+
 export default function StudentIdCard({ student, className = '', theme = 'dark' }) {
   const qrRef = useRef(null);
-  const p = theme === 'light' ? PALETTE.light : PALETTE.dark;
+  const base = theme === 'light' ? PALETTE.light : PALETTE.dark;
+  const p = { ...base, ...STAGE_ACCENTS[student?.stageName] };
 
   useEffect(() => {
     const canvas = qrRef.current;

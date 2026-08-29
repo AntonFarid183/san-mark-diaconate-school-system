@@ -13,11 +13,34 @@ const LEVEL_LABELS = { 1: 'المستوى 1', 2: 'المستوى 2' };
 
 // Same dark palette as StudentIdCard.jsx's PALETTE.dark — kept in sync by
 // hand since this build's a plain HTML string for window.print(), not React.
+// gold/goldSoft/goldFaint/panelBorder are the *default* accent (used when a
+// student's stage isn't in STAGE_ACCENTS below) — everything else (the dark
+// navy background, text colors) stays the same across every stage.
 const PAL = {
   bgFrom: '#0f172a', bgTo: '#111c34', text: '#f1f5f9', subtext: '#93a1b8',
   gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)',
   panel: 'rgba(255,255,255,0.04)', panelBorder: 'rgba(251,191,36,0.22)', chipBg: 'rgba(255,255,255,0.06)',
 };
+
+// One accent color per stage, replacing the gold trim (border, name-plate
+// gradient, labels) with a stage-specific hue so cards sort visually by
+// stage at a glance -- the dark navy card body stays identical across all
+// of them, only the accent changes. Same soft/faint/border alpha ratios as
+// the original gold (0.35 / 0.14 / 0.22) so contrast stays consistent.
+// Kept in sync by hand with the identical map in StudentIdCard.jsx (same
+// "plain string vs React" reason as the PAL duplication above).
+const STAGE_ACCENTS = {
+  'طفولة': { color: '#fb7185', soft: 'rgba(251,113,133,0.35)', faint: 'rgba(251,113,133,0.14)', border: 'rgba(251,113,133,0.22)' },
+  'ابتدائي': { color: '#38bdf8', soft: 'rgba(56,189,248,0.35)', faint: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.22)' },
+  'إعدادي': { color: '#34d399', soft: 'rgba(52,211,153,0.35)', faint: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.22)' },
+  'ثانوي': { color: '#a78bfa', soft: 'rgba(167,139,250,0.35)', faint: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.22)' },
+  'جامعة': { color: '#fb923c', soft: 'rgba(251,146,60,0.35)', faint: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.22)' },
+  'خريجون': { color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
+  'كبار': { color: '#f87171', soft: 'rgba(248,113,113,0.35)', faint: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.22)' },
+};
+function stageAccent(stageName) {
+  return STAGE_ACCENTS[stageName] || { color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
+}
 
 // ── Print rendering ──────────────────────────────────────────────────────
 // Reuses the same window.open + document.write print pattern already used
@@ -40,9 +63,10 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
   const levelText = LEVEL_LABELS[student.level] ?? '—';
   const name = student.fullName || '—';
   const initials = name.trim().charAt(0) || 'ط';
+  const accent = stageAccent(student.stageName);
 
   return `
-    <div class="card">
+    <div class="card" style="--accent:${accent.color}; --accent-soft:${accent.soft}; --accent-faint:${accent.faint}; --accent-border:${accent.border};">
       <div class="glow-top"></div>
       <div class="glow-bottom"></div>
       <div class="header">
@@ -126,22 +150,22 @@ function buildSheetsHtml(cardHtmls) {
 // One source of truth, optionally prefixed, so the two never drift apart.
 function cardCss() {
   return `
-    .card { position: relative; width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm; border-radius: 3.18mm; overflow: hidden; background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%); border: 0.28mm solid ${PAL.panelBorder}; display: flex; flex-direction: column; }
-    .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
-    .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, ${PAL.goldFaint} 0%, transparent 70%); }
-    .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid ${PAL.goldSoft}; }
+    .card { position: relative; width: ${CARD_WIDTH_MM}mm; height: ${CARD_HEIGHT_MM}mm; border-radius: 3.18mm; overflow: hidden; background: linear-gradient(155deg, ${PAL.bgFrom} 0%, ${PAL.bgTo} 60%, ${PAL.bgFrom} 100%); border: 0.28mm solid var(--accent-border); display: flex; flex-direction: column; }
+    .glow-top { position: absolute; top: -14mm; right: -10mm; width: 34mm; height: 34mm; border-radius: 50%; background: radial-gradient(circle, var(--accent-faint) 0%, transparent 70%); }
+    .glow-bottom { position: absolute; bottom: -16mm; left: -12mm; width: 30mm; height: 30mm; border-radius: 50%; background: radial-gradient(circle, var(--accent-faint) 0%, transparent 70%); }
+    .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid var(--accent-soft); }
     .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
     .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
     .church-name { font-size: 2.1mm; font-weight: 600; color: ${PAL.subtext}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .school-name { font-size: 2.6mm; font-weight: 800; color: ${PAL.gold}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid ${PAL.goldSoft}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+    .school-name { font-size: 2.6mm; font-weight: 800; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid var(--accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
     .school-badge img { width: 100%; height: 100%; object-fit: cover; }
     .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }
     .photo-col { display: flex; flex-direction: column; align-items: center; gap: 1.3mm; flex-shrink: 0; }
-    .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid ${PAL.goldSoft}; background: ${PAL.panel}; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid var(--accent-soft); background: ${PAL.panel}; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-    .initials { font-size: 5mm; font-weight: 800; color: ${PAL.gold}; }
-    .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid ${PAL.goldSoft}; border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
+    .initials { font-size: 5mm; font-weight: 800; color: var(--accent); }
+    .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid var(--accent-soft); border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
     .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.8mm; }
     .name { font-size: 3.4mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2mm; row-gap: 1.3mm; }
@@ -149,9 +173,9 @@ function cardCss() {
     .meta-label { font-size: 1.7mm; font-weight: 600; color: ${PAL.subtext}; }
     .meta-value { font-size: 2.1mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid ${PAL.goldSoft}; padding: 1.1mm; box-sizing: border-box; }
+    .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid var(--accent-soft); padding: 1.1mm; box-sizing: border-box; }
     .qr-chip img { width: 100%; height: 100%; display: block; }
-    .footer-rule { height: 1.4mm; background: linear-gradient(90deg, transparent, ${PAL.gold}, transparent); opacity: 0.5; }
+    .footer-rule { height: 1.4mm; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.5; }
   `;
 }
 

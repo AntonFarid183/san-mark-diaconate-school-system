@@ -176,7 +176,7 @@ function cardCss() {
     .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
     .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
     .church-name { font-size: 2.4mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .school-name { font-size: 2.9mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-name { font-size: 2.9mm; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid var(--accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
     .school-badge img { width: 100%; height: 100%; object-fit: cover; }
     .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }

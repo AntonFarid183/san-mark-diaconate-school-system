@@ -186,11 +186,11 @@ const RegisterStudentScreen = () => {
           {credentials.fullName && (
             <p style={{ marginBottom: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>{credentials.fullName}</p>
           )}
-          <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
-            اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
+          <h2 style={{ marginBottom: '15px' }}>
+            اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</span>
           </h2>
-          <h2 style={{ letterSpacing: '2px' }}>
-            كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
+          <h2>
+            كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.temporaryPassword}</span>
           </h2>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '30px' }}>

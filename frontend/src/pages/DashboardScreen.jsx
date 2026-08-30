@@ -301,6 +301,10 @@ const AdminDashboard = () => {
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>({birthdays.length})</span>
             )}
           </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span onClick={() => navigate('/birthdays')} style={{ fontSize: '0.78rem', color: 'var(--accent-gold)', cursor: 'pointer', fontWeight: 600 }}>
+              عرض الكل
+            </span>
           {birthdayPageCount > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button onClick={() => setBirthdayPage(p => Math.max(0, p - 1))} disabled={birthdayPage === 0}
@@ -314,6 +318,7 @@ const AdminDashboard = () => {
               </button>
             </div>
           )}
+          </div>
         </div>
 
         {birthdays === null ? (

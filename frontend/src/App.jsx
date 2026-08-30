@@ -28,6 +28,7 @@ import StudentProfileScreen from './pages/StudentProfileScreen';
 import AttendanceSessionsScreen from './pages/AttendanceSessionsScreen';
 import AttendanceDashboardScreen from './pages/AttendanceDashboardScreen';
 import StudentCardsScreen from './pages/StudentCardsScreen';
+import BirthdaysScreen from './pages/BirthdaysScreen';
 import StudentCheckInScreen from './pages/StudentCheckInScreen';
 import AcademicYearsScreen from './pages/AcademicYearsScreen';
 import ClassDistributionScreen from './pages/ClassDistributionScreen';
@@ -82,6 +83,7 @@ function AppRoutes() {
                 <Route path="/pending-approvals" element={<ProtectedRoute adminOnly><PendingApprovalsScreen /></ProtectedRoute>} />
                 <Route path="/payment-reports" element={<ProtectedRoute adminOnly><PaymentReportsScreen /></ProtectedRoute>} />
                 <Route path="/student-cards" element={<ProtectedRoute adminOnly><StudentCardsScreen /></ProtectedRoute>} />
+                <Route path="/birthdays" element={<ProtectedRoute adminOnly><BirthdaysScreen /></ProtectedRoute>} />
                 <Route path="/students" element={<ProtectedRoute adminOnly><StudentListScreen /></ProtectedRoute>} />
                 <Route path="/student-performance" element={<ProtectedRoute adminOnly><StudentPerformanceScreen /></ProtectedRoute>} />
                 <Route path="/students/:id" element={<ProtectedRoute adminOnly><StudentDetailScreen /></ProtectedRoute>} />

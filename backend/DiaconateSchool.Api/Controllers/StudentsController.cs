@@ -106,6 +106,21 @@ public class StudentsController : ControllerBase
         return Ok(result);
     }
 
+    // Full birthdays page -- every active student, optionally narrowed by
+    // month/day/stage/grade/class. No filters = everyone, sorted month then day.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("birthdays")]
+    public async Task<IActionResult> GetBirthdays(
+        [FromQuery] int? month = null,
+        [FromQuery] int? day = null,
+        [FromQuery] Guid? stageId = null,
+        [FromQuery] Guid? gradeId = null,
+        [FromQuery] Guid? classId = null)
+    {
+        var result = await _queryService.GetBirthdaysAsync(month, day, stageId, gradeId, classId);
+        return Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("performance")]
     public async Task<IActionResult> GetPerformance(

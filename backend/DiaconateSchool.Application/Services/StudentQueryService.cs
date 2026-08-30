@@ -287,6 +287,8 @@ public class StudentQueryService : IStudentQueryService
     // Name kept as-is (GetBirthdaysThisMonthAsync / birthdays-this-month route) to
     // avoid touching the repository method and API contract for what's now a
     // same-day filter -- was the whole month, narrowed to just today per request.
+    // Dashboard widget only -- GetBirthdaysAsync below is the full-page version
+    // with real filters; this one's output/behavior is untouched.
     public async Task<List<StudentBirthdayDto>> GetBirthdaysThisMonthAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
@@ -295,19 +297,44 @@ public class StudentQueryService : IStudentQueryService
         return students
             .Where(s => s.DateOfBirth.Month == today.Month && s.DateOfBirth.Day == today.Day)
             .OrderBy(s => s.DateOfBirth.Day)
-            .Select(s => new StudentBirthdayDto
-            {
-                Id = s.Id,
-                FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
-                GradeName = s.Grade.Name,
-                StageName = s.Grade.Stage.Name,
-                ClassName = s.Class?.Name,
-                DateOfBirth = s.DateOfBirth,
-                ProfilePictureUrl = s.ProfilePictureUrl,
-                IsToday = s.DateOfBirth.Day == today.Day
-            })
+            .Select(s => MapBirthday(s, today))
             .ToList();
     }
+
+    // Full birthdays page (admin) -- every active student, optionally narrowed by
+    // month/day and the usual stage/grade/class filters, not capped to "today" or
+    // "this month" like the dashboard widget. No filter at all just lists everyone
+    // sorted by month then day, effectively a full-year birthday calendar.
+    public async Task<List<StudentBirthdayDto>> GetBirthdaysAsync(int? month, int? day, Guid? stageId, Guid? gradeId, Guid? classId)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var students = await _studentRepo.GetActiveStudentsWithBirthMonthIncludesAsync();
+
+        IEnumerable<Domain.Entities.Student> query = students;
+        if (month.HasValue) query = query.Where(s => s.DateOfBirth.Month == month.Value);
+        if (day.HasValue) query = query.Where(s => s.DateOfBirth.Day == day.Value);
+        if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);
+        else if (stageId.HasValue) query = query.Where(s => s.Grade.StageId == stageId.Value);
+        if (classId.HasValue) query = query.Where(s => s.ClassId == classId.Value);
+
+        return query
+            .OrderBy(s => s.DateOfBirth.Month)
+            .ThenBy(s => s.DateOfBirth.Day)
+            .Select(s => MapBirthday(s, today))
+            .ToList();
+    }
+
+    private static StudentBirthdayDto MapBirthday(Domain.Entities.Student s, DateOnly today) => new()
+    {
+        Id = s.Id,
+        FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
+        GradeName = s.Grade.Name,
+        StageName = s.Grade.Stage.Name,
+        ClassName = s.Class?.Name,
+        DateOfBirth = s.DateOfBirth,
+        ProfilePictureUrl = s.ProfilePictureUrl,
+        IsToday = s.DateOfBirth.Month == today.Month && s.DateOfBirth.Day == today.Day
+    };
 
     private static StudentDetailDto MapToDetailDto(Domain.Entities.Student student)
     {

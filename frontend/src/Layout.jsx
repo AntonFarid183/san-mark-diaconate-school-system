@@ -240,6 +240,7 @@ const Layout = () => {
     { path: '/pending-approvals', label: 'طلبات التسجيل', icon: 'pending_actions' },
     { path: '/payment-reports', label: 'تقرير المدفوعات', icon: 'account_balance' },
     { path: '/student-cards', label: 'كارنيهات الطلاب', icon: 'badge' },
+    { path: '/birthdays', label: 'أعياد الميلاد', icon: 'cake' },
   ];
 
   const adminItems = [

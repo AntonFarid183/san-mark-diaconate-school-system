@@ -131,7 +131,14 @@ public class StudentQueryService : IStudentQueryService
         await _studentRepo.UpdateAsync(student);
         await _uow.SaveChangesAsync();
 
-        return MapToDetailDto(student);
+        // Reassigning GradeId directly (not through a fresh query) leaves EF's
+        // already-loaded Grade/Stage navigation properties stale relative to
+        // the new FK -- MapToDetailDto reading student.Grade.Name/Stage.Name
+        // off that stale reference throws when it goes null. Re-fetching with
+        // includes after the save gets navigation properties consistent with
+        // whatever GradeId ended up persisted.
+        var refreshed = await _studentRepo.GetByIdWithIncludesAsync(id);
+        return MapToDetailDto(refreshed!);
     }
 
     public async Task<bool> ResetPasswordAsync(Guid studentId, string newPassword)

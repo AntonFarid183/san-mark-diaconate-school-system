@@ -175,23 +175,30 @@ export default function SelfRegisterScreen() {
           <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>تم التسجيل بنجاح!</h1>
           <p style={{ marginBottom: '1.5rem' }}>احتفظ ببيانات الدخول الخاصة بك</p>
 
-          <div ref={credentialsRef} style={{ padding: '1.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)', marginBottom: '1.5rem' }}>
+          {/* Explicit hardcoded colors, not var(--...) theme tokens -- see the
+              identical note in RegisterStudentScreen.jsx: html2canvas's cloned-
+              document rendering doesn't reliably pick up the page's light/dark
+              data-theme override for CSS custom properties, so a fine on-screen
+              card downloaded as a broken (wrong dark background, near-invisible
+              label text) JPG. Hardcoding here keeps the download consistent
+              regardless of the viewer's theme. */}
+          <div ref={credentialsRef} style={{ padding: '1.5rem', background: '#111c34', borderRadius: 'var(--radius-md)', border: '1px solid #fbbf24', marginBottom: '1.5rem' }}>
             {credentials.fullName && (
-              <p style={{ marginBottom: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{credentials.fullName}</p>
+              <p style={{ marginBottom: '1rem', fontWeight: 600, color: '#f1f5f9' }}>{credentials.fullName}</p>
             )}
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>اسم المستخدم</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</div>
+              <div style={{ fontSize: '0.8rem', color: '#93a1b8', marginBottom: '0.25rem' }}>اسم المستخدم</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#fbbf24', letterSpacing: '2px' }}>{credentials.userName}</div>
             </div>
             <div style={{ marginBottom: credentials.gradeName || credentials.whatsAppNumber ? '1rem' : 0 }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>كلمة المرور المؤقتة</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.temporaryPassword}</div>
+              <div style={{ fontSize: '0.8rem', color: '#93a1b8', marginBottom: '0.25rem' }}>كلمة المرور المؤقتة</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#fbbf24', letterSpacing: '2px' }}>{credentials.temporaryPassword}</div>
             </div>
             {credentials.gradeName && (
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
+              <p style={{ fontSize: '0.85rem', color: '#93a1b8', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
             )}
             {credentials.whatsAppNumber && (
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
+              <p style={{ fontSize: '0.85rem', color: '#93a1b8', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
             )}
           </div>
 

@@ -189,21 +189,29 @@ const RegisterStudentScreen = () => {
         <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
         <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
         <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
-        <div ref={credentialsRef} style={{ padding: '20px', background: 'var(--surface-2)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
+        {/* Explicit hardcoded colors, not var(--...) theme tokens -- this div gets
+            rasterized by html2canvas for the download button below, and its cloned-
+            document rendering doesn't reliably pick up the page's light/dark
+            data-theme override for CSS custom properties. Admin in light mode saw a
+            fine on-screen card but a broken (wrong dark background, near-invisible
+            label text) downloaded JPG -- fixed background+text here the same way
+            the ID card's colors are hardcoded, so the download looks the same
+            regardless of the viewer's theme. */}
+        <div ref={credentialsRef} style={{ padding: '20px', background: '#111c34', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid #fbbf24' }}>
           {credentials.fullName && (
-            <p style={{ marginBottom: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>{credentials.fullName}</p>
+            <p style={{ marginBottom: '15px', fontWeight: 600, color: '#f1f5f9' }}>{credentials.fullName}</p>
           )}
-          <h2 style={{ marginBottom: '15px' }}>
-            اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</span>
+          <h2 style={{ marginBottom: '15px', color: '#f1f5f9' }}>
+            اسم المستخدم:<br /><span style={{ color: '#fbbf24', letterSpacing: '2px' }}>{credentials.userName}</span>
           </h2>
-          <h2 style={{ marginBottom: credentials.gradeName || credentials.whatsAppNumber ? '15px' : 0 }}>
-            كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.temporaryPassword}</span>
+          <h2 style={{ marginBottom: credentials.gradeName || credentials.whatsAppNumber ? '15px' : 0, color: '#f1f5f9' }}>
+            كلمة المرور:<br /><span style={{ color: '#fbbf24', letterSpacing: '2px' }}>{credentials.temporaryPassword}</span>
           </h2>
           {credentials.gradeName && (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
+            <p style={{ fontSize: '0.85rem', color: '#93a1b8', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
           )}
           {credentials.whatsAppNumber && (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
+            <p style={{ fontSize: '0.85rem', color: '#93a1b8', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
           )}
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '30px' }}>

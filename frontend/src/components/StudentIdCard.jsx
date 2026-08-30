@@ -67,8 +67,16 @@ const GRADE_ACCENTS = {
   'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', gold: '#5eead4', goldSoft: 'rgba(94,234,212,0.35)', goldFaint: 'rgba(94,234,212,0.14)', panelBorder: 'rgba(94,234,212,0.22)' },
   'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', gold: '#7dd3fc', goldSoft: 'rgba(125,211,252,0.35)', goldFaint: 'rgba(125,211,252,0.14)', panelBorder: 'rgba(125,211,252,0.22)' },
   'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', gold: '#c4b5fd', goldSoft: 'rgba(196,181,253,0.35)', goldFaint: 'rgba(196,181,253,0.14)', panelBorder: 'rgba(196,181,253,0.22)' },
-  'إعدادي': { bgFrom: '#a21caf', bgTo: '#86198f', gold: '#f0abfc', goldSoft: 'rgba(240,171,252,0.35)', goldFaint: 'rgba(240,171,252,0.14)', panelBorder: 'rgba(240,171,252,0.22)' },
-  'ثانوي': { bgFrom: '#b91c1c', bgTo: '#991b1b', gold: '#fca5a5', goldSoft: 'rgba(252,165,165,0.35)', goldFaint: 'rgba(252,165,165,0.14)', panelBorder: 'rgba(252,165,165,0.22)' },
+  // A white card, not just a light accent -- the only entry that also
+  // overrides text/subtext/panel/chipBg (normally shared PALETTE.dark
+  // values), since white text on a white background would be invisible.
+  'إعدادي': {
+    bgFrom: '#ffffff', bgTo: '#f1f5f9',
+    gold: '#92400e', goldSoft: 'rgba(146,64,14,0.35)', goldFaint: 'rgba(146,64,14,0.12)', panelBorder: 'rgba(146,64,14,0.3)',
+    text: '#0f172a', subtext: '#475569', panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
+  },
+  // ثانوي intentionally has no entry -- falls through to the original navy/gold
+  // default (PALETTE.dark) via the ?? fallback below, per request to restore it.
   'جامعة': { bgFrom: '#475569', bgTo: '#334155', gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
   'كبار': { bgFrom: '#57534e', bgTo: '#44403c', gold: '#d6d3d1', goldSoft: 'rgba(214,211,209,0.35)', goldFaint: 'rgba(214,211,209,0.14)', panelBorder: 'rgba(214,211,209,0.22)' },
 };
@@ -139,7 +147,7 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
           <div style={{ fontSize: '2.4mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             كنيسة مارمرقس الرسول
           </div>
-          <div style={{ fontSize: '2.9mm', fontWeight: 800, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
+          <div style={{ fontSize: '2.9mm', fontWeight: 800, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
             مدرسة بي ثيؤريموس للألحان والتسبحة
           </div>
         </div>

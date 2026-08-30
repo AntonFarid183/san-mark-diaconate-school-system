@@ -45,8 +45,16 @@ const GRADE_ACCENTS = {
   'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', color: '#5eead4', soft: 'rgba(94,234,212,0.35)', faint: 'rgba(94,234,212,0.14)', border: 'rgba(94,234,212,0.22)' },
   'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', color: '#7dd3fc', soft: 'rgba(125,211,252,0.35)', faint: 'rgba(125,211,252,0.14)', border: 'rgba(125,211,252,0.22)' },
   'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', color: '#c4b5fd', soft: 'rgba(196,181,253,0.35)', faint: 'rgba(196,181,253,0.14)', border: 'rgba(196,181,253,0.22)' },
-  'إعدادي': { bgFrom: '#a21caf', bgTo: '#86198f', color: '#f0abfc', soft: 'rgba(240,171,252,0.35)', faint: 'rgba(240,171,252,0.14)', border: 'rgba(240,171,252,0.22)' },
-  'ثانوي': { bgFrom: '#b91c1c', bgTo: '#991b1b', color: '#fca5a5', soft: 'rgba(252,165,165,0.35)', faint: 'rgba(252,165,165,0.14)', border: 'rgba(252,165,165,0.22)' },
+  // A white card, not just a light accent -- the only entry that also
+  // overrides text/subtext/panel/chipBg (normally the shared PAL values),
+  // since white text on a white background would be invisible.
+  'إعدادي': {
+    bgFrom: '#ffffff', bgTo: '#f1f5f9',
+    color: '#92400e', soft: 'rgba(146,64,14,0.35)', faint: 'rgba(146,64,14,0.12)', border: 'rgba(146,64,14,0.3)',
+    text: '#0f172a', subtext: '#475569', panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
+  },
+  // ثانوي intentionally has no entry -- falls through to gradeAccent()'s
+  // default (PAL's original navy/gold), per request to restore it.
   'جامعة': { bgFrom: '#475569', bgTo: '#334155', color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
   'كبار': { bgFrom: '#57534e', bgTo: '#44403c', color: '#d6d3d1', soft: 'rgba(214,211,209,0.35)', faint: 'rgba(214,211,209,0.14)', border: 'rgba(214,211,209,0.22)' },
 };
@@ -58,7 +66,10 @@ function gradeColorKey(student) {
   return student?.gradeName || student?.stageName;
 }
 function gradeAccent(student) {
-  return GRADE_ACCENTS[gradeColorKey(student)] || { bgFrom: PAL.bgFrom, bgTo: PAL.bgTo, color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
+  const a = GRADE_ACCENTS[gradeColorKey(student)] || { bgFrom: PAL.bgFrom, bgTo: PAL.bgTo, color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
+  // Most grades don't override these -- fall back to the shared PAL values,
+  // same idea as StudentIdCard.jsx's `{ ...base, ...GRADE_ACCENTS[key] }` spread.
+  return { text: PAL.text, subtext: PAL.subtext, panel: PAL.panel, chipBg: PAL.chipBg, ...a };
 }
 
 // ── Print rendering ──────────────────────────────────────────────────────
@@ -85,7 +96,7 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
   const accent = gradeAccent(student);
 
   return `
-    <div class="card" style="--bg-from:${accent.bgFrom}; --bg-to:${accent.bgTo}; --accent:${accent.color}; --accent-soft:${accent.soft}; --accent-faint:${accent.faint}; --accent-border:${accent.border};">
+    <div class="card" style="--bg-from:${accent.bgFrom}; --bg-to:${accent.bgTo}; --accent:${accent.color}; --accent-soft:${accent.soft}; --accent-faint:${accent.faint}; --accent-border:${accent.border}; --text:${accent.text}; --subtext:${accent.subtext}; --panel:${accent.panel}; --chip-bg:${accent.chipBg};">
       <div class="glow-top"></div>
       <div class="glow-bottom"></div>
       <div class="header">
@@ -175,22 +186,22 @@ function cardCss() {
     .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid var(--accent-soft); }
     .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
     .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
-    .church-name { font-size: 2.4mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .school-name { font-size: 2.9mm; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .church-name { font-size: 2.4mm; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-name { font-size: 2.9mm; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid var(--accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
     .school-badge img { width: 100%; height: 100%; object-fit: cover; }
     .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }
     .photo-col { display: flex; flex-direction: column; align-items: center; gap: 1.3mm; flex-shrink: 0; }
-    .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid var(--accent-soft); background: ${PAL.panel}; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .photo-frame { width: 15mm; height: 18mm; border-radius: 2mm; border: 0.3mm solid var(--accent-soft); background: var(--panel); overflow: hidden; display: flex; align-items: center; justify-content: center; }
     .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
     .initials { font-size: 5mm; font-weight: 800; color: var(--accent); }
-    .code-chip { font-size: 1.9mm; font-weight: 700; color: ${PAL.text}; background: ${PAL.chipBg}; border: 0.18mm solid var(--accent-soft); border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
+    .code-chip { font-size: 1.9mm; font-weight: 700; color: var(--text); background: var(--chip-bg); border: 0.18mm solid var(--accent-soft); border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
     .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.6mm; }
-    .name { font-size: 3.4mm; font-weight: 800; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .name { font-size: 3.4mm; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.2mm; row-gap: 1.6mm; }
     .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
-    .meta-label { font-size: 2mm; font-weight: 600; color: ${PAL.subtext}; }
-    .meta-value { font-size: 2.6mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta-label { font-size: 2mm; font-weight: 600; color: var(--subtext); }
+    .meta-value { font-size: 2.6mm; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid var(--accent-soft); padding: 1.1mm; box-sizing: border-box; }
     .qr-chip img { width: 100%; height: 100%; display: block; }

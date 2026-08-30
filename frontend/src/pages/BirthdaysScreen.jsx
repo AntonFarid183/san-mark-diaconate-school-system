@@ -37,9 +37,16 @@ const BirthdaysScreen = () => {
   const [birthdays, setBirthdays] = useState(null); // null = loading
   const [error, setError] = useState(null);
 
+  // Same "today's birthdays" data as the dashboard widget (identical endpoint,
+  // now day-only) -- shown here too as a quick-glance section above the full
+  // filtered list, so admins land on this page and immediately see today's
+  // without having to set the day filter themselves.
+  const [todayBirthdays, setTodayBirthdays] = useState(null);
+
   useEffect(() => {
     apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
     apiClient.get('/academic-years').then(r => setAcademicYears(r.data)).catch(() => {});
+    apiClient.get('/students/birthdays-this-month').then(r => setTodayBirthdays(r.data)).catch(() => setTodayBirthdays([]));
   }, []);
 
   useEffect(() => {
@@ -124,6 +131,44 @@ const BirthdaysScreen = () => {
           </select>
         </div>
       </div>
+
+      {/* Today's birthdays — same data/endpoint as the dashboard widget */}
+      {todayBirthdays && todayBirthdays.length > 0 && (
+        <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+          <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>cake</span>
+            أعياد ميلاد اليوم
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>({todayBirthdays.length})</span>
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {todayBirthdays.map(b => (
+              <div
+                key={b.id}
+                onClick={() => navigate(`/students/${b.id}`)}
+                className="card-hover"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', background: 'rgba(251,191,36,0.08)' }}
+              >
+                {b.profilePictureUrl ? (
+                  <img src={b.profilePictureUrl.startsWith('http') ? b.profilePictureUrl : `${BACKEND_URL}${b.profilePictureUrl}`} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)', flexShrink: 0 }} />
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontSize: '38px', color: 'var(--accent-gold)', flexShrink: 0 }}>account_circle</span>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {b.fullName} <span title="عيد ميلاده اليوم">🎉</span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    {b.stageName} — {b.gradeName}{b.className ? ` — فصل ${b.className}` : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--accent-gold)', fontWeight: 700, flexShrink: 0 }}>
+                  {MONTH_DAY_LABEL(b.dateOfBirth)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
         {birthdays ? `${birthdays.length} طالب` : ''}

@@ -4,6 +4,7 @@ using DiaconateSchool.Application.Interfaces.Services;
 using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -20,19 +21,22 @@ public class StudentsController : ControllerBase
     private readonly IPromotionService _promotionService;
     private readonly IStudentPerformanceService _performanceService;
     private readonly IPaymentService _paymentService;
+    private readonly ILogger<StudentsController> _logger;
 
     public StudentsController(
         IStudentRegistrationService registrationService,
         IStudentQueryService queryService,
         IPromotionService promotionService,
         IStudentPerformanceService performanceService,
-        IPaymentService paymentService)
+        IPaymentService paymentService,
+        ILogger<StudentsController> logger)
     {
         _registrationService = registrationService;
         _queryService = queryService;
         _promotionService = promotionService;
         _performanceService = performanceService;
         _paymentService = paymentService;
+        _logger = logger;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -200,8 +204,12 @@ public class StudentsController : ControllerBase
         {
             return BadRequest(new { Message = ex.Message });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            // Was swallowed with zero trace -- every registration 500 was a dead end
+            // (this exact class of bug bit us before: unseeded pseudo-grade FK
+            // violations). Logging now so the real cause shows up in App Service logs.
+            _logger.LogError(ex, "Student registration failed. GradeId={GradeId}, SelfRegistered={SelfRegistered}", dto.GradeId, dto.SelfRegistered);
             return StatusCode(500, new { Message = "An unexpected error occurred on the server." });
         }
     }

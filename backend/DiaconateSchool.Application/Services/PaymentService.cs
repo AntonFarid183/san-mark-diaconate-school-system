@@ -13,13 +13,15 @@ public class PaymentService : IPaymentService
 {
     private readonly IPaymentRepository _repo;
     private readonly IStudentRepository _studentRepo;
+    private readonly IUserRepository _userRepo;
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
 
-    public PaymentService(IPaymentRepository repo, IStudentRepository studentRepo, IUnitOfWork uow, INotificationService notificationService)
+    public PaymentService(IPaymentRepository repo, IStudentRepository studentRepo, IUserRepository userRepo, IUnitOfWork uow, INotificationService notificationService)
     {
         _repo = repo;
         _studentRepo = studentRepo;
+        _userRepo = userRepo;
         _uow = uow;
         _notificationService = notificationService;
     }
@@ -108,6 +110,21 @@ public class PaymentService : IPaymentService
         {
             await _notificationService.NotifyPaymentRecordedAsync(
                 student.UserId, dto.Amount, dto.Kind, mapped.RemainingBalance, refreshed!.Description);
+
+            // Recording a real payment here means the subscription is settled --
+            // a still-pending (Suspended) student shouldn't keep sitting on the
+            // pending-approvals page waiting for a *second* "تم السداد" click that
+            // would charge them again. Same activation as SetActiveStatusAsync,
+            // just without re-charging (that already happened above).
+            if (dto.Kind == PaymentTransactionKind.Payment && student.Status != StudentStatus.Active)
+            {
+                student.User.IsActive = true;
+                student.Status = StudentStatus.Active;
+                student.User.UpdatedAt = DateTime.UtcNow;
+                await _studentRepo.UpdateAsync(student);
+                await _userRepo.UpdateAsync(student.User);
+                await _uow.SaveChangesAsync();
+            }
         }
 
         return (true, null, mapped);

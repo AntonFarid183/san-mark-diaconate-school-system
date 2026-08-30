@@ -1,11 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import apiClient from '../apiClient';
 import SchoolLogo from '../components/SchoolLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import PhotoCaptureField from '../components/PhotoCaptureField';
 import { BACKEND_URL } from '../config';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND_URL}${url}`);
+
+// Same capture-and-save pattern as RegisterStudentScreen's credentials
+// download (and the ID card download before that) -- no photo/CORS
+// involved, just text, so none of that complexity applies here.
+async function downloadCredentialsImage(node, studentName) {
+  const canvas = await html2canvas(node, { scale: 3, backgroundColor: '#0f172a' });
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  const safeName = (studentName || 'طالب').replace(/[\\/:*?"<>|]/g, '').trim();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `بيانات الدخول - ${safeName}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 const STAGE_IDS = {
   childhood:   '00000000-0000-0000-0000-000000000001',
@@ -52,6 +70,8 @@ export default function SelfRegisterScreen() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [downloadingCreds, setDownloadingCreds] = useState(false);
+  const credentialsRef = useRef(null);
 
   const formSections = [
     { key: 'basic',   icon: 'person',        title: 'البيانات الأساسية' },
@@ -123,7 +143,7 @@ export default function SelfRegisterScreen() {
         selfRegistered: true,
       };
       const response = await apiClient.post('/students/register', payload);
-      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
+      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword, fullName: formData.fullName });
     } catch (err) {
       let errorMsg = 'حدث خطأ. تأكد من أن بياناتك صحيحة.';
       // Backend serializes as camelCase ("message") by ASP.NET Core's default
@@ -148,7 +168,10 @@ export default function SelfRegisterScreen() {
           <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>تم التسجيل بنجاح!</h1>
           <p style={{ marginBottom: '1.5rem' }}>احتفظ ببيانات الدخول الخاصة بك</p>
 
-          <div style={{ padding: '1.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)', marginBottom: '1.5rem' }}>
+          <div ref={credentialsRef} style={{ padding: '1.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)', marginBottom: '1.5rem' }}>
+            {credentials.fullName && (
+              <p style={{ marginBottom: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{credentials.fullName}</p>
+            )}
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>اسم المستخدم</div>
               <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</div>
@@ -163,9 +186,27 @@ export default function SelfRegisterScreen() {
             ستُطلب منك تغيير كلمة المرور عند أول تسجيل دخول
           </p>
 
-          <button onClick={() => navigate('/login')} className="btn-primary">
-            تسجيل الدخول الآن
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={async () => {
+                setDownloadingCreds(true);
+                try {
+                  await downloadCredentialsImage(credentialsRef.current, credentials.fullName);
+                } finally {
+                  setDownloadingCreds(false);
+                }
+              }}
+              disabled={downloadingCreds}
+              className="btn-secondary"
+              style={{ width: 'auto', padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+              {downloadingCreds ? 'جاري التنزيل...' : 'تنزيل بيانات الدخول'}
+            </button>
+            <button onClick={() => navigate('/login')} className="btn-primary" style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
+              تسجيل الدخول الآن
+            </button>
+          </div>
         </div>
       </div>
     );

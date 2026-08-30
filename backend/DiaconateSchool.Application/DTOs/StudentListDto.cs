@@ -186,3 +186,12 @@ public class StudentBirthdayDto
     public string? ProfilePictureUrl { get; set; }
     public bool IsToday { get; set; }
 }
+
+// One row per student the pending-approvals cleanup activated -- just enough
+// to show the admin an audit trail of who got auto-activated.
+public class ActivatedPendingStudentDto
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+}

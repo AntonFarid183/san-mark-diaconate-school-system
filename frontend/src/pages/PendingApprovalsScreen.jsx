@@ -16,6 +16,7 @@ export default function PendingApprovalsScreen() {
   const [discountAmount, setDiscountAmount] = useState('');
   const [payLaterModal, setPayLaterModal] = useState(null); // { id } while the pay-later amount prompt is open
   const [payLaterAmount, setPayLaterAmount] = useState('');
+  const [cleaning, setCleaning] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -93,11 +94,42 @@ export default function PendingApprovalsScreen() {
     activate(id, { amountDue });
   };
 
+  // One-off cleanup for students who already have a payment recorded (e.g. from
+  // before a new payment auto-activated) but are still stuck here -- safe to
+  // click more than once, just does nothing if nobody matches anymore.
+  const cleanAlreadyPaid = async () => {
+    setCleaning(true);
+    try {
+      const res = await apiClient.post('/students/pending/activate-already-paid');
+      const activated = res.data;
+      if (activated.length === 0) {
+        alert('لا يوجد طلاب معلّقون سبق أن دفعوا الاشتراك.');
+      } else {
+        alert(`تم تفعيل ${activated.length} حساب سبق دفع اشتراكهم:\n${activated.map(a => `${a.fullName} (${a.studentCode})`).join('\n')}`);
+        setStudents(prev => prev.filter(s => !activated.some(a => a.id === s.id)));
+      }
+    } catch {
+      alert('حدث خطأ أثناء التنظيف، حاول مرة أخرى.');
+    } finally {
+      setCleaning(false);
+    }
+  };
+
   return (
     <>
-      <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-        الأعضاء الذين سجّلوا أنفسهم عبر نموذج التسجيل — في انتظار موافقة الإدارة على قبولهم وتفعيل حساباتهم.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+          الأعضاء الذين سجّلوا أنفسهم عبر نموذج التسجيل — في انتظار موافقة الإدارة على قبولهم وتفعيل حساباتهم.
+        </p>
+        <button
+          onClick={cleanAlreadyPaid}
+          disabled={cleaning}
+          title="يفعّل أي طالب هنا سبق أن سُجّلت له دفعة اشتراك فعلية، دون تحصيل أي مبلغ إضافي"
+          style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: cleaning ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{cleaning ? 'hourglass_empty' : 'cleaning_services'}</span>
+          {cleaning ? 'جاري التنظيف...' : 'تفعيل من سبق أن دفعوا'}
+        </button>
+      </div>
 
       {loading ? (
         <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>

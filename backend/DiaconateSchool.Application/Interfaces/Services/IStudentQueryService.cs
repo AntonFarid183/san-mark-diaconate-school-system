@@ -21,4 +21,5 @@ public interface IStudentQueryService
     Task<PaymentReportSummaryDto> GetPaymentReportAsync(PaymentReportFilterDto filter);
     Task<List<StudentBirthdayDto>> GetBirthdaysThisMonthAsync();
     Task<List<StudentBirthdayDto>> GetBirthdaysAsync(int? month, int? day, Guid? stageId, Guid? gradeId, Guid? classId);
+    Task<List<ActivatedPendingStudentDto>> ActivateAlreadyPaidPendingAsync();
 }

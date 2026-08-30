@@ -18,6 +18,7 @@ public class StudentQueryService : IStudentQueryService
     private readonly IPasswordHasher _hasher;
     private readonly INotificationService _notificationService;
     private readonly IStudentFeeService _feeService;
+    private readonly IPaymentRepository _paymentRepo;
     private readonly IUnitOfWork _uow;
 
     public StudentQueryService(
@@ -26,6 +27,7 @@ public class StudentQueryService : IStudentQueryService
         IPasswordHasher hasher,
         INotificationService notificationService,
         IStudentFeeService feeService,
+        IPaymentRepository paymentRepo,
         IUnitOfWork uow)
     {
         _studentRepo = studentRepo;
@@ -33,6 +35,7 @@ public class StudentQueryService : IStudentQueryService
         _hasher = hasher;
         _notificationService = notificationService;
         _feeService = feeService;
+        _paymentRepo = paymentRepo;
         _uow = uow;
     }
 
@@ -322,6 +325,41 @@ public class StudentQueryService : IStudentQueryService
             .ThenBy(s => s.DateOfBirth.Day)
             .Select(s => MapBirthday(s, today))
             .ToList();
+    }
+
+    // One-time-use cleanup for the "recorded a payment before activation existed
+    // as a check" bug: any student still sitting on pending-approvals (Suspended)
+    // who already has a real Payment transaction on their account got stuck
+    // there permanently before the fix -- new payments now activate automatically,
+    // but these existing ones need a one-off catch-up. Safe to call repeatedly:
+    // once a student's activated they no longer match the Suspended filter.
+    public async Task<List<ActivatedPendingStudentDto>> ActivateAlreadyPaidPendingAsync()
+    {
+        var pending = await _studentRepo.GetPendingAsync();
+        var activated = new List<ActivatedPendingStudentDto>();
+
+        foreach (var s in pending)
+        {
+            var account = await _paymentRepo.GetAccountByStudentIdAsync(s.Id);
+            var hasPayment = account?.Transactions.Any(t => !t.IsVoided && t.Kind == PaymentTransactionKind.Payment) ?? false;
+            if (!hasPayment) continue;
+
+            s.User.IsActive = true;
+            s.Status = StudentStatus.Active;
+            s.User.UpdatedAt = DateTime.UtcNow;
+            await _studentRepo.UpdateAsync(s);
+            await _userRepo.UpdateAsync(s.User);
+
+            activated.Add(new ActivatedPendingStudentDto
+            {
+                Id = s.Id,
+                FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.ThirdName} {s.User.LastName}",
+                StudentCode = s.StudentCode,
+            });
+        }
+
+        if (activated.Count > 0) await _uow.SaveChangesAsync();
+        return activated;
     }
 
     private static StudentBirthdayDto MapBirthday(Domain.Entities.Student s, DateOnly today) => new()

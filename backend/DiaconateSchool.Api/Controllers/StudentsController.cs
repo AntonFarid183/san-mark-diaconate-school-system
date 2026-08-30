@@ -78,6 +78,17 @@ public class StudentsController : ControllerBase
         return Ok(result);
     }
 
+    // One-time cleanup for pending students who already have a payment on
+    // record (from before a new payment auto-activated) -- safe to call more
+    // than once, returns whoever it actually activated this time.
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("pending/activate-already-paid")]
+    public async Task<IActionResult> ActivateAlreadyPaidPending()
+    {
+        var result = await _queryService.ActivateAlreadyPaidPendingAsync();
+        return Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     public async Task<IActionResult> GetStudents(

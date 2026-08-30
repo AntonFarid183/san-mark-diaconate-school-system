@@ -1,9 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import PhotoCaptureField from '../components/PhotoCaptureField';
 import { BACKEND_URL } from '../config';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND_URL}${url}`);
+
+// Same capture-and-save pattern as the ID card download (StudentCardsScreen)
+// -- no photo/CORS involved here (just text), so no crossorigin dance needed.
+async function downloadCredentialsImage(node, studentName) {
+  const canvas = await html2canvas(node, { scale: 3, backgroundColor: '#0f172a' });
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  const safeName = (studentName || 'طالب').replace(/[\\/:*?"<>|]/g, '').trim();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `بيانات الدخول - ${safeName}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 const STAGE_IDS = {
   childhood:   '00000000-0000-0000-0000-000000000001',
@@ -57,6 +74,8 @@ const RegisterStudentScreen = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [downloadingCreds, setDownloadingCreds] = useState(false);
+  const credentialsRef = useRef(null);
 
   const formSections = [
     { key: 'basic',   icon: 'person',        title: 'البيانات الأساسية' },
@@ -140,7 +159,7 @@ const RegisterStudentScreen = () => {
         amountDue: amountDue && amountDue > 0 ? amountDue : null,
       };
       const response = await apiClient.post('/students/register', payload);
-      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword });
+      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword, fullName: formData.fullName });
     } catch (err) {
       let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
       // Backend serializes as camelCase ("message") by ASP.NET Core's default
@@ -163,7 +182,10 @@ const RegisterStudentScreen = () => {
         <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--success)', marginBottom: '1rem' }}>check_circle</span>
         <h1 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>تم التسجيل بنجاح!</h1>
         <p>تمت إضافة بيانات الطالب إلى قاعدة البيانات.</p>
-        <div style={{ padding: '20px', background: 'var(--surface-2)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
+        <div ref={credentialsRef} style={{ padding: '20px', background: 'var(--surface-2)', marginTop: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-gold)' }}>
+          {credentials.fullName && (
+            <p style={{ marginBottom: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>{credentials.fullName}</p>
+          )}
           <h2 style={{ letterSpacing: '2px', marginBottom: '15px' }}>
             اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.userName}</span>
           </h2>
@@ -171,10 +193,28 @@ const RegisterStudentScreen = () => {
             كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)' }}>{credentials.temporaryPassword}</span>
           </h2>
         </div>
-        <button onClick={() => window.location.reload()} className="btn-primary" style={{ marginTop: '30px', width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-          تسجيل طالب آخر
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '30px' }}>
+          <button
+            onClick={async () => {
+              setDownloadingCreds(true);
+              try {
+                await downloadCredentialsImage(credentialsRef.current, credentials.fullName);
+              } finally {
+                setDownloadingCreds(false);
+              }
+            }}
+            disabled={downloadingCreds}
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+            {downloadingCreds ? 'جاري التنزيل...' : 'تنزيل بيانات الدخول'}
+          </button>
+          <button onClick={() => window.location.reload()} className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+            تسجيل طالب آخر
+          </button>
+        </div>
       </div>
     );
   }

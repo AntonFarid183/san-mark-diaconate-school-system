@@ -139,7 +139,7 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
           <div style={{ fontSize: '2.4mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             كنيسة مارمرقس الرسول
           </div>
-          <div style={{ fontSize: '2.9mm', fontWeight: 800, color: p.gold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
+          <div style={{ fontSize: '2.9mm', fontWeight: 800, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
             مدرسة بي ثيؤريموس للألحان والتسبحة
           </div>
         </div>

@@ -32,25 +32,21 @@ const PAL = {
 // Same soft/faint/border alpha ratios as the original gold (0.35/0.14/0.22).
 // Kept in sync by hand with the identical map in StudentIdCard.jsx (same
 // "plain string vs React" reason as the PAL duplication above).
-// v2: the first pass (near-black tints) read as muddy/burgundy and all
-// looked too similar -- especially the youngest grades, which is exactly
-// where a parent needs the color to pop most. bgFrom/bgTo are now Tailwind's
-// 600/700 shades (the ones Tailwind itself uses for solid buttons with white
-// text -- already proven to keep white text readable), so the background
-// itself reads as a clearly distinct, vivid color instead of a dark tint;
-// the accent is the matching pastel 300 shade, bright enough to still pop
-// as trim against the now-lighter background.
+// v3: v2's 600/700 shades were called too bright/loud. Shifted one step
+// darker to Tailwind's 700/800 shades -- still a clearly distinct color per
+// grade (not back to v1's muddy near-black), just calmer. Accent stays the
+// 300 shade -- still pops fine as trim against the slightly darker body.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#e11d48', bgTo: '#be123c', color: '#fda4af', soft: 'rgba(253,164,175,0.35)', faint: 'rgba(253,164,175,0.14)', border: 'rgba(253,164,175,0.22)' },
-  'KG2': { bgFrom: '#ea580c', bgTo: '#c2410c', color: '#fdba74', soft: 'rgba(253,186,116,0.35)', faint: 'rgba(253,186,116,0.14)', border: 'rgba(253,186,116,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#d97706', bgTo: '#b45309', color: '#fcd34d', soft: 'rgba(252,211,77,0.35)', faint: 'rgba(252,211,77,0.14)', border: 'rgba(252,211,77,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#65a30d', bgTo: '#4d7c0f', color: '#bef264', soft: 'rgba(190,242,100,0.35)', faint: 'rgba(190,242,100,0.14)', border: 'rgba(190,242,100,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#059669', bgTo: '#047857', color: '#6ee7b7', soft: 'rgba(110,231,183,0.35)', faint: 'rgba(110,231,183,0.14)', border: 'rgba(110,231,183,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#0d9488', bgTo: '#0f766e', color: '#5eead4', soft: 'rgba(94,234,212,0.35)', faint: 'rgba(94,234,212,0.14)', border: 'rgba(94,234,212,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0284c7', bgTo: '#0369a1', color: '#7dd3fc', soft: 'rgba(125,211,252,0.35)', faint: 'rgba(125,211,252,0.14)', border: 'rgba(125,211,252,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#7c3aed', bgTo: '#6d28d9', color: '#c4b5fd', soft: 'rgba(196,181,253,0.35)', faint: 'rgba(196,181,253,0.14)', border: 'rgba(196,181,253,0.22)' },
-  'إعدادي': { bgFrom: '#c026d3', bgTo: '#a21caf', color: '#f0abfc', soft: 'rgba(240,171,252,0.35)', faint: 'rgba(240,171,252,0.14)', border: 'rgba(240,171,252,0.22)' },
-  'ثانوي': { bgFrom: '#dc2626', bgTo: '#b91c1c', color: '#fca5a5', soft: 'rgba(252,165,165,0.35)', faint: 'rgba(252,165,165,0.14)', border: 'rgba(252,165,165,0.22)' },
+  'KG1': { bgFrom: '#be123c', bgTo: '#9f1239', color: '#fda4af', soft: 'rgba(253,164,175,0.35)', faint: 'rgba(253,164,175,0.14)', border: 'rgba(253,164,175,0.22)' },
+  'KG2': { bgFrom: '#c2410c', bgTo: '#9a3412', color: '#fdba74', soft: 'rgba(253,186,116,0.35)', faint: 'rgba(253,186,116,0.14)', border: 'rgba(253,186,116,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#b45309', bgTo: '#92400e', color: '#fcd34d', soft: 'rgba(252,211,77,0.35)', faint: 'rgba(252,211,77,0.14)', border: 'rgba(252,211,77,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#4d7c0f', bgTo: '#3f6212', color: '#bef264', soft: 'rgba(190,242,100,0.35)', faint: 'rgba(190,242,100,0.14)', border: 'rgba(190,242,100,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#047857', bgTo: '#065f46', color: '#6ee7b7', soft: 'rgba(110,231,183,0.35)', faint: 'rgba(110,231,183,0.14)', border: 'rgba(110,231,183,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', color: '#5eead4', soft: 'rgba(94,234,212,0.35)', faint: 'rgba(94,234,212,0.14)', border: 'rgba(94,234,212,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', color: '#7dd3fc', soft: 'rgba(125,211,252,0.35)', faint: 'rgba(125,211,252,0.14)', border: 'rgba(125,211,252,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', color: '#c4b5fd', soft: 'rgba(196,181,253,0.35)', faint: 'rgba(196,181,253,0.14)', border: 'rgba(196,181,253,0.22)' },
+  'إعدادي': { bgFrom: '#a21caf', bgTo: '#86198f', color: '#f0abfc', soft: 'rgba(240,171,252,0.35)', faint: 'rgba(240,171,252,0.14)', border: 'rgba(240,171,252,0.22)' },
+  'ثانوي': { bgFrom: '#b91c1c', bgTo: '#991b1b', color: '#fca5a5', soft: 'rgba(252,165,165,0.35)', faint: 'rgba(252,165,165,0.14)', border: 'rgba(252,165,165,0.22)' },
   'جامعة': { bgFrom: '#475569', bgTo: '#334155', color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
   'كبار': { bgFrom: '#57534e', bgTo: '#44403c', color: '#d6d3d1', soft: 'rgba(214,211,209,0.35)', faint: 'rgba(214,211,209,0.14)', border: 'rgba(214,211,209,0.22)' },
 };
@@ -179,8 +175,8 @@ function cardCss() {
     .header { position: relative; display: flex; align-items: center; gap: 1.6mm; padding: 2mm 2.6mm 1.6mm; border-bottom: 0.2mm solid var(--accent-soft); }
     .church-logo { width: 7mm; height: 7mm; object-fit: contain; flex-shrink: 0; }
     .header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3mm; }
-    .church-name { font-size: 2.1mm; font-weight: 600; color: ${PAL.subtext}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .school-name { font-size: 2.6mm; font-weight: 800; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .church-name { font-size: 2.4mm; font-weight: 700; color: ${PAL.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .school-name { font-size: 2.9mm; font-weight: 800; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .school-badge { width: 9mm; height: 9mm; border-radius: 1.6mm; background: #fff; border: 0.22mm solid var(--accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
     .school-badge img { width: 100%; height: 100%; object-fit: cover; }
     .body { position: relative; flex: 1; display: flex; align-items: stretch; gap: 2mm; padding: 2mm 2.6mm; min-height: 0; }

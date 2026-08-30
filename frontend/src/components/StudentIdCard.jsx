@@ -54,25 +54,21 @@ const PALETTE = {
 // original gold (0.35/0.14/0.22). Kept in sync by hand with the identical
 // map in StudentCardsScreen.jsx (print/download build the card as a plain
 // HTML string, not through this component).
-// v2: the first pass (near-black tints) read as muddy/burgundy and all
-// looked too similar -- especially the youngest grades, which is exactly
-// where a parent needs the color to pop most. bgFrom/bgTo are now Tailwind's
-// 600/700 shades (the ones Tailwind itself uses for solid buttons with white
-// text -- already proven to keep white text readable), so the background
-// itself reads as a clearly distinct, vivid color instead of a dark tint;
-// the accent is the matching pastel 300 shade, bright enough to still pop
-// as trim against the now-lighter background.
+// v3: v2's 600/700 shades were called too bright/loud. Shifted one step
+// darker to Tailwind's 700/800 shades -- still a clearly distinct color per
+// grade (not back to v1's muddy near-black), just calmer. Accent stays the
+// 300 shade -- still pops fine as trim against the slightly darker body.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#e11d48', bgTo: '#be123c', gold: '#fda4af', goldSoft: 'rgba(253,164,175,0.35)', goldFaint: 'rgba(253,164,175,0.14)', panelBorder: 'rgba(253,164,175,0.22)' },
-  'KG2': { bgFrom: '#ea580c', bgTo: '#c2410c', gold: '#fdba74', goldSoft: 'rgba(253,186,116,0.35)', goldFaint: 'rgba(253,186,116,0.14)', panelBorder: 'rgba(253,186,116,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#d97706', bgTo: '#b45309', gold: '#fcd34d', goldSoft: 'rgba(252,211,77,0.35)', goldFaint: 'rgba(252,211,77,0.14)', panelBorder: 'rgba(252,211,77,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#65a30d', bgTo: '#4d7c0f', gold: '#bef264', goldSoft: 'rgba(190,242,100,0.35)', goldFaint: 'rgba(190,242,100,0.14)', panelBorder: 'rgba(190,242,100,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#059669', bgTo: '#047857', gold: '#6ee7b7', goldSoft: 'rgba(110,231,183,0.35)', goldFaint: 'rgba(110,231,183,0.14)', panelBorder: 'rgba(110,231,183,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#0d9488', bgTo: '#0f766e', gold: '#5eead4', goldSoft: 'rgba(94,234,212,0.35)', goldFaint: 'rgba(94,234,212,0.14)', panelBorder: 'rgba(94,234,212,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0284c7', bgTo: '#0369a1', gold: '#7dd3fc', goldSoft: 'rgba(125,211,252,0.35)', goldFaint: 'rgba(125,211,252,0.14)', panelBorder: 'rgba(125,211,252,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#7c3aed', bgTo: '#6d28d9', gold: '#c4b5fd', goldSoft: 'rgba(196,181,253,0.35)', goldFaint: 'rgba(196,181,253,0.14)', panelBorder: 'rgba(196,181,253,0.22)' },
-  'إعدادي': { bgFrom: '#c026d3', bgTo: '#a21caf', gold: '#f0abfc', goldSoft: 'rgba(240,171,252,0.35)', goldFaint: 'rgba(240,171,252,0.14)', panelBorder: 'rgba(240,171,252,0.22)' },
-  'ثانوي': { bgFrom: '#dc2626', bgTo: '#b91c1c', gold: '#fca5a5', goldSoft: 'rgba(252,165,165,0.35)', goldFaint: 'rgba(252,165,165,0.14)', panelBorder: 'rgba(252,165,165,0.22)' },
+  'KG1': { bgFrom: '#be123c', bgTo: '#9f1239', gold: '#fda4af', goldSoft: 'rgba(253,164,175,0.35)', goldFaint: 'rgba(253,164,175,0.14)', panelBorder: 'rgba(253,164,175,0.22)' },
+  'KG2': { bgFrom: '#c2410c', bgTo: '#9a3412', gold: '#fdba74', goldSoft: 'rgba(253,186,116,0.35)', goldFaint: 'rgba(253,186,116,0.14)', panelBorder: 'rgba(253,186,116,0.22)' },
+  'الصف 1 الابتدائي': { bgFrom: '#b45309', bgTo: '#92400e', gold: '#fcd34d', goldSoft: 'rgba(252,211,77,0.35)', goldFaint: 'rgba(252,211,77,0.14)', panelBorder: 'rgba(252,211,77,0.22)' },
+  'الصف 2 الابتدائي': { bgFrom: '#4d7c0f', bgTo: '#3f6212', gold: '#bef264', goldSoft: 'rgba(190,242,100,0.35)', goldFaint: 'rgba(190,242,100,0.14)', panelBorder: 'rgba(190,242,100,0.22)' },
+  'الصف 3 الابتدائي': { bgFrom: '#047857', bgTo: '#065f46', gold: '#6ee7b7', goldSoft: 'rgba(110,231,183,0.35)', goldFaint: 'rgba(110,231,183,0.14)', panelBorder: 'rgba(110,231,183,0.22)' },
+  'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', gold: '#5eead4', goldSoft: 'rgba(94,234,212,0.35)', goldFaint: 'rgba(94,234,212,0.14)', panelBorder: 'rgba(94,234,212,0.22)' },
+  'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', gold: '#7dd3fc', goldSoft: 'rgba(125,211,252,0.35)', goldFaint: 'rgba(125,211,252,0.14)', panelBorder: 'rgba(125,211,252,0.22)' },
+  'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', gold: '#c4b5fd', goldSoft: 'rgba(196,181,253,0.35)', goldFaint: 'rgba(196,181,253,0.14)', panelBorder: 'rgba(196,181,253,0.22)' },
+  'إعدادي': { bgFrom: '#a21caf', bgTo: '#86198f', gold: '#f0abfc', goldSoft: 'rgba(240,171,252,0.35)', goldFaint: 'rgba(240,171,252,0.14)', panelBorder: 'rgba(240,171,252,0.22)' },
+  'ثانوي': { bgFrom: '#b91c1c', bgTo: '#991b1b', gold: '#fca5a5', goldSoft: 'rgba(252,165,165,0.35)', goldFaint: 'rgba(252,165,165,0.14)', panelBorder: 'rgba(252,165,165,0.22)' },
   'جامعة': { bgFrom: '#475569', bgTo: '#334155', gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
   'كبار': { bgFrom: '#57534e', bgTo: '#44403c', gold: '#d6d3d1', goldSoft: 'rgba(214,211,209,0.35)', goldFaint: 'rgba(214,211,209,0.14)', panelBorder: 'rgba(214,211,209,0.22)' },
 };
@@ -140,10 +136,10 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '1.6mm', padding: '2mm 2.6mm 1.6mm', borderBottom: `0.2mm solid ${p.goldSoft}` }}>
         <img src="/church logo.png" alt="شعار الكنيسة" style={{ width: '7mm', height: '7mm', objectFit: 'contain', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.3mm' }}>
-          <div style={{ fontSize: '2.1mm', fontWeight: 600, color: p.subtext, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: '2.4mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             كنيسة مارمرقس الرسول
           </div>
-          <div style={{ fontSize: '2.6mm', fontWeight: 800, color: p.gold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
+          <div style={{ fontSize: '2.9mm', fontWeight: 800, color: p.gold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
             مدرسة بي ثيؤريموس للألحان والتسبحة
           </div>
         </div>

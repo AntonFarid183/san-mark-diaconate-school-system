@@ -4,7 +4,13 @@ import apiClient from '../apiClient';
 import { getNotificationRoute, getDynamicItemRoute, NOTIFICATION_ICONS, timeAgo } from '../utils/notifications';
 import { readDismissed, writeDismissed } from '../utils/notificationDismissal';
 
-const POLL_INTERVAL_MS = 60000;
+// Was 60s, polled forever regardless of whether the tab was even visible --
+// on a serverless Azure SQL DB (auto-pause after 15min idle), that alone was
+// enough to keep the database billed online 24/7 any time someone left a
+// logged-in tab open, background or not. 5 minutes + pausing entirely while
+// the tab is hidden (below) means a backgrounded/forgotten tab now costs
+// nothing -- only actively-open, foreground tabs poll at all.
+const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
 export default function NotificationBell() {
   const navigate = useNavigate();
@@ -29,8 +35,19 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchSummary();
-    const timer = setInterval(fetchSummary, POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
+    let timer = null;
+    const start = () => { if (!timer) timer = setInterval(fetchSummary, POLL_INTERVAL_MS); };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else { fetchSummary(); start(); } // refresh immediately on return, don't wait for the next tick
+    };
+    start();
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // Close on outside click

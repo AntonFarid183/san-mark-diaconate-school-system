@@ -291,7 +291,7 @@ const AdminDashboard = () => {
         أهلاً بك يا {user?.fullName || user?.userName}، إليك الإجراءات المتاحة في النظام
       </p>
 
-      {/* Birthdays this month — active students only, sorted by day, today highlighted */}
+      {/* Birthdays today — active students only (backend now filters to same day, not the whole month) */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -319,7 +319,7 @@ const AdminDashboard = () => {
         {birthdays === null ? (
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
         ) : birthdays.length === 0 ? (
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>لا يوجد أعياد ميلاد هذا الشهر</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>لا يوجد أعياد ميلاد اليوم</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {visibleBirthdays.map(b => (

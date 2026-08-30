@@ -159,7 +159,14 @@ const RegisterStudentScreen = () => {
         amountDue: amountDue && amountDue > 0 ? amountDue : null,
       };
       const response = await apiClient.post('/students/register', payload);
-      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword, fullName: formData.fullName });
+      const gradeName = grades.find(g => g.id === formData.gradeId)?.name || '';
+      setCredentials({
+        userName: response.data.userName,
+        temporaryPassword: response.data.temporaryPassword,
+        fullName: formData.fullName,
+        whatsAppNumber: formData.whatsAppNumber,
+        gradeName,
+      });
     } catch (err) {
       let errorMsg = 'حدث خطأ. تأكد من أن الطالب غير مسجل مسبقاً.';
       // Backend serializes as camelCase ("message") by ASP.NET Core's default
@@ -189,9 +196,15 @@ const RegisterStudentScreen = () => {
           <h2 style={{ marginBottom: '15px' }}>
             اسم المستخدم:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</span>
           </h2>
-          <h2>
+          <h2 style={{ marginBottom: credentials.gradeName || credentials.whatsAppNumber ? '15px' : 0 }}>
             كلمة المرور:<br /><span style={{ color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.temporaryPassword}</span>
           </h2>
+          {credentials.gradeName && (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
+          )}
+          {credentials.whatsAppNumber && (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '30px' }}>
           <button

@@ -143,7 +143,14 @@ export default function SelfRegisterScreen() {
         selfRegistered: true,
       };
       const response = await apiClient.post('/students/register', payload);
-      setCredentials({ userName: response.data.userName, temporaryPassword: response.data.temporaryPassword, fullName: formData.fullName });
+      const gradeName = grades.find(g => g.id === formData.gradeId)?.name || '';
+      setCredentials({
+        userName: response.data.userName,
+        temporaryPassword: response.data.temporaryPassword,
+        fullName: formData.fullName,
+        whatsAppNumber: formData.whatsAppNumber,
+        gradeName,
+      });
     } catch (err) {
       let errorMsg = 'حدث خطأ. تأكد من أن بياناتك صحيحة.';
       // Backend serializes as camelCase ("message") by ASP.NET Core's default
@@ -176,10 +183,16 @@ export default function SelfRegisterScreen() {
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>اسم المستخدم</div>
               <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.userName}</div>
             </div>
-            <div>
+            <div style={{ marginBottom: credentials.gradeName || credentials.whatsAppNumber ? '1rem' : 0 }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>كلمة المرور المؤقتة</div>
               <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent-gold)', letterSpacing: '2px' }}>{credentials.temporaryPassword}</div>
             </div>
+            {credentials.gradeName && (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>الصف: {credentials.gradeName}</p>
+            )}
+            {credentials.whatsAppNumber && (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', direction: 'ltr' }}>واتساب: {credentials.whatsAppNumber}</p>
+            )}
           </div>
 
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>

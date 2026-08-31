@@ -344,9 +344,9 @@ public class AttendanceService : IAttendanceService
     // model underneath (one session per class, transparently), it just
     // fetches/saves across every class in the stage in one call so the UI
     // doesn't have to loop the class-roster flow itself. ──
-    public async Task<List<StageRosterEntryDto>> GetStageRosterAsync(Guid stageId, Guid academicYearId, StudentLevel level, DateOnly date)
+    public async Task<List<StageRosterEntryDto>> GetStageRosterAsync(Guid stageId, Guid academicYearId, StudentLevel? level, DateOnly date, Guid? gradeId = null)
     {
-        var students = await _repo.GetActiveStudentsByStageAsync(stageId, academicYearId, level);
+        var students = await _repo.GetActiveStudentsByStageAsync(stageId, academicYearId, level, gradeId);
         var classIds = students.Select(s => s.ClassId!.Value).Distinct().ToList();
         var sessions = await _repo.GetSessionsByClassIdsAndDateAsync(classIds, date);
         var statusByStudent = sessions
@@ -370,7 +370,7 @@ public class AttendanceService : IAttendanceService
 
     public async Task<List<AttendanceRecordDto>> RecordStageAttendanceAsync(RecordStageAttendanceDto dto, Guid recordedByUserId)
     {
-        var students = await _repo.GetActiveStudentsByStageAsync(dto.StageId, dto.AcademicYearId, dto.Level);
+        var students = await _repo.GetActiveStudentsByStageAsync(dto.StageId, dto.AcademicYearId, dto.Level, dto.GradeId);
         var classByStudent = students.ToDictionary(s => s.Id, s => s.ClassId!.Value);
 
         var entriesByClass = dto.Entries

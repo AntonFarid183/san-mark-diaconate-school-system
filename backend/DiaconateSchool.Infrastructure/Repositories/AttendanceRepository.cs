@@ -159,16 +159,21 @@ public class AttendanceRepository : IAttendanceRepository
             .ToListAsync();
     }
 
-    public async Task<List<Student>> GetActiveStudentsByStageAsync(Guid stageId, Guid academicYearId, StudentLevel level)
+    public async Task<List<Student>> GetActiveStudentsByStageAsync(Guid stageId, Guid academicYearId, StudentLevel? level, Guid? gradeId = null)
     {
+        // level == null means "every level" -- covers a grade that was never
+        // split (everyone defaults to Level1 anyway) as well as deliberately
+        // taking attendance for both levels at once. gradeId narrows the
+        // same stage-wide query down to a single grade when set.
         return await _context.Students
             .Include(s => s.User)
             .Include(s => s.Class).ThenInclude(c => c.Grade)
             .Where(s => s.Status == StudentStatus.Active
                 && s.Class != null
                 && s.Class.AcademicYearId == academicYearId
-                && s.Class.Level == level
-                && s.Class.Grade.StageId == stageId)
+                && (level == null || s.Class.Level == level)
+                && s.Class.Grade.StageId == stageId
+                && (gradeId == null || s.Class.GradeId == gradeId))
             .ToListAsync();
     }
 

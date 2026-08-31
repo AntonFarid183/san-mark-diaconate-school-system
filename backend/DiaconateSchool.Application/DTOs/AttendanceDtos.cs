@@ -108,8 +108,14 @@ public class StageRosterEntryDto
 public class RecordStageAttendanceDto
 {
     public Guid StageId { get; set; }
+    // Optional narrowing to one Grade under the stage — same roster/record
+    // flow, just scoped to a single grade instead of the whole stage.
+    public Guid? GradeId { get; set; }
     public Guid AcademicYearId { get; set; }
-    public StudentLevel Level { get; set; } = StudentLevel.Level1;
+    // Null = every level, undivided — covers a grade that was never split
+    // into levels (every student defaults to Level1 anyway) as well as
+    // "take attendance for everyone regardless of level" on purpose.
+    public StudentLevel? Level { get; set; }
     public DateOnly Date { get; set; }
     public List<RecordClassAttendanceEntryDto> Entries { get; set; } = new();
 }

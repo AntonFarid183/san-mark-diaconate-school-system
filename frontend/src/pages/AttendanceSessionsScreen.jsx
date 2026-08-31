@@ -40,11 +40,16 @@ const AttendanceSessionsScreen = () => {
   const [academicYearId, setAcademicYearId] = useState('');
   const [stageId, setStageId] = useState('');
   const [gradeId, setGradeId] = useState('');
-  const [level, setLevel] = useState(1);
+  // '' = every level at once — covers a grade never split into levels
+  // (everyone defaults to Level1 anyway) as well as deliberately taking
+  // attendance for both levels together. 1/2 narrows to one level.
+  const [level, setLevel] = useState('');
   const [classId, setClassId] = useState('');
   const [date, setDate] = useState(todayStr());
-  // 'class': pick grade + class as before. 'stage': skip grade/class and
-  // take attendance for every class in every grade under the stage at once.
+  // 'class': pick grade + class as before. 'grade': skip class, take
+  // attendance for every class (at the chosen level, or all of them) in one
+  // grade. 'stage': skip grade/class entirely and take attendance for every
+  // class in every grade under the stage at once.
   const [scope, setScope] = useState('class');
 
   const [roster, setRoster] = useState([]);
@@ -85,21 +90,23 @@ const AttendanceSessionsScreen = () => {
     }
   }, [stageId]);
 
-  // Grade + year + level -> classes. Level defaults to 1 server-side when
-  // omitted (GET /classes' [FromQuery] StudentLevel level = Level1), which
-  // is exactly why level-2 classes used to be invisible here — there was no
-  // level param sent at all, let alone a picker to change it.
+  // Grade + year + level -> classes (class scope only — a single class
+  // belongs to exactly one level, so "كل المستويات" doesn't apply here;
+  // fall back to Level1 like before when no level is picked). Level used to
+  // default to 1 server-side when omitted (GET /classes' [FromQuery]
+  // StudentLevel level = Level1), which is exactly why level-2 classes used
+  // to be invisible here — there was no level param sent at all.
   useEffect(() => {
     setClassId(''); setClasses([]);
-    if (gradeId && academicYearId) {
-      apiClient.get('/classes', { params: { gradeId, academicYearId, level } }).then(r => {
+    if (scope === 'class' && gradeId && academicYearId) {
+      apiClient.get('/classes', { params: { gradeId, academicYearId, level: level || 1 } }).then(r => {
         setClasses(r.data);
         const target = initialTarget.current.classId;
         if (target && r.data.find(c => c.id === target)) setClassId(target);
         initialTarget.current = {}; // consume — only auto-apply once
       }).catch(() => setClasses([]));
     }
-  }, [gradeId, academicYearId, level]);
+  }, [scope, gradeId, academicYearId, level]);
 
   // Class or date -> roster for that day (class scope)
   useEffect(() => {
@@ -109,13 +116,15 @@ const AttendanceSessionsScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope, classId, date]);
 
-  // Stage + year + level + date -> roster for the whole stage
+  // Grade (or stage) + year + level + date -> roster. Same call either way —
+  // gradeId narrows the stage-wide query to one grade when scope is 'grade'.
   useEffect(() => {
-    if (scope !== 'stage') return;
-    if (stageId && academicYearId && date) fetchStageRoster();
+    if (scope !== 'grade' && scope !== 'stage') return;
+    const ready = scope === 'grade' ? !!gradeId : !!stageId;
+    if (ready && stageId && academicYearId && date) fetchStageRoster();
     else { setRoster([]); setStatusByStudent({}); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope, stageId, academicYearId, level, date]);
+  }, [scope, stageId, gradeId, academicYearId, level, date]);
 
   const fetchRoster = async () => {
     setLoading(true);
@@ -132,7 +141,10 @@ const AttendanceSessionsScreen = () => {
   const fetchStageRoster = async () => {
     setLoading(true);
     try {
-      const r = await apiClient.get('/attendance/stage-roster', { params: { stageId, academicYearId, level, date } });
+      const params = { stageId, academicYearId, date };
+      if (level) params.level = level; // omitted = every level
+      if (scope === 'grade') params.gradeId = gradeId;
+      const r = await apiClient.get('/attendance/stage-roster', { params });
       setRoster(r.data);
       const map = {};
       r.data.forEach(s => { if (s.status !== null && s.status !== undefined) map[s.studentId] = s.status; });
@@ -195,8 +207,12 @@ const AttendanceSessionsScreen = () => {
     setSaving(true);
     try {
       const entries = Object.entries(statusByStudent).map(([studentId, status]) => ({ studentId, status }));
-      if (scope === 'stage') {
-        await apiClient.post('/attendance/record-stage', { stageId, academicYearId, level, date, entries });
+      if (scope === 'grade' || scope === 'stage') {
+        await apiClient.post('/attendance/record-stage', {
+          stageId, academicYearId, date, entries,
+          level: level || null, // null = every level
+          gradeId: scope === 'grade' ? gradeId : null,
+        });
       } else {
         await apiClient.post('/attendance/record-class', { classId, date, entries });
       }
@@ -208,7 +224,9 @@ const AttendanceSessionsScreen = () => {
     }
   };
 
-  const ready = scope === 'stage' ? !!(stageId && academicYearId) : !!classId;
+  const ready = scope === 'stage' ? !!(stageId && academicYearId)
+    : scope === 'grade' ? !!(gradeId && academicYearId)
+    : !!classId;
 
   return (
     <>
@@ -228,6 +246,13 @@ const AttendanceSessionsScreen = () => {
             style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${scope === 'class' ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: scope === 'class' ? 'rgba(251,191,36,0.12)' : 'transparent', color: scope === 'class' ? 'var(--accent-gold)' : 'var(--text-secondary)' }}
           >
             فصل واحد
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope('grade')}
+            style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${scope === 'grade' ? 'var(--accent-gold)' : 'var(--glass-border)'}`, background: scope === 'grade' ? 'rgba(251,191,36,0.12)' : 'transparent', color: scope === 'grade' ? 'var(--accent-gold)' : 'var(--text-secondary)' }}
+          >
+            صف كامل
           </button>
           <button
             type="button"
@@ -252,7 +277,7 @@ const AttendanceSessionsScreen = () => {
               {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          {scope === 'class' && (
+          {(scope === 'class' || scope === 'grade') && (
             <div style={{ minWidth: '180px' }}>
               <label style={labelStyle}>الصف</label>
               <select className="premium-input" value={gradeId} onChange={e => setGradeId(e.target.value)} disabled={!stageId}>
@@ -261,13 +286,25 @@ const AttendanceSessionsScreen = () => {
               </select>
             </div>
           )}
-          <div style={{ minWidth: '140px' }}>
-            <label style={labelStyle}>المستوى</label>
-            <select className="premium-input" value={level} onChange={e => setLevel(Number(e.target.value))}>
-              <option value={1}>المستوى 1</option>
-              <option value={2}>المستوى 2</option>
-            </select>
-          </div>
+          {scope !== 'class' && (
+            <div style={{ minWidth: '150px' }}>
+              <label style={labelStyle}>المستوى</label>
+              <select className="premium-input" value={level} onChange={e => setLevel(e.target.value ? Number(e.target.value) : '')}>
+                <option value="">الكل (بدون تقسيم)</option>
+                <option value={1}>المستوى 1</option>
+                <option value={2}>المستوى 2</option>
+              </select>
+            </div>
+          )}
+          {scope === 'class' && (
+            <div style={{ minWidth: '140px' }}>
+              <label style={labelStyle}>المستوى</label>
+              <select className="premium-input" value={level || 1} onChange={e => setLevel(Number(e.target.value))}>
+                <option value={1}>المستوى 1</option>
+                <option value={2}>المستوى 2</option>
+              </select>
+            </div>
+          )}
           {scope === 'class' && (
             <div style={{ minWidth: '140px' }}>
               <label style={labelStyle}>الفصل</label>
@@ -290,6 +327,8 @@ const AttendanceSessionsScreen = () => {
           <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
             {scope === 'stage'
               ? 'اختر السنة الدراسية والمرحلة لعرض طلاب المرحلة كاملة وتسجيل حضورهم'
+              : scope === 'grade'
+              ? 'اختر السنة الدراسية والمرحلة والصف لعرض طلاب الصف كاملاً (بمستوياته) وتسجيل حضورهم'
               : 'اختر السنة الدراسية والمرحلة والصف والفصل لعرض الطلاب وتسجيل حضورهم'}
           </p>
         </div>
@@ -298,7 +337,9 @@ const AttendanceSessionsScreen = () => {
       ) : roster.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)' }}>event_busy</span>
-          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>{scope === 'stage' ? 'لا يوجد طلاب في هذه المرحلة' : 'لا يوجد طلاب في هذا الفصل'}</p>
+          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
+            {scope === 'stage' ? 'لا يوجد طلاب في هذه المرحلة' : scope === 'grade' ? 'لا يوجد طلاب في هذا الصف' : 'لا يوجد طلاب في هذا الفصل'}
+          </p>
         </div>
       ) : (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
@@ -352,6 +393,9 @@ const AttendanceSessionsScreen = () => {
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>({student.studentCode})</span>
                     {scope === 'stage' && (
                       <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold)', marginRight: '0.5rem' }}>{student.gradeName} — فصل {student.className}</span>
+                    )}
+                    {scope === 'grade' && (
+                      <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold)', marginRight: '0.5rem' }}>فصل {student.className}</span>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>

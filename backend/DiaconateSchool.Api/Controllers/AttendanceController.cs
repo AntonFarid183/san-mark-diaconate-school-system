@@ -141,9 +141,9 @@ public class AttendanceController : ControllerBase
     // every grade under one Stage — for taking attendance stage-wide.
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("stage-roster")]
-    public async Task<IActionResult> GetStageRoster([FromQuery] Guid stageId, [FromQuery] Guid academicYearId, [FromQuery] StudentLevel level, [FromQuery] DateOnly date)
+    public async Task<IActionResult> GetStageRoster([FromQuery] Guid stageId, [FromQuery] Guid academicYearId, [FromQuery] StudentLevel? level, [FromQuery] DateOnly date, [FromQuery] Guid? gradeId = null)
     {
-        var result = await _service.GetStageRosterAsync(stageId, academicYearId, level, date);
+        var result = await _service.GetStageRosterAsync(stageId, academicYearId, level, date, gradeId);
         return Ok(result);
     }
 

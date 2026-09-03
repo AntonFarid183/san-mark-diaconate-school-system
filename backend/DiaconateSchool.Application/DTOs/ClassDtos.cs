@@ -70,3 +70,8 @@ public class MoveStudentsDto
     public List<Guid> StudentIds { get; set; } = new();
     public Guid? TargetClassId { get; set; } // null = remove from class
 }
+
+public class RenameClassDto
+{
+    public string Name { get; set; } = string.Empty;
+}

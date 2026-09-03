@@ -146,6 +146,23 @@ public class SchoolClassService : ISchoolClassService
         return (true, null);
     }
 
+    public async Task<(bool Success, string? Error)> RenameClassAsync(Guid classId, string name)
+    {
+        name = name?.Trim() ?? "";
+        if (name.Length == 0)
+            return (false, "اسم الفصل مطلوب.");
+
+        var schoolClass = await _repo.GetByIdAsync(classId);
+        if (schoolClass == null) return (false, "الفصل غير موجود.");
+
+        var duplicate = await _repo.NameExistsAsync(schoolClass.GradeId, schoolClass.AcademicYearId, schoolClass.Level, name, classId);
+        if (duplicate) return (false, "يوجد فصل بهذا الاسم بالفعل في نفس الصف والمستوى.");
+
+        schoolClass.Name = name;
+        await _uow.SaveChangesAsync();
+        return (true, null);
+    }
+
     public async Task<(bool Success, string? Error)> DeleteClassAsync(Guid classId)
     {
         var schoolClass = await _repo.GetByIdAsync(classId);

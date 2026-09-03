@@ -50,6 +50,13 @@ public class ClassesController : ControllerBase
         return success ? Ok() : BadRequest(new { Message = error });
     }
 
+    [HttpPut("{id}/rename")]
+    public async Task<IActionResult> Rename(Guid id, [FromBody] RenameClassDto dto)
+    {
+        var (success, error) = await _service.RenameClassAsync(id, dto.Name);
+        return success ? Ok() : BadRequest(new { Message = error });
+    }
+
     [HttpPost("{id}/toggle-lock")]
     public async Task<IActionResult> ToggleLock(Guid id)
     {

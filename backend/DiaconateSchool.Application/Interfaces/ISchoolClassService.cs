@@ -25,4 +25,8 @@ public interface ISchoolClassService
     Task<(bool Success, string? Error)> ToggleLockAsync(Guid classId);
 
     Task<(bool Success, string? Error)> DeleteClassAsync(Guid classId);
+
+    // Rename an existing class -- "A"/"B" letters are just the smart-distribution
+    // default, admins can call a class whatever they want (e.g. "فصل مارجرجس").
+    Task<(bool Success, string? Error)> RenameClassAsync(Guid classId, string name);
 }

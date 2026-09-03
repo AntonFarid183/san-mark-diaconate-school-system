@@ -4,14 +4,15 @@ import apiClient from '../apiClient';
 import { getNotificationRoute, getDynamicItemRoute, NOTIFICATION_ICONS, timeAgo } from '../utils/notifications';
 import { readDismissed, writeDismissed } from '../utils/notificationDismissal';
 
-// Was 60s, polled forever regardless of whether the tab was even visible --
-// on a serverless Azure SQL DB (auto-pause after 15min idle), that alone was
-// enough to keep the database billed online 24/7 any time someone left a
-// logged-in tab open, background or not. 5 minutes + pausing entirely while
-// the tab is hidden (below) means a backgrounded/forgotten tab now costs
-// nothing -- only actively-open, foreground tabs poll at all.
-const POLL_INTERVAL_MS = 5 * 60 * 1000;
-
+// No more interval-based polling at all -- 60s, then 5min+visibility-paused,
+// still kept the serverless SQL DB (auto-pause after 15min idle) online
+// nonstop through any ordinary work session, because a real admin session
+// checks the tab far more often than every 15 minutes. That's the entire
+// cost problem: as long as one tab pings on any timer, the DB never gets to
+// pause. Fetching only on mount, on opening the bell, and on the tab
+// regaining focus means the DB actually gets to idle out and pause between
+// bursts of real activity, instead of being kept alive by a background
+// heartbeat nobody's looking at.
 export default function NotificationBell() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -35,19 +36,12 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchSummary();
-    let timer = null;
-    const start = () => { if (!timer) timer = setInterval(fetchSummary, POLL_INTERVAL_MS); };
-    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
-    const handleVisibility = () => {
-      if (document.hidden) stop();
-      else { fetchSummary(); start(); } // refresh immediately on return, don't wait for the next tick
-    };
-    start();
+    // Refresh when the admin actually comes back to the tab (switches back
+    // from another app/tab) -- not on a timer, so an idle-but-open tab lets
+    // the database go quiet and auto-pause instead of being pinged forever.
+    const handleVisibility = () => { if (!document.hidden) fetchSummary(); };
     document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      stop();
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   // Close on outside click
@@ -98,7 +92,7 @@ export default function NotificationBell() {
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(o => { const next = !o; if (next) fetchSummary(); return next; })}
         className="tap-target"
         style={{
           position: 'relative', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',

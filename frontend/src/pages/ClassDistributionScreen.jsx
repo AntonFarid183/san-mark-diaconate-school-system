@@ -202,6 +202,33 @@ export default function ClassDistributionScreen() {
     }
   };
 
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+  const startRename = (cls) => { setRenamingId(cls.id); setRenameValue(cls.name); };
+  const cancelRename = () => { setRenamingId(null); setRenameValue(''); };
+  const saveRename = async (cls) => {
+    const name = renameValue.trim();
+    if (!name || name === cls.name) { cancelRename(); return; }
+    try {
+      await apiClient.put(`/classes/${cls.id}/rename`, { name });
+      cancelRename();
+      fetchClasses(manGradeId, manYearId, manLevel);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل تغيير اسم الفصل.' });
+    }
+  };
+
+  // Smart-distribution preview: admin can rename each slot before applying
+  // (defaults to A/B/C letters, but "فصل مارجرجس" etc. works just as well).
+  // Indexed, not by name -- two slots can briefly share an in-progress name
+  // while editing, which would break a name-keyed lookup.
+  const renameSlot = (index, newName) => {
+    setSelectedOption(prev => prev && {
+      ...prev,
+      classes: prev.classes.map((c, i) => i === index ? { ...c, name: newName } : c),
+    });
+  };
+
   const deleteClass = async (cls) => {
     if (!window.confirm(`حذف الفصل "${cls.name}"؟ سيتم إلغاء تعيين طلابه.`)) return;
     try {
@@ -340,11 +367,19 @@ export default function ClassDistributionScreen() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-                    {selectedOption.classes.map(cls => (
-                      <div key={cls.name} className="glass-card" style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-gold)' }}>فصل {cls.name}</span>
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(251,191,36,0.12)', color: 'var(--accent-gold)', padding: '0.1rem 0.5rem', borderRadius: '12px' }}>
+                    {selectedOption.classes.map((cls, idx) => (
+                      <div key={idx} className="glass-card" style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0 }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--accent-gold)', flexShrink: 0 }}>فصل</span>
+                            <input
+                              className="premium-input"
+                              value={cls.name}
+                              onChange={e => renameSlot(idx, e.target.value)}
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.95rem', fontWeight: 700, minWidth: 0 }}
+                            />
+                          </div>
+                          <span style={{ fontSize: '0.75rem', background: 'rgba(251,191,36,0.12)', color: 'var(--accent-gold)', padding: '0.1rem 0.5rem', borderRadius: '12px', flexShrink: 0 }}>
                             {cls.students.length} طالب
                           </span>
                         </div>
@@ -442,14 +477,37 @@ export default function ClassDistributionScreen() {
               {classes.map(cls => (
                 <div key={cls.id} className="glass-card" style={{ padding: '1.25rem', border: cls.isLocked ? '1px solid rgba(251,191,36,0.3)' : undefined }}>
                   {/* Class header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-gold)' }}>فصل {cls.name}</span>
-                      {cls.isLocked && (
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent-gold)' }}>lock</span>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
+                    {renamingId === cls.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0, flex: 1 }}>
+                        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--accent-gold)', flexShrink: 0 }}>فصل</span>
+                        <input
+                          className="premium-input"
+                          autoFocus
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveRename(cls); if (e.key === 'Escape') cancelRename(); }}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', fontWeight: 700, minWidth: 0 }}
+                        />
+                        <button onClick={() => saveRename(cls)} title="حفظ" style={{ ...iconBtnStyle, color: 'var(--success)', minWidth: 'auto', padding: '0.3rem' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
+                        </button>
+                        <button onClick={cancelRename} title="إلغاء" style={{ ...iconBtnStyle, minWidth: 'auto', padding: '0.3rem' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                        <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>فصل {cls.name}</span>
+                        {cls.isLocked && (
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent-gold)' }}>lock</span>
+                        )}
+                        <button onClick={() => startRename(cls)} title="تعديل الاسم" style={{ ...iconBtnStyle, minWidth: 'auto', padding: '0.2rem', flexShrink: 0 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>edit</span>
+                        </button>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
                       <button onClick={() => exportClass(cls)} disabled={exportingClassId === cls.id || cls.studentCount === 0} title="تصدير Excel" style={{ ...iconBtnStyle, color: 'var(--c-green)', opacity: cls.studentCount === 0 ? 0.4 : 1 }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{exportingClassId === cls.id ? 'hourglass_top' : 'download'}</span>
                         <span style={iconBtnLabelStyle}>تصدير</span>

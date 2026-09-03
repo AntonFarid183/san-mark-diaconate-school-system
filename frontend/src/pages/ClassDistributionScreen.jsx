@@ -476,10 +476,12 @@ export default function ClassDistributionScreen() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
               {classes.map(cls => (
                 <div key={cls.id} className="glass-card" style={{ padding: '1.25rem', border: cls.isLocked ? '1px solid rgba(251,191,36,0.3)' : undefined }}>
-                  {/* Class header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
+                  {/* Class header -- name gets its own full-width row so a
+                      long custom name (e.g. "فصل مارجرجس") never gets
+                      crushed to nothing by the icon-button row next to it. */}
+                  <div style={{ marginBottom: '0.75rem' }}>
                     {renamingId === cls.id ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0, marginBottom: '0.5rem' }}>
                         <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--accent-gold)', flexShrink: 0 }}>فصل</span>
                         <input
                           className="premium-input"
@@ -487,7 +489,7 @@ export default function ClassDistributionScreen() {
                           value={renameValue}
                           onChange={e => setRenameValue(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveRename(cls); if (e.key === 'Escape') cancelRename(); }}
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', fontWeight: 700, minWidth: 0 }}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', fontWeight: 700, minWidth: 0, flex: 1 }}
                         />
                         <button onClick={() => saveRename(cls)} title="حفظ" style={{ ...iconBtnStyle, color: 'var(--success)', minWidth: 'auto', padding: '0.3rem' }}>
                           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
@@ -497,17 +499,17 @@ export default function ClassDistributionScreen() {
                         </button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-                        <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>فصل {cls.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--accent-gold)', overflowWrap: 'break-word', minWidth: 0 }}>فصل {cls.name}</span>
                         {cls.isLocked && (
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent-gold)' }}>lock</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent-gold)', flexShrink: 0 }}>lock</span>
                         )}
                         <button onClick={() => startRename(cls)} title="تعديل الاسم" style={{ ...iconBtnStyle, minWidth: 'auto', padding: '0.2rem', flexShrink: 0 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>edit</span>
                         </button>
                       </div>
                     )}
-                    <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: '0.3rem' }}>
                       <button onClick={() => exportClass(cls)} disabled={exportingClassId === cls.id || cls.studentCount === 0} title="تصدير Excel" style={{ ...iconBtnStyle, color: 'var(--c-green)', opacity: cls.studentCount === 0 ? 0.4 : 1 }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{exportingClassId === cls.id ? 'hourglass_top' : 'download'}</span>
                         <span style={iconBtnLabelStyle}>تصدير</span>

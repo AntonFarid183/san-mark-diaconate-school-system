@@ -99,12 +99,12 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
           <div class="code-chip">${student.studentCode || ''}</div>
         </div>
         <div class="info-col">
-          <div class="name" title="${name}">${name}</div>
+          <div class="name">${name}</div>
           <div class="meta-grid">
-            <div class="meta-item"><span class="meta-label">المرحلة</span><span class="meta-value">${student.stageName || '—'}</span></div>
+            <div class="meta-item"><span class="meta-label">المرحلة</span><span class="meta-value meta-value--chip">${student.stageName || '—'}</span></div>
             <div class="meta-item"><span class="meta-label">الصف</span><span class="meta-value meta-value--chip">${student.gradeName || '—'}</span></div>
-            <div class="meta-item"><span class="meta-label">الفصل</span><span class="meta-value">${student.className || '—'}</span></div>
-            <div class="meta-item"><span class="meta-label">المستوى</span><span class="meta-value">${levelText}</span></div>
+            <div class="meta-item"><span class="meta-label">الفصل</span><span class="meta-value meta-value--chip">${student.className || '—'}</span></div>
+            <div class="meta-item"><span class="meta-label">المستوى</span><span class="meta-value meta-value--chip">${levelText}</span></div>
           </div>
         </div>
         <div class="qr-col">
@@ -184,7 +184,9 @@ function cardCss() {
     /* Solid accent chip, not just colored text -- a thin border alone
        wasn't reading as "this stage's color" clearly enough. Name and grade
        are the two values that carry the accent color solidly now. */
-    .name { font-size: 3.2mm; font-weight: 800; color: #ffffff; background: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: fit-content; border-radius: 1.2mm; padding: 0.7mm 2mm; }
+    /* No truncation -- a smaller font that always shows the full name beats
+       an ellipsis cutting it off. */
+    .name { font-size: 2.6mm; font-weight: 800; color: #ffffff; background: var(--accent); max-width: 100%; overflow-wrap: break-word; line-height: 1.25; border-radius: 1.2mm; padding: 0.7mm 2mm; }
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.2mm; row-gap: 1.6mm; }
     .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
     .meta-label { font-size: 2mm; font-weight: 600; color: var(--subtext); }

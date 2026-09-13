@@ -26,6 +26,16 @@ function levelLabel(level) {
   return LEVEL_LABELS[level] ?? String(level);
 }
 
+// Shared style for every solid accent-colored value chip (المرحلة/الصف/
+// الفصل/المستوى) — all four now carry the stage color, not just الصف.
+function chipStyle(accentColor) {
+  return {
+    fontSize: '2.3mm', fontWeight: 700, color: '#ffffff', background: accentColor,
+    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
+    borderRadius: '1mm', padding: '0.3mm 1.4mm',
+  };
+}
+
 // Every stage's card is a plain white card now (per Bishoy: "keeping the
 // exact same design... completely white background for every stage" — the
 // reference card he sent has one fixed white body, only the frame/border
@@ -158,42 +168,35 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
         {/* Name + meta grid */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.6mm' }}>
           {/* Solid accent chip, not just colored text -- a thin border alone
-              wasn't reading as "this stage's color" clearly enough. Name and
-              grade are the two values that carry the accent color solidly now. */}
+              wasn't reading as "this stage's color" clearly enough. Every
+              value chip below shares this look. Name: no truncation -- a
+              smaller font that always shows the full name beats an ellipsis
+              cutting it off, per request. */}
           <div
             style={{
-              fontSize: '3.2mm', fontWeight: 800, color: '#ffffff', background: p.gold,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
-              borderRadius: '1.2mm', padding: '0.7mm 2mm',
+              fontSize: '2.6mm', fontWeight: 800, color: '#ffffff', background: p.gold,
+              borderRadius: '1.2mm', padding: '0.7mm 2mm', maxWidth: '100%',
+              overflowWrap: 'break-word', lineHeight: 1.25,
             }}
-            title={name}
           >
             {name || '—'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '2.2mm', rowGap: '1.6mm' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>المرحلة</span>
-              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.stageName || '—'}</span>
+              <span style={chipStyle(p.gold)}>{student.stageName || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الصف</span>
-              <span
-                style={{
-                  fontSize: '2.3mm', fontWeight: 700, color: '#ffffff', background: p.gold,
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
-                  borderRadius: '1mm', padding: '0.3mm 1.4mm',
-                }}
-              >
-                {student.gradeName || '—'}
-              </span>
+              <span style={chipStyle(p.gold)}>{student.gradeName || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الفصل</span>
-              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.className || '—'}</span>
+              <span style={chipStyle(p.gold)}>{student.className || '—'}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>المستوى</span>
-              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{levelLabel(student.level) || '—'}</span>
+              <span style={chipStyle(p.gold)}>{levelLabel(student.level) || '—'}</span>
             </div>
           </div>
         </div>

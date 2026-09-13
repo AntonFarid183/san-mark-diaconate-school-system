@@ -11,52 +11,39 @@ const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKE
 // Mirrors DiaconateSchool.Domain.Enums.StudentLevel (Level1 = 1, Level2 = 2)
 const LEVEL_LABELS = { 1: 'المستوى 1', 2: 'المستوى 2' };
 
-// Same dark palette as StudentIdCard.jsx's PALETTE.dark — kept in sync by
-// hand since this build's a plain HTML string for window.print(), not React.
-// bgFrom/bgTo/gold/goldSoft/goldFaint/panelBorder are the *default* theme
-// (used when a student's grade/stage isn't in GRADE_ACCENTS below, e.g.
-// خريجون -- graduates weren't given their own color) — text colors and
-// everything else stay the same across every grade.
+// Every stage's card is a plain white card now (per Bishoy: "keeping the
+// exact same design... completely white background for every stage" — the
+// reference card he sent has one fixed white body, only the frame/border
+// color changes per stage). Same text/panel/chip values regardless of
+// grade — only the accent (color/soft/faint/border, in GRADE_ACCENTS below)
+// varies. Kept in sync by hand with the identical map in StudentIdCard.jsx
+// (this build's a plain HTML string for window.print(), not React).
 const PAL = {
-  bgFrom: '#0f172a', bgTo: '#111c34', text: '#f1f5f9', subtext: '#93a1b8',
-  gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)',
-  panel: 'rgba(255,255,255,0.04)', panelBorder: 'rgba(251,191,36,0.22)', chipBg: 'rgba(255,255,255,0.06)',
+  bgFrom: '#ffffff', bgTo: '#f8fafc', text: '#0f172a', subtext: '#475569',
+  panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
 };
+// Default accent (used by any grade/stage below with no entry of its own).
+const DEFAULT_ACCENT = { color: '#fbbf24', soft: 'rgba(251,191,36,0.35)', faint: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.22)' };
 
-// A full theme (dark tinted background + a brighter accent in the same hue,
-// for the border/name-plate/glow/footer-rule) per grade -- the whole card
-// background changes now, not just the trim. KG1/KG2 and each primary grade
-// (1st-6th) get their own color; إعدادي (Middle) and ثانوي (High) are
-// grouped -- every grade within either stage shares one color rather than
-// splitting further; جامعة (University) and كبار (Adult) each get one too.
-// Same soft/faint/border alpha ratios as the original gold (0.35/0.14/0.22).
-// Kept in sync by hand with the identical map in StudentIdCard.jsx (same
-// "plain string vs React" reason as the PAL duplication above).
-// v3: v2's 600/700 shades were called too bright/loud. Shifted one step
-// darker to Tailwind's 700/800 shades -- still a clearly distinct color per
-// grade (not back to v1's muddy near-black), just calmer. Accent stays the
-// 300 shade -- still pops fine as trim against the slightly darker body.
+// One accent color per grade -- this is the only thing that varies card to
+// card now (border/frame, header rule, photo-frame border, code chip,
+// footer rule). KG1/KG2 and each primary grade (1st-6th) get their own;
+// إعدادي (Middle) and ثانوي (High) are grouped -- every grade within either
+// stage shares one accent rather than splitting further; جامعة (University)
+// and كبار (Adult) each get one too.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#be123c', bgTo: '#9f1239', color: '#fda4af', soft: 'rgba(253,164,175,0.35)', faint: 'rgba(253,164,175,0.14)', border: 'rgba(253,164,175,0.22)' },
-  'KG2': { bgFrom: '#c2410c', bgTo: '#9a3412', color: '#fdba74', soft: 'rgba(253,186,116,0.35)', faint: 'rgba(253,186,116,0.14)', border: 'rgba(253,186,116,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#b45309', bgTo: '#92400e', color: '#fcd34d', soft: 'rgba(252,211,77,0.35)', faint: 'rgba(252,211,77,0.14)', border: 'rgba(252,211,77,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#4d7c0f', bgTo: '#3f6212', color: '#bef264', soft: 'rgba(190,242,100,0.35)', faint: 'rgba(190,242,100,0.14)', border: 'rgba(190,242,100,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#047857', bgTo: '#065f46', color: '#6ee7b7', soft: 'rgba(110,231,183,0.35)', faint: 'rgba(110,231,183,0.14)', border: 'rgba(110,231,183,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', color: '#5eead4', soft: 'rgba(94,234,212,0.35)', faint: 'rgba(94,234,212,0.14)', border: 'rgba(94,234,212,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', color: '#7dd3fc', soft: 'rgba(125,211,252,0.35)', faint: 'rgba(125,211,252,0.14)', border: 'rgba(125,211,252,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', color: '#c4b5fd', soft: 'rgba(196,181,253,0.35)', faint: 'rgba(196,181,253,0.14)', border: 'rgba(196,181,253,0.22)' },
-  // A white card, not just a light accent -- the only entry that also
-  // overrides text/subtext/panel/chipBg (normally the shared PAL values),
-  // since white text on a white background would be invisible.
-  'إعدادي': {
-    bgFrom: '#ffffff', bgTo: '#f1f5f9',
-    color: '#92400e', soft: 'rgba(146,64,14,0.35)', faint: 'rgba(146,64,14,0.12)', border: 'rgba(146,64,14,0.3)',
-    text: '#0f172a', subtext: '#475569', panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
-  },
-  // ثانوي intentionally has no entry -- falls through to gradeAccent()'s
-  // default (PAL's original navy/gold), per request to restore it.
-  'جامعة': { bgFrom: '#475569', bgTo: '#334155', color: '#cbd5e1', soft: 'rgba(203,213,225,0.35)', faint: 'rgba(203,213,225,0.14)', border: 'rgba(203,213,225,0.22)' },
-  'كبار': { bgFrom: '#57534e', bgTo: '#44403c', color: '#d6d3d1', soft: 'rgba(214,211,209,0.35)', faint: 'rgba(214,211,209,0.14)', border: 'rgba(214,211,209,0.22)' },
+  'KG1': { color: '#e11d48', soft: 'rgba(225,29,72,0.35)', faint: 'rgba(225,29,72,0.14)', border: 'rgba(225,29,72,0.35)' },
+  'KG2': { color: '#ea580c', soft: 'rgba(234,88,12,0.35)', faint: 'rgba(234,88,12,0.14)', border: 'rgba(234,88,12,0.35)' },
+  'الصف 1 الابتدائي': { color: '#b45309', soft: 'rgba(180,83,9,0.35)', faint: 'rgba(180,83,9,0.14)', border: 'rgba(180,83,9,0.35)' },
+  'الصف 2 الابتدائي': { color: '#4d7c0f', soft: 'rgba(77,124,15,0.35)', faint: 'rgba(77,124,15,0.14)', border: 'rgba(77,124,15,0.35)' },
+  'الصف 3 الابتدائي': { color: '#047857', soft: 'rgba(4,120,87,0.35)', faint: 'rgba(4,120,87,0.14)', border: 'rgba(4,120,87,0.35)' },
+  'الصف 4 الابتدائي': { color: '#0f766e', soft: 'rgba(15,118,110,0.35)', faint: 'rgba(15,118,110,0.14)', border: 'rgba(15,118,110,0.35)' },
+  'الصف 5 الابتدائي': { color: '#0369a1', soft: 'rgba(3,105,161,0.35)', faint: 'rgba(3,105,161,0.14)', border: 'rgba(3,105,161,0.35)' },
+  'الصف 6 الابتدائي': { color: '#6d28d9', soft: 'rgba(109,40,217,0.35)', faint: 'rgba(109,40,217,0.14)', border: 'rgba(109,40,217,0.35)' },
+  'إعدادي': { color: '#92400e', soft: 'rgba(146,64,14,0.35)', faint: 'rgba(146,64,14,0.12)', border: 'rgba(146,64,14,0.35)' },
+  // ثانوي intentionally has no entry -- falls through to DEFAULT_ACCENT.
+  'جامعة': { color: '#475569', soft: 'rgba(71,85,105,0.35)', faint: 'rgba(71,85,105,0.14)', border: 'rgba(71,85,105,0.35)' },
+  'كبار': { color: '#57534e', soft: 'rgba(87,83,78,0.35)', faint: 'rgba(87,83,78,0.14)', border: 'rgba(87,83,78,0.35)' },
 };
 // إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
 // other stage has exactly one grade per student anyway, so keying by grade
@@ -66,10 +53,7 @@ function gradeColorKey(student) {
   return student?.gradeName || student?.stageName;
 }
 function gradeAccent(student) {
-  const a = GRADE_ACCENTS[gradeColorKey(student)] || { bgFrom: PAL.bgFrom, bgTo: PAL.bgTo, color: PAL.gold, soft: PAL.goldSoft, faint: PAL.goldFaint, border: PAL.panelBorder };
-  // Most grades don't override these -- fall back to the shared PAL values,
-  // same idea as StudentIdCard.jsx's `{ ...base, ...GRADE_ACCENTS[key] }` spread.
-  return { text: PAL.text, subtext: PAL.subtext, panel: PAL.panel, chipBg: PAL.chipBg, ...a };
+  return { ...PAL, ...DEFAULT_ACCENT, ...GRADE_ACCENTS[gradeColorKey(student)] };
 }
 
 // ── Print rendering ──────────────────────────────────────────────────────

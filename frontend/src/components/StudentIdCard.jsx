@@ -26,59 +26,43 @@ function levelLabel(level) {
   return LEVEL_LABELS[level] ?? String(level);
 }
 
-// Same hex values as the app's --bg-primary/--accent-gold tokens in each
-// theme (see index.css) — kept as a literal palette rather than CSS vars
-// since this card is meant to print/export standalone, independent of
-// whatever theme the surrounding admin page happens to be in.
-const PALETTE = {
-  dark: {
-    bgFrom: '#0f172a', bgTo: '#111c34', text: '#f1f5f9', subtext: '#93a1b8',
-    gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)',
-    panel: 'rgba(255,255,255,0.04)', panelBorder: 'rgba(251,191,36,0.22)',
-    shadow: '0 1.2mm 3mm rgba(0,0,0,0.45)', chipBg: 'rgba(255,255,255,0.06)',
-  },
-  light: {
-    bgFrom: '#f1f4f9', bgTo: '#e7ecf5', text: '#152238', subtext: '#5b6b85',
-    gold: '#8a5f05', goldSoft: 'rgba(138,95,5,0.35)', goldFaint: 'rgba(138,95,5,0.10)',
-    panel: 'rgba(15,23,42,0.03)', panelBorder: 'rgba(138,95,5,0.28)',
-    shadow: '0 1mm 2.4mm rgba(21,34,56,0.18)', chipBg: 'rgba(15,23,42,0.04)',
-  },
+// Every stage's card is a plain white card now (per Bishoy: "keeping the
+// exact same design... completely white background for every stage" — the
+// reference card he sent has one fixed white body, only the frame/border
+// color changes per stage). Same text/panel/chip values regardless of
+// theme or grade — only the accent (gold family, in GRADE_ACCENTS below)
+// varies. `theme` prop is kept for API compatibility but no longer changes
+// the card's own colors (it never should have — this card always renders
+// standalone, independent of the admin page's light/dark toggle).
+const WHITE = {
+  bgFrom: '#ffffff', bgTo: '#f8fafc', text: '#0f172a', subtext: '#475569',
+  panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
+  shadow: '0 1mm 2.4mm rgba(21,34,56,0.18)',
 };
+// Default accent (used by any grade/stage below with no entry of its own).
+const DEFAULT_ACCENT = { gold: '#fbbf24', goldSoft: 'rgba(251,191,36,0.35)', goldFaint: 'rgba(251,191,36,0.14)', panelBorder: 'rgba(251,191,36,0.22)' };
 
-// A full theme (dark tinted background + a brighter accent in the same hue)
-// per grade -- the whole card background changes now, not just the trim.
-// KG1/KG2 and each primary grade (1st-6th) get their own color; إعدادي
-// (Middle) and ثانوي (High) are grouped -- every grade within either stage
-// shares one color rather than splitting further; جامعة (University) and
-// كبار (Adult) each get one too. Same soft/faint/border alpha ratios as the
-// original gold (0.35/0.14/0.22). Kept in sync by hand with the identical
+// One accent color per grade — this is the only thing that varies card to
+// card now (border/frame, header rule, photo-frame border, code chip,
+// footer rule). KG1/KG2 and each primary grade (1st-6th) get their own;
+// إعدادي (Middle) and ثانوي (High) are grouped -- every grade within either
+// stage shares one accent rather than splitting further; جامعة (University)
+// and كبار (Adult) each get one too. Kept in sync by hand with the identical
 // map in StudentCardsScreen.jsx (print/download build the card as a plain
 // HTML string, not through this component).
-// v3: v2's 600/700 shades were called too bright/loud. Shifted one step
-// darker to Tailwind's 700/800 shades -- still a clearly distinct color per
-// grade (not back to v1's muddy near-black), just calmer. Accent stays the
-// 300 shade -- still pops fine as trim against the slightly darker body.
 const GRADE_ACCENTS = {
-  'KG1': { bgFrom: '#be123c', bgTo: '#9f1239', gold: '#fda4af', goldSoft: 'rgba(253,164,175,0.35)', goldFaint: 'rgba(253,164,175,0.14)', panelBorder: 'rgba(253,164,175,0.22)' },
-  'KG2': { bgFrom: '#c2410c', bgTo: '#9a3412', gold: '#fdba74', goldSoft: 'rgba(253,186,116,0.35)', goldFaint: 'rgba(253,186,116,0.14)', panelBorder: 'rgba(253,186,116,0.22)' },
-  'الصف 1 الابتدائي': { bgFrom: '#b45309', bgTo: '#92400e', gold: '#fcd34d', goldSoft: 'rgba(252,211,77,0.35)', goldFaint: 'rgba(252,211,77,0.14)', panelBorder: 'rgba(252,211,77,0.22)' },
-  'الصف 2 الابتدائي': { bgFrom: '#4d7c0f', bgTo: '#3f6212', gold: '#bef264', goldSoft: 'rgba(190,242,100,0.35)', goldFaint: 'rgba(190,242,100,0.14)', panelBorder: 'rgba(190,242,100,0.22)' },
-  'الصف 3 الابتدائي': { bgFrom: '#047857', bgTo: '#065f46', gold: '#6ee7b7', goldSoft: 'rgba(110,231,183,0.35)', goldFaint: 'rgba(110,231,183,0.14)', panelBorder: 'rgba(110,231,183,0.22)' },
-  'الصف 4 الابتدائي': { bgFrom: '#0f766e', bgTo: '#115e59', gold: '#5eead4', goldSoft: 'rgba(94,234,212,0.35)', goldFaint: 'rgba(94,234,212,0.14)', panelBorder: 'rgba(94,234,212,0.22)' },
-  'الصف 5 الابتدائي': { bgFrom: '#0369a1', bgTo: '#075985', gold: '#7dd3fc', goldSoft: 'rgba(125,211,252,0.35)', goldFaint: 'rgba(125,211,252,0.14)', panelBorder: 'rgba(125,211,252,0.22)' },
-  'الصف 6 الابتدائي': { bgFrom: '#6d28d9', bgTo: '#5b21b6', gold: '#c4b5fd', goldSoft: 'rgba(196,181,253,0.35)', goldFaint: 'rgba(196,181,253,0.14)', panelBorder: 'rgba(196,181,253,0.22)' },
-  // A white card, not just a light accent -- the only entry that also
-  // overrides text/subtext/panel/chipBg (normally shared PALETTE.dark
-  // values), since white text on a white background would be invisible.
-  'إعدادي': {
-    bgFrom: '#ffffff', bgTo: '#f1f5f9',
-    gold: '#92400e', goldSoft: 'rgba(146,64,14,0.35)', goldFaint: 'rgba(146,64,14,0.12)', panelBorder: 'rgba(146,64,14,0.3)',
-    text: '#0f172a', subtext: '#475569', panel: 'rgba(15,23,42,0.04)', chipBg: 'rgba(15,23,42,0.06)',
-  },
-  // ثانوي intentionally has no entry -- falls through to the original navy/gold
-  // default (PALETTE.dark) via the ?? fallback below, per request to restore it.
-  'جامعة': { bgFrom: '#475569', bgTo: '#334155', gold: '#cbd5e1', goldSoft: 'rgba(203,213,225,0.35)', goldFaint: 'rgba(203,213,225,0.14)', panelBorder: 'rgba(203,213,225,0.22)' },
-  'كبار': { bgFrom: '#57534e', bgTo: '#44403c', gold: '#d6d3d1', goldSoft: 'rgba(214,211,209,0.35)', goldFaint: 'rgba(214,211,209,0.14)', panelBorder: 'rgba(214,211,209,0.22)' },
+  'KG1': { gold: '#e11d48', goldSoft: 'rgba(225,29,72,0.35)', goldFaint: 'rgba(225,29,72,0.14)', panelBorder: 'rgba(225,29,72,0.35)' },
+  'KG2': { gold: '#ea580c', goldSoft: 'rgba(234,88,12,0.35)', goldFaint: 'rgba(234,88,12,0.14)', panelBorder: 'rgba(234,88,12,0.35)' },
+  'الصف 1 الابتدائي': { gold: '#b45309', goldSoft: 'rgba(180,83,9,0.35)', goldFaint: 'rgba(180,83,9,0.14)', panelBorder: 'rgba(180,83,9,0.35)' },
+  'الصف 2 الابتدائي': { gold: '#4d7c0f', goldSoft: 'rgba(77,124,15,0.35)', goldFaint: 'rgba(77,124,15,0.14)', panelBorder: 'rgba(77,124,15,0.35)' },
+  'الصف 3 الابتدائي': { gold: '#047857', goldSoft: 'rgba(4,120,87,0.35)', goldFaint: 'rgba(4,120,87,0.14)', panelBorder: 'rgba(4,120,87,0.35)' },
+  'الصف 4 الابتدائي': { gold: '#0f766e', goldSoft: 'rgba(15,118,110,0.35)', goldFaint: 'rgba(15,118,110,0.14)', panelBorder: 'rgba(15,118,110,0.35)' },
+  'الصف 5 الابتدائي': { gold: '#0369a1', goldSoft: 'rgba(3,105,161,0.35)', goldFaint: 'rgba(3,105,161,0.14)', panelBorder: 'rgba(3,105,161,0.35)' },
+  'الصف 6 الابتدائي': { gold: '#6d28d9', goldSoft: 'rgba(109,40,217,0.35)', goldFaint: 'rgba(109,40,217,0.14)', panelBorder: 'rgba(109,40,217,0.35)' },
+  'إعدادي': { gold: '#92400e', goldSoft: 'rgba(146,64,14,0.35)', goldFaint: 'rgba(146,64,14,0.12)', panelBorder: 'rgba(146,64,14,0.35)' },
+  // ثانوي intentionally has no entry -- falls through to DEFAULT_ACCENT.
+  'جامعة': { gold: '#475569', goldSoft: 'rgba(71,85,105,0.35)', goldFaint: 'rgba(71,85,105,0.14)', panelBorder: 'rgba(71,85,105,0.35)' },
+  'كبار': { gold: '#57534e', goldSoft: 'rgba(87,83,78,0.35)', goldFaint: 'rgba(87,83,78,0.14)', panelBorder: 'rgba(87,83,78,0.35)' },
 };
 // إعدادي/ثانوي are grouped by stage (ignore which of the 3 grades); every
 // other stage has exactly one grade per student anyway, so keying by grade
@@ -90,8 +74,7 @@ function gradeColorKey(student) {
 
 export default function StudentIdCard({ student, className = '', theme = 'dark' }) {
   const qrRef = useRef(null);
-  const base = theme === 'light' ? PALETTE.light : PALETTE.dark;
-  const p = { ...base, ...GRADE_ACCENTS[gradeColorKey(student)] };
+  const p = { ...WHITE, ...DEFAULT_ACCENT, ...GRADE_ACCENTS[gradeColorKey(student)] };
 
   useEffect(() => {
     const canvas = qrRef.current;
@@ -206,7 +189,7 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
       </div>
 
       {/* Footer rule */}
-      <div style={{ height: '1.4mm', background: `linear-gradient(90deg, transparent, ${p.gold}, transparent)`, opacity: theme === 'dark' ? 0.5 : 0.6 }} />
+      <div style={{ height: '1.4mm', background: `linear-gradient(90deg, transparent, ${p.gold}, transparent)`, opacity: 0.6 }} />
     </div>
   );
 }

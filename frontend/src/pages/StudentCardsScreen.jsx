@@ -102,7 +102,7 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
           <div class="name" title="${name}">${name}</div>
           <div class="meta-grid">
             <div class="meta-item"><span class="meta-label">المرحلة</span><span class="meta-value">${student.stageName || '—'}</span></div>
-            <div class="meta-item"><span class="meta-label">الصف</span><span class="meta-value">${student.gradeName || '—'}</span></div>
+            <div class="meta-item"><span class="meta-label">الصف</span><span class="meta-value meta-value--chip">${student.gradeName || '—'}</span></div>
             <div class="meta-item"><span class="meta-label">الفصل</span><span class="meta-value">${student.className || '—'}</span></div>
             <div class="meta-item"><span class="meta-label">المستوى</span><span class="meta-value">${levelText}</span></div>
           </div>
@@ -181,11 +181,15 @@ function cardCss() {
     .initials { font-size: 5mm; font-weight: 800; color: var(--accent); }
     .code-chip { font-size: 1.9mm; font-weight: 700; color: var(--text); background: var(--chip-bg); border: 0.18mm solid var(--accent-soft); border-radius: 1mm; padding: 0.6mm 1.4mm; white-space: nowrap; direction: ltr; }
     .info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.6mm; }
-    .name { font-size: 3.4mm; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    /* Solid accent chip, not just colored text -- a thin border alone
+       wasn't reading as "this stage's color" clearly enough. Name and grade
+       are the two values that carry the accent color solidly now. */
+    .name { font-size: 3.2mm; font-weight: 800; color: #ffffff; background: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: fit-content; border-radius: 1.2mm; padding: 0.7mm 2mm; }
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.2mm; row-gap: 1.6mm; }
     .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
     .meta-label { font-size: 2mm; font-weight: 600; color: var(--subtext); }
     .meta-value { font-size: 2.6mm; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta-value--chip { font-size: 2.3mm; color: #ffffff; background: var(--accent); max-width: fit-content; border-radius: 1mm; padding: 0.3mm 1.4mm; }
     .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid var(--accent-soft); padding: 1.1mm; box-sizing: border-box; }
     .qr-chip img { width: 100%; height: 100%; display: block; }

@@ -157,7 +157,17 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
 
         {/* Name + meta grid */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.6mm' }}>
-          <div style={{ fontSize: '3.4mm', fontWeight: 800, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} title={name}>
+          {/* Solid accent chip, not just colored text -- a thin border alone
+              wasn't reading as "this stage's color" clearly enough. Name and
+              grade are the two values that carry the accent color solidly now. */}
+          <div
+            style={{
+              fontSize: '3.2mm', fontWeight: 800, color: '#ffffff', background: p.gold,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
+              borderRadius: '1.2mm', padding: '0.7mm 2mm',
+            }}
+            title={name}
+          >
             {name || '—'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '2.2mm', rowGap: '1.6mm' }}>
@@ -167,7 +177,15 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الصف</span>
-              <span style={{ fontSize: '2.6mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.gradeName || '—'}</span>
+              <span
+                style={{
+                  fontSize: '2.3mm', fontWeight: 700, color: '#ffffff', background: p.gold,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
+                  borderRadius: '1mm', padding: '0.3mm 1.4mm',
+                }}
+              >
+                {student.gradeName || '—'}
+              </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3mm', minWidth: 0 }}>
               <span style={{ fontSize: '2mm', fontWeight: 600, color: p.subtext }}>الفصل</span>

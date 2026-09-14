@@ -115,6 +115,11 @@ public class StudentQueryService : IStudentQueryService
         if (dto.GradeId.HasValue) student.GradeId = dto.GradeId.Value;
         if (dto.IsDeacon.HasValue) student.IsDeacon = dto.IsDeacon.Value;
         if (dto.DeaconRank.HasValue) student.DeaconRank = dto.DeaconRank;
+        // Every other field treats null as "not sent, leave alone", but a rank
+        // has to be clearable: unticking شماس on the edit screen sends
+        // IsDeacon=false with no rank, and without this the old rank would
+        // stay on a student who is no longer a deacon.
+        else if (dto.IsDeacon == false) student.DeaconRank = null;
         if (dto.FatherOfConfession != null) student.FatherOfConfession = dto.FatherOfConfession;
         if (dto.FatherMobile != null) student.FatherMobile = dto.FatherMobile;
         if (dto.MotherMobile != null) student.MotherMobile = dto.MotherMobile;

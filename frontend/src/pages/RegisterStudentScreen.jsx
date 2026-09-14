@@ -4,6 +4,7 @@ import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import PhotoCaptureField from '../components/PhotoCaptureField';
 import { BACKEND_URL } from '../config';
+import { STAGE_IDS, STAGES } from '../constants/stages';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND_URL}${url}`);
 
 // Same capture-and-save pattern as the ID card download (StudentCardsScreen)
@@ -22,35 +23,6 @@ async function downloadCredentialsImage(node, studentName) {
   URL.revokeObjectURL(url);
 }
 
-const STAGE_IDS = {
-  childhood:   '00000000-0000-0000-0000-000000000001',
-  primary:     '00000000-0000-0000-0001-000000000001',
-  preparatory: '00000000-0000-0000-0002-000000000001',
-  secondary:   '00000000-0000-0000-0003-000000000001',
-  university:  '00000000-0000-0000-0004-000000000001',
-  graduates:   '00000000-0000-0000-0005-000000000001',
-  adults:      '00000000-0000-0000-0006-000000000001',
-};
-
-const STAGES = [
-  {
-    id: STAGE_IDS.childhood, label: 'طفولة', sublabel: '(KG1 و KG2)',
-    hasGrade: true, fetchGrades: false,
-    localGrades: [{ id: '00000000-0000-0000-0000-000000000011', name: 'KG1' }, { id: '00000000-0000-0000-0000-000000000012', name: 'KG2' }],
-  },
-  { id: STAGE_IDS.primary,     label: 'ابتدائي',      hasGrade: true,  fetchGrades: true },
-  { id: STAGE_IDS.preparatory, label: 'إعدادي',       hasGrade: true,  fetchGrades: true },
-  { id: STAGE_IDS.secondary,   label: 'ثانوي',        hasGrade: true,  fetchGrades: true },
-  {
-    id: STAGE_IDS.university, label: 'جامعة', sublabel: '/ معهد',
-    hasGrade: true, fetchGrades: false, hidePicker: true, hasCollege: true,
-    localGrades: [{ id: '00000000-0000-0000-0004-000000000011', name: 'جامعة' }],
-  },
-  { id: STAGE_IDS.graduates, label: 'خريجون', hasGrade: true, fetchGrades: false, hidePicker: true,
-    localGrades: [{ id: '00000000-0000-0000-0005-000000000011', name: 'خريجون' }] },
-  { id: STAGE_IDS.adults,    label: 'كبار',    hasGrade: true, fetchGrades: false, hidePicker: true,
-    localGrades: [{ id: '00000000-0000-0000-0006-000000000011', name: 'كبار' }] },
-];
 
 const RegisterStudentScreen = () => {
   usePageTitle('تسجيل طالب جديد');

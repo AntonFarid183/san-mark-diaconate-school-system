@@ -4,10 +4,13 @@ import apiClient from '../apiClient';
 import { toAbsoluteBackendUrl } from '../config';
 import { usePageTitle } from '../context/PageTitleContext';
 import PhotoCaptureField from '../components/PhotoCaptureField';
+import { STAGES, GENDER_OPTIONS, DEACON_RANK_OPTIONS, genderValue, deaconRankValue } from '../constants/stages';
 
-// Only the fields UpdateStudentDto actually accepts. Anything else typed here would be
-// silently dropped by the API, so the form deliberately doesn't offer it — email in
-// particular lives on the User and has no update path yet.
+// Every field the admin fills in at registration is editable here, matching
+// RegisterStudentScreen section for section. The one exception is the fee
+// status: it isn't a plain field, it's a ledger entry (charge + payment +
+// discount rows), so it's managed from the student's payments section rather
+// than being toggled behind the ledger's back.
 const PERSONAL_FIELDS = [
   ['الاسم الأول', 'firstName'],
   ['اسم الأب', 'secondName'],
@@ -22,16 +25,33 @@ const CONTACT_FIELDS = [
   ['واتساب', 'whatsAppNumber'],
   ['تليفون أرضي', 'landline'],
   ['العنوان', 'address'],
+  ['أقرب علامة مميزة', 'landmark'],
 ];
 
-const EDITABLE_KEYS = [...PERSONAL_FIELDS, ...CONTACT_FIELDS].map(([, key]) => key);
+const CHURCH_FIELDS = [
+  ['أب الاعتراف', 'fatherOfConfession'],
+];
+
+// Free-text inputs only -- the pickers below (gender/date/stage/grade/deacon)
+// each have their own control and their own entry in `form`.
+const TEXT_KEYS = [...PERSONAL_FIELDS, ...CONTACT_FIELDS, ...CHURCH_FIELDS].map(([, key]) => key);
 
 // The four name parts build FullName everywhere else in the app, and the API only skips a
 // field when it is null — an empty string is a real value and overwrites the stored name.
 // Without this the admin can blank a student out of every roster and search result.
 const REQUIRED_FIELDS = PERSONAL_FIELDS;
 
-const emptyForm = () => Object.fromEntries(EDITABLE_KEYS.map(key => [key, '']));
+const emptyForm = () => ({
+  ...Object.fromEntries(TEXT_KEYS.map(key => [key, ''])),
+  gender: 1,
+  dateOfBirth: '',
+  stage: '',
+  gradeId: '',
+  isDeacon: false,
+  deaconRank: null,
+});
+
+const labelStyle = { fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' };
 
 const resetPasswordButtonStyle = {
   background: 'rgba(251,191,36,0.1)',
@@ -61,6 +81,15 @@ const EditStudentScreen = () => {
   const [showReset, setShowReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [grades, setGrades] = useState([]);
+  const [gradesLoading, setGradesLoading] = useState(false);
+  // The stage/grade effect below resets gradeId whenever the stage changes,
+  // which would wipe the student's saved grade the moment their data lands.
+  // This carries it across that first run, then clears itself so a real stage
+  // change by the admin still resets the picker.
+  const [pendingGradeId, setPendingGradeId] = useState(null);
+
+  const currentStage = STAGES.find(s => s.id === form.stage) || null;
 
   useEffect(() => {
     const loadStudent = async () => {
@@ -68,7 +97,17 @@ const EditStudentScreen = () => {
         const { data } = await apiClient.get(`/students/${id}`);
         setStudent(data);
         setPhotoUrl(data.profilePictureUrl || null);
-        setForm(Object.fromEntries(EDITABLE_KEYS.map(key => [key, data[key] || ''])));
+        setPendingGradeId(data.gradeId || null);
+        setForm({
+          ...Object.fromEntries(TEXT_KEYS.map(key => [key, data[key] || ''])),
+          gender: genderValue(data.gender) ?? 1,
+          // DateOnly serializes as "YYYY-MM-DD", which is exactly what <input type="date"> wants.
+          dateOfBirth: data.dateOfBirth || '',
+          stage: data.stageId || '',
+          gradeId: data.gradeId || '',
+          isDeacon: !!data.isDeacon,
+          deaconRank: deaconRankValue(data.deaconRank),
+        });
       } catch (e) {
         setMsg({ type: 'error', text: e.response?.data?.message || 'تعذر تحميل بيانات الطالب.' });
       } finally {
@@ -78,17 +117,57 @@ const EditStudentScreen = () => {
     loadStudent();
   }, [id]);
 
+  // Stage -> grade options, same rules as the registration form: some stages
+  // have their year list in the database, others carry a fixed pseudo-grade.
+  useEffect(() => {
+    if (!form.stage) return;
+    const stage = STAGES.find(s => s.id === form.stage);
+    if (!stage) { setGrades([]); return; }
+
+    const applyGrades = (list) => {
+      setGrades(list);
+      setForm(prev => {
+        const keep = pendingGradeId && list.some(g => g.id === pendingGradeId) ? pendingGradeId : null;
+        return { ...prev, gradeId: keep || list[0]?.id || '' };
+      });
+      setPendingGradeId(null);
+    };
+
+    if (!stage.fetchGrades) { applyGrades(stage.localGrades || []); return; }
+
+    let cancelled = false;
+    setGradesLoading(true);
+    apiClient.get(`/students/grades/${form.stage}`)
+      .then(res => { if (!cancelled) applyGrades(res.data); })
+      .catch(() => { if (!cancelled) { setGrades([]); setMsg({ type: 'error', text: 'تعذر تحميل السنوات الدراسية لهذه المرحلة.' }); } })
+      .finally(() => { if (!cancelled) setGradesLoading(false); });
+    return () => { cancelled = true; };
+  }, [form.stage]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const save = async () => {
     const missing = REQUIRED_FIELDS.filter(([, key]) => !form[key].trim());
     if (missing.length > 0) {
       setMsg({ type: 'error', text: `يجب إدخال: ${missing.map(([label]) => label).join('، ')}` });
       return;
     }
+    if (!form.gradeId) {
+      setMsg({ type: 'error', text: 'يجب اختيار الصف الدراسي.' });
+      return;
+    }
 
     setSaving(true);
     try {
-      const trimmed = Object.fromEntries(EDITABLE_KEYS.map(key => [key, form[key].trim()]));
-      await apiClient.put(`/students/${id}`, trimmed);
+      const payload = {
+        ...Object.fromEntries(TEXT_KEYS.map(key => [key, form[key].trim()])),
+        gender: form.gender,
+        dateOfBirth: form.dateOfBirth || null,
+        gradeId: form.gradeId,
+        isDeacon: form.isDeacon,
+        // Sent as null when he isn't a deacon so the backend clears any rank
+        // left over from before the checkbox was unticked.
+        deaconRank: form.isDeacon ? form.deaconRank : null,
+      };
+      await apiClient.put(`/students/${id}`, payload);
       setMsg({ type: 'success', text: 'تم حفظ التعديلات.' });
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل الحفظ.' });
@@ -147,7 +226,7 @@ const EditStudentScreen = () => {
 
   const renderField = ([label, key]) => (
     <div key={key}>
-      <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>{label}</label>
+      <label style={labelStyle}>{label}</label>
       <input className="premium-input" type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
     </div>
   );
@@ -184,6 +263,78 @@ const EditStudentScreen = () => {
           <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>البيانات الشخصية</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
             {PERSONAL_FIELDS.map(renderField)}
+            <div>
+              <label style={labelStyle}>تاريخ الميلاد</label>
+              <input className="premium-input" type="date" value={form.dateOfBirth}
+                onChange={e => setForm({ ...form, dateOfBirth: e.target.value })} />
+            </div>
+            <div>
+              <label style={labelStyle}>النوع</label>
+              <div style={{ display: 'flex', gap: '1.5rem', padding: '0.75rem 0' }}>
+                {GENDER_OPTIONS.map(opt => (
+                  <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem' }}>
+                    <input type="radio" name="gender" value={opt.value} checked={form.gender === opt.value}
+                      onChange={() => setForm({ ...form, gender: opt.value })} style={{ accentColor: 'var(--accent-gold)' }} />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <h3 style={{ color: 'var(--accent-gold)', margin: '1.5rem 0 1rem' }}>المرحلة والصف</h3>
+          <div>
+            <label style={labelStyle}>المرحلة الدراسية</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {STAGES.map(s => (
+                <button key={s.id} type="button" onClick={() => setForm({ ...form, stage: s.id })}
+                  style={{
+                    padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', transition: 'all 0.2s',
+                    background: form.stage === s.id ? 'rgba(251,191,36,0.12)' : 'var(--track-inset)',
+                    border: form.stage === s.id ? '1px solid var(--accent-gold)' : '1px solid var(--divider-strong)',
+                    color: form.stage === s.id ? 'var(--accent-gold)' : 'var(--text-secondary)',
+                    fontWeight: form.stage === s.id ? 700 : 400,
+                  }}>
+                  {s.label}{s.sublabel && <span style={{ marginRight: '0.25rem' }}>{s.sublabel}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+          {currentStage && !currentStage.hidePicker && (
+            <div style={{ marginTop: '1rem' }}>
+              <label style={labelStyle}>السنة الدراسية (الترم)</label>
+              <select className="premium-input" value={form.gradeId} disabled={gradesLoading}
+                onChange={e => setForm({ ...form, gradeId: e.target.value })}>
+                {gradesLoading ? (
+                  <option>جاري التحميل...</option>
+                ) : grades.length > 0 ? (
+                  grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)
+                ) : (
+                  <option value="">لا يوجد بيانات</option>
+                )}
+              </select>
+            </div>
+          )}
+
+          <h3 style={{ color: 'var(--accent-gold)', margin: '1.5rem 0 1rem' }}>البيانات الكنسية</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
+            {CHURCH_FIELDS.map(renderField)}
+            <div>
+              <label style={labelStyle}>الرتبة الشماسية (إن وجد)</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <input type="checkbox" checked={form.isDeacon}
+                  onChange={e => setForm({ ...form, isDeacon: e.target.checked, deaconRank: e.target.checked ? form.deaconRank : null })}
+                  style={{ accentColor: 'var(--accent-gold)', width: '18px', height: '18px' }} />
+                <label style={{ fontSize: '0.9rem' }}>شماس؟</label>
+              </div>
+              {form.isDeacon && (
+                <select className="premium-input" value={form.deaconRank || ''}
+                  onChange={e => setForm({ ...form, deaconRank: e.target.value ? parseInt(e.target.value, 10) : null })}>
+                  <option value="">اختر الرتبة</option>
+                  {DEACON_RANK_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              )}
+            </div>
           </div>
 
           <h3 style={{ color: 'var(--accent-gold)', margin: '1.5rem 0 1rem' }}>معلومات التواصل</h3>

@@ -11,13 +11,6 @@ import { STAGES, GENDER_OPTIONS, DEACON_RANK_OPTIONS, genderValue, deaconRankVal
 // status: it isn't a plain field, it's a ledger entry (charge + payment +
 // discount rows), so it's managed from the student's payments section rather
 // than being toggled behind the ledger's back.
-const PERSONAL_FIELDS = [
-  ['الاسم الأول', 'firstName'],
-  ['اسم الأب', 'secondName'],
-  ['الاسم الثالث', 'thirdName'],
-  ['الاسم الأخير', 'lastName'],
-];
-
 const CONTACT_FIELDS = [
   ['موبايل الطالب', 'studentMobile'],
   ['موبايل الأب', 'fatherMobile'],
@@ -32,17 +25,22 @@ const CHURCH_FIELDS = [
   ['أب الاعتراف', 'fatherOfConfession'],
 ];
 
-// Free-text inputs only -- the pickers below (gender/date/stage/grade/deacon)
-// each have their own control and their own entry in `form`.
-const TEXT_KEYS = [...PERSONAL_FIELDS, ...CONTACT_FIELDS, ...CHURCH_FIELDS].map(([, key]) => key);
+// Free-text inputs only -- the name (one field, split on save) and the
+// pickers below (gender/date/stage/grade/deacon) each have their own control
+// and their own entry in `form`.
+const TEXT_KEYS = [...CONTACT_FIELDS, ...CHURCH_FIELDS].map(([, key]) => key);
 
-// The four name parts build FullName everywhere else in the app, and the API only skips a
-// field when it is null — an empty string is a real value and overwrites the stored name.
-// Without this the admin can blank a student out of every roster and search result.
-const REQUIRED_FIELDS = PERSONAL_FIELDS;
+// One "الاسم الرباعي" box like the registration form, rather than four
+// separate inputs -- the API still stores the parts separately, so the split
+// happens on save (and the join on load), exactly how registration does it.
+const splitName = (fullName) => {
+  const parts = fullName.trim().split(/\s+/);
+  return { firstName: parts[0] || '', secondName: parts[1] || '', thirdName: parts[2] || '', lastName: parts[3] || '' };
+};
 
 const emptyForm = () => ({
   ...Object.fromEntries(TEXT_KEYS.map(key => [key, ''])),
+  fullName: '',
   gender: 1,
   dateOfBirth: '',
   stage: '',
@@ -100,6 +98,10 @@ const EditStudentScreen = () => {
         setPendingGradeId(data.gradeId || null);
         setForm({
           ...Object.fromEntries(TEXT_KEYS.map(key => [key, data[key] || ''])),
+          // Joined from the parts rather than using data.fullName: that one is
+          // a computed "first second third last" with the blanks left in, so a
+          // student missing a middle part comes back with double spaces.
+          fullName: [data.firstName, data.secondName, data.thirdName, data.lastName].filter(Boolean).join(' '),
           gender: genderValue(data.gender) ?? 1,
           // DateOnly serializes as "YYYY-MM-DD", which is exactly what <input type="date"> wants.
           dateOfBirth: data.dateOfBirth || '',
@@ -145,9 +147,11 @@ const EditStudentScreen = () => {
   }, [form.stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = async () => {
-    const missing = REQUIRED_FIELDS.filter(([, key]) => !form[key].trim());
-    if (missing.length > 0) {
-      setMsg({ type: 'error', text: `يجب إدخال: ${missing.map(([label]) => label).join('، ')}` });
+    // The name parts build FullName everywhere else in the app, and the API only skips a
+    // field when it is null — an empty string is a real value and overwrites the stored name.
+    // Without this the admin can blank a student out of every roster and search result.
+    if (!form.fullName.trim()) {
+      setMsg({ type: 'error', text: 'يجب إدخال اسم الطالب.' });
       return;
     }
     if (!form.gradeId) {
@@ -159,6 +163,7 @@ const EditStudentScreen = () => {
     try {
       const payload = {
         ...Object.fromEntries(TEXT_KEYS.map(key => [key, form[key].trim()])),
+        ...splitName(form.fullName),
         gender: form.gender,
         dateOfBirth: form.dateOfBirth || null,
         gradeId: form.gradeId,
@@ -261,8 +266,12 @@ const EditStudentScreen = () => {
           </div>
 
           <h3 style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>البيانات الشخصية</h3>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={labelStyle}>الاسم الرباعي</label>
+            <input className="premium-input" type="text" placeholder="مثال: مارك أنطون جرجس يوسف"
+              value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} />
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
-            {PERSONAL_FIELDS.map(renderField)}
             <div>
               <label style={labelStyle}>تاريخ الميلاد</label>
               <input className="premium-input" type="date" value={form.dateOfBirth}

@@ -16,11 +16,13 @@ public class SchoolClassService : ISchoolClassService
     private static readonly string[] ClassLetters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
     private readonly ISchoolClassRepository _repo;
+    private readonly IAttendanceRepository _attendanceRepo;
     private readonly IUnitOfWork _uow;
 
-    public SchoolClassService(ISchoolClassRepository repo, IUnitOfWork uow)
+    public SchoolClassService(ISchoolClassRepository repo, IAttendanceRepository attendanceRepo, IUnitOfWork uow)
     {
         _repo = repo;
+        _attendanceRepo = attendanceRepo;
         _uow = uow;
     }
 
@@ -86,6 +88,10 @@ public class SchoolClassService : ISchoolClassService
         foreach (var student in allStudents.Where(s => !lockedStudentIds.Contains(s.Id)))
             student.ClassId = null;
 
+        // Same Restrict FK as DeleteClassAsync: re-running the distribution on a
+        // grade whose old classes already had attendance taken would fail here.
+        if (unlocked.Count > 0)
+            await _attendanceRepo.DeleteSessionsByClassIdsAsync(unlocked.Select(c => c.Id).ToList());
         await _repo.DeleteRangeAsync(unlocked);
 
         // Create new classes and assign students
@@ -172,6 +178,12 @@ public class SchoolClassService : ISchoolClassService
         foreach (var student in schoolClass.Students)
             student.ClassId = null;
 
+        // AttendanceSession -> Class is Restrict, so any class that ever had a
+        // day of attendance taken (a session is auto-created per class per day)
+        // failed to delete with a raw foreign-key error the admin just saw as
+        // "فشل الحذف". Its sessions -- and the records/audit logs that cascade
+        // off them -- go first, same order AcademicYearService already uses.
+        await _attendanceRepo.DeleteSessionsByClassIdsAsync(new[] { schoolClass.Id });
         await _repo.DeleteRangeAsync(new[] { schoolClass });
         await _uow.SaveChangesAsync();
         return (true, null);

@@ -3,6 +3,7 @@ using DiaconateSchool.Application.Interfaces;
 using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -14,10 +15,12 @@ namespace DiaconateSchool.Api.Controllers;
 public class ClassesController : ControllerBase
 {
     private readonly ISchoolClassService _service;
+    private readonly ILogger<ClassesController> _logger;
 
-    public ClassesController(ISchoolClassService service)
+    public ClassesController(ISchoolClassService service, ILogger<ClassesController> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -67,7 +70,17 @@ public class ClassesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var (success, error) = await _service.DeleteClassAsync(id);
-        return success ? NoContent() : NotFound(new { Message = error });
+        try
+        {
+            var (success, error) = await _service.DeleteClassAsync(id);
+            return success ? NoContent() : NotFound(new { Message = error });
+        }
+        catch (Exception ex)
+        {
+            // Was an unhandled 500 the admin only ever saw as a generic
+            // "فشل الحذف" with no way to tell what actually blocked it.
+            _logger.LogError(ex, "Deleting class {ClassId} failed", id);
+            return BadRequest(new { Message = "تعذر حذف الفصل. حاول مرة أخرى، وإن تكرر الخطأ راجع سجل الأخطاء." });
+        }
     }
 }

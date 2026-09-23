@@ -30,8 +30,12 @@ function levelLabel(level) {
 // الفصل/المستوى) — all four now carry the stage color, not just الصف.
 function chipStyle(accentColor) {
   return {
-    fontSize: '2.3mm', fontWeight: 700, color: '#ffffff', background: accentColor,
-    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 'fit-content',
+    fontSize: '2mm', fontWeight: 700, color: '#ffffff', background: accentColor,
+    // Wraps instead of clipping: a custom class name ("فصل مارجرجس") is far
+    // wider than its grid cell, and nowrap + overflow:hidden cut the Arabic
+    // mid-word -- which renders as overlapping, unreadable glyphs once the
+    // card is rasterized for print/download, not a clean ellipsis.
+    overflowWrap: 'break-word', lineHeight: 1.3, maxWidth: '100%',
     borderRadius: '1mm', padding: '0.3mm 1.4mm',
   };
 }

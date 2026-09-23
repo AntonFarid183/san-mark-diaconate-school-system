@@ -191,7 +191,10 @@ function cardCss() {
     .meta-item { display: flex; flex-direction: column; gap: 0.3mm; min-width: 0; }
     .meta-label { font-size: 2mm; font-weight: 600; color: var(--subtext); }
     .meta-value { font-size: 2.6mm; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .meta-value--chip { font-size: 2.3mm; color: #ffffff; background: var(--accent); max-width: fit-content; border-radius: 1mm; padding: 0.3mm 1.4mm; }
+    /* Wraps instead of clipping -- see the matching note in StudentIdCard.jsx:
+       nowrap + overflow:hidden cut long class names mid-word, which rasterizes
+       as overlapping unreadable Arabic rather than a clean ellipsis. */
+    .meta-value--chip { font-size: 2mm; color: #ffffff; background: var(--accent); max-width: 100%; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: break-word; line-height: 1.3; border-radius: 1mm; padding: 0.3mm 1.4mm; }
     .qr-col { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .qr-chip { width: 15mm; height: 15mm; background: #fff; border-radius: 1.4mm; border: 0.3mm solid var(--accent-soft); padding: 1.1mm; box-sizing: border-box; }
     .qr-chip img { width: 100%; height: 100%; display: block; }

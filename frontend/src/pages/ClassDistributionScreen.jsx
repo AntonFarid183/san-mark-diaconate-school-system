@@ -35,6 +35,7 @@ export default function ClassDistributionScreen() {
   const [manYearId, setManYearId] = useState('');
   const [manLevel, setManLevel] = useState(1);
   const [classes, setClasses] = useState([]);
+  const [unassigned, setUnassigned] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [movingTo, setMovingTo] = useState(null); // classId being moved to
@@ -118,8 +119,16 @@ export default function ClassDistributionScreen() {
     setLoadingClasses(true);
     setSelectedStudents(new Set());
     try {
-      const r = await apiClient.get('/classes', { params: { gradeId, academicYearId: yearId, level } });
-      setClasses(r.data);
+      // The classes and everyone in this grade+level, so students who aren't in
+      // any class yet (a new registration, or someone moved out of a class) get
+      // their own bucket below instead of being invisible -- without it there
+      // was no way to add a student to an existing class at all.
+      const [classesRes, studentsRes] = await Promise.all([
+        apiClient.get('/classes', { params: { gradeId, academicYearId: yearId, level } }),
+        apiClient.get('/students', { params: { gradeId, level, page: 1, pageSize: 1000 } }),
+      ]);
+      setClasses(classesRes.data);
+      setUnassigned((studentsRes.data.students || []).filter(s => s.isActive && !s.className));
     } catch {
       setMsg({ type: 'error', text: 'فشل تحميل الفصول.' });
     } finally {
@@ -230,12 +239,13 @@ export default function ClassDistributionScreen() {
   };
 
   const deleteClass = async (cls) => {
-    if (!window.confirm(`حذف الفصل "${cls.name}"؟ سيتم إلغاء تعيين طلابه.`)) return;
+    if (!window.confirm(`حذف الفصل "${cls.name}"؟ سيعود طلابه إلى قائمة "بدون فصل" ويمكن توزيعهم من جديد.`)) return;
     try {
       await apiClient.delete(`/classes/${cls.id}`);
+      setMsg({ type: 'success', text: `تم حذف الفصل "${cls.name}".` });
       fetchClasses(manGradeId, manYearId, manLevel);
-    } catch {
-      setMsg({ type: 'error', text: 'فشل الحذف.' });
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل الحذف.' });
     }
   };
 
@@ -466,7 +476,7 @@ export default function ClassDistributionScreen() {
               <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>manage_accounts</span>
               <p style={{ color: 'var(--text-muted)' }}>اختر السنة الدراسية والصف لعرض الفصول</p>
             </div>
-          ) : classes.length === 0 ? (
+          ) : classes.length === 0 && unassigned.length === 0 ? (
             <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>groups</span>
               <p style={{ color: 'var(--text-muted)' }}>لا توجد فصول لهذا الصف في هذه السنة</p>
@@ -474,6 +484,34 @@ export default function ClassDistributionScreen() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {/* Students with no class yet -- newly registered, or moved out of
+                  one. Selecting them here and hitting a class in the move bar
+                  is how a student gets added to an existing class. */}
+              {unassigned.length > 0 && (
+                <div className="glass-card" style={{ padding: '1.25rem', border: '1px dashed var(--divider-strong)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--text-muted)' }}>person_add</span>
+                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-secondary)' }}>بدون فصل</span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                    {unassigned.length} طالب — حددهم ثم اختر الفصل من الشريط بالأعلى
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '280px', overflowY: 'auto' }}>
+                    {unassigned.map((s, i) => {
+                      const checked = selectedStudents.has(s.id);
+                      return (
+                        <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.3rem 0.4rem', borderRadius: '6px', cursor: 'pointer', background: checked ? 'rgba(251,191,36,0.08)' : 'transparent', transition: 'background 0.15s' }}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleStudent(s.id)} style={{ accentColor: 'var(--accent-gold)', width: '14px', height: '14px', flexShrink: 0 }} />
+                          <span style={{ fontSize: '0.82rem', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem', fontSize: '0.72rem' }}>{i + 1}.</span>
+                            {s.fullName}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {classes.map(cls => (
                 <div key={cls.id} className="glass-card" style={{ padding: '1.25rem', border: cls.isLocked ? '1px solid rgba(251,191,36,0.3)' : undefined }}>
                   {/* Class header -- name gets its own full-width row so a

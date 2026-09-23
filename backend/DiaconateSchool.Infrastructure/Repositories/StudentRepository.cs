@@ -12,6 +12,28 @@ namespace DiaconateSchool.Infrastructure.Repositories;
 
 public class StudentRepository : IStudentRepository
 {
+
+    // Searching "كاراس ابانوب" used to return nothing: the whole string was
+    // matched against each name column on its own, and no single column holds
+    // both words. Each whitespace-separated term now has to match *some* part
+    // of the student (any name part or the code), so first+second name, any
+    // word order, and a single term all work.
+    private static IQueryable<Student> ApplyNameFilter(IQueryable<Student> query, string? nameFilter)
+    {
+        if (string.IsNullOrWhiteSpace(nameFilter)) return query;
+
+        var terms = nameFilter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var term in terms)
+        {
+            var t = term;
+            query = query.Where(s =>
+                s.User.FirstName.Contains(t) || s.User.MiddleName.Contains(t) ||
+                s.User.ThirdName.Contains(t) || s.User.LastName.Contains(t) ||
+                s.StudentCode.Contains(t));
+        }
+
+        return query;
+    }
     private readonly ApplicationDbContext _context;
 
     public StudentRepository(ApplicationDbContext context)
@@ -72,14 +94,7 @@ public class StudentRepository : IStudentRepository
         if (level.HasValue)
             query = query.Where(s => s.Level == level.Value);
 
-        if (!string.IsNullOrWhiteSpace(nameFilter))
-        {
-            var filter = nameFilter.Trim();
-            query = query.Where(s =>
-                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
-                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
-                s.StudentCode.Contains(filter));
-        }
+        query = ApplyNameFilter(query, nameFilter);
 
         return await query
             .OrderBy(s => s.User.FirstName).ThenBy(s => s.User.MiddleName).ThenBy(s => s.User.ThirdName).ThenBy(s => s.User.LastName)
@@ -100,14 +115,7 @@ public class StudentRepository : IStudentRepository
         if (level.HasValue)
             query = query.Where(s => s.Level == level.Value);
 
-        if (!string.IsNullOrWhiteSpace(nameFilter))
-        {
-            var filter = nameFilter.Trim();
-            query = query.Where(s =>
-                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
-                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
-                s.StudentCode.Contains(filter));
-        }
+        query = ApplyNameFilter(query, nameFilter);
 
         return await query.CountAsync();
     }
@@ -218,14 +226,7 @@ public class StudentRepository : IStudentRepository
         else if (stageId.HasValue)
             query = query.Where(s => s.Grade.StageId == stageId.Value);
 
-        if (!string.IsNullOrWhiteSpace(nameFilter))
-        {
-            var filter = nameFilter.Trim();
-            query = query.Where(s =>
-                s.User.FirstName.Contains(filter) || s.User.MiddleName.Contains(filter) ||
-                s.User.ThirdName.Contains(filter) || s.User.LastName.Contains(filter) ||
-                s.StudentCode.Contains(filter));
-        }
+        query = ApplyNameFilter(query, nameFilter);
 
         if (dateFrom.HasValue)
             query = query.Where(s => s.RegisteredDate >= dateFrom.Value);

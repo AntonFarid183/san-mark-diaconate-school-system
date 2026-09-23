@@ -173,7 +173,13 @@ export default function PendingApprovalsScreen() {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* flexShrink:0 here used to force this whole row to its natural
+                    (wide) width even after wrapping onto its own line under the
+                    info block -- on a narrow phone that pushed "سداد لاحقاً" and
+                    "إعفاء" off the edge of the card, clipped invisible by the
+                    page's overflow-x:hidden. Letting it shrink is what lets its
+                    own flexWrap actually wrap the buttons instead. */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => navigate(`/students/${s.id}`)}
                     style={{ padding: '0.45rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>

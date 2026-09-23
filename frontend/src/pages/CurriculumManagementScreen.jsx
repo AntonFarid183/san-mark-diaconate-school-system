@@ -284,7 +284,11 @@ export default function CurriculumManagementScreen() {
             const st = STATUS_MAP[item.status] || STATUS_MAP[0];
             return (
               <div key={item.id} className="glass-card" style={{ padding: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* flexWrap here (and no flexShrink:0 on the actions row below) is
+                    what lets the icon buttons drop to their own line on a narrow
+                    phone instead of overflowing past the card, clipped invisible
+                    by the page's overflow-x:hidden. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
 
                   {/* Icon */}
                   <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent-gold)', flexShrink: 0 }}>import_contacts</span>
@@ -307,7 +311,7 @@ export default function CurriculumManagementScreen() {
                   </div>
 
                   {/* Icon action buttons */}
-                  <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                     <button onClick={() => setUploadTarget(item)} className="btn-icon" title="رفع / استبدال PDF">
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload_file</span>
                       <span className="btn-icon-label">رفع</span>

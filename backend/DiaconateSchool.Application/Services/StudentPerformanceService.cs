@@ -83,7 +83,7 @@ public class StudentPerformanceService : IStudentPerformanceService
         var row = new StudentPerformanceRowDto
         {
             StudentId = student.Id,
-            FullName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim(),
+            FullName = student.User.FullName,
             StudentCode = student.StudentCode,
             ClassName = student.Class?.Name
         };

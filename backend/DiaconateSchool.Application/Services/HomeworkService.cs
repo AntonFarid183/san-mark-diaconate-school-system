@@ -133,7 +133,7 @@ public class HomeworkService : IHomeworkService
             return new HomeworkGradingRosterItemDto
             {
                 StudentId = student.Id,
-                StudentName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim(),
+                StudentName = student.User.FullName,
                 StudentCode = student.StudentCode,
                 ClassName = student.Class?.Name,
                 HasSubmitted = sub != null,

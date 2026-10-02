@@ -255,7 +255,7 @@ public class AttendanceService : IAttendanceService
             .Select(s => new ClassRosterEntryDto
             {
                 StudentId = s.Id,
-                StudentName = s.User.FirstName + " " + s.User.LastName,
+                StudentName = s.User.FullName,
                 StudentCode = s.StudentCode,
                 Status = statusByStudent.TryGetValue(s.Id, out var st) ? st : null
             })
@@ -357,7 +357,7 @@ public class AttendanceService : IAttendanceService
             .Select(s => new StageRosterEntryDto
             {
                 StudentId = s.Id,
-                StudentName = s.User.FirstName + " " + s.User.LastName,
+                StudentName = s.User.FullName,
                 StudentCode = s.StudentCode,
                 ClassId = s.ClassId!.Value,
                 ClassName = s.Class!.Name,
@@ -526,7 +526,7 @@ public class AttendanceService : IAttendanceService
                 return new StudentAttendanceSummaryDto
                 {
                     StudentId = g.Key,
-                    StudentName = first.Student.User.FirstName + " " + first.Student.User.LastName,
+                    StudentName = first.Student.User.FullName,
                     StudentCode = first.Student.StudentCode,
                     PresentCount = g.Count(r => r.Status == AttendanceStatus.Present),
                     AbsentCount = g.Count(r => r.Status == AttendanceStatus.Absent),
@@ -594,7 +594,7 @@ public class AttendanceService : IAttendanceService
         SessionId = r.SessionId,
         SessionTitle = r.Session != null ? r.Session.Title : string.Empty,
         StudentId = r.StudentId,
-        StudentName = r.Student.User.FirstName + " " + r.Student.User.LastName,
+        StudentName = r.Student.User.FullName,
         StudentCode = r.Student.StudentCode,
         Status = r.Status,
         Method = r.Method,

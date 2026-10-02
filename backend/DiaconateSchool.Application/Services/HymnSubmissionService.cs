@@ -83,7 +83,7 @@ public class HymnSubmissionService : IHymnSubmissionService
         var student = await _studentRepo.GetByIdWithIncludesAsync(studentId);
         if (student == null) return;
 
-        var studentName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim();
+        var studentName = student.User.FullName;
         await _notificationService.NotifyAdminsNewHymnSubmissionAsync(submissionId, studentName, hymnTitle);
     }
 
@@ -99,7 +99,7 @@ public class HymnSubmissionService : IHymnSubmissionService
             return new HymnSubmissionRosterItemDto
             {
                 StudentId = student.Id,
-                StudentName = $"{student.User.FirstName} {student.User.MiddleName} {student.User.LastName}".Trim(),
+                StudentName = student.User.FullName,
                 StudentCode = student.StudentCode,
                 ClassName = student.Class?.Name,
                 SubmissionId = sub?.Id,

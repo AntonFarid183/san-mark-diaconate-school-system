@@ -334,6 +334,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<LeaveRequest>()
             .HasIndex(l => new { l.StudentId, l.FromDate, l.ToDate });
 
+        // Computed display name, not a column.
+        modelBuilder.Entity<ApplicationUser>().Ignore(u => u.FullName);
+
         // SchoolClass -> Grade
         modelBuilder.Entity<SchoolClass>()
             .HasOne(c => c.Grade)

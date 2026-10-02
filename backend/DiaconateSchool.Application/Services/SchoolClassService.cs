@@ -226,7 +226,7 @@ public class SchoolClassService : ISchoolClassService
     private static ClassStudentDto MapToStudentDto(Student s) => new()
     {
         Id = s.Id,
-        FullName = $"{s.User.FirstName} {s.User.MiddleName} {s.User.LastName}".Trim(),
+        FullName = s.User.FullName,
         StudentCode = s.StudentCode
     };
 

@@ -131,7 +131,7 @@ public class HymnLessonProgressService : IHymnLessonProgressService
             StudentDetails         = details.Select(p => new StudentProgressDetailDto
             {
                 StudentId    = p.StudentId,
-                StudentName  = p.Student?.User != null ? $"{p.Student.User.FirstName} {p.Student.User.LastName}" : "",
+                StudentName  = p.Student?.User != null ? p.Student.User.FullName : "",
                 StudentCode  = p.Student?.StudentCode ?? "",
                 WatchedPercent = p.WatchedPercent,
                 IsCompleted  = p.IsCompleted,

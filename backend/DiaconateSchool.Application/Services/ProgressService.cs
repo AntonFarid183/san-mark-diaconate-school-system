@@ -82,7 +82,7 @@ public class ProgressService : IProgressService
 
         return new StudentDashboardDto
         {
-            StudentName = $"{student.User.FirstName} {student.User.LastName}",
+            StudentName = student.User.FullName,
             StageName = student.Grade?.Stage?.Name ?? string.Empty,
             GradeName = student.Grade?.Name ?? string.Empty,
             StudentCode = student.StudentCode,

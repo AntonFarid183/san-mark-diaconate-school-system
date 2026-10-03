@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
+import { CHURCH_NAME } from '../constants/church';
 
 const CertificateScreen = () => {
   usePageTitle('الشهادة');
@@ -88,7 +89,7 @@ const CertificateScreen = () => {
           <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--accent-gold)' }}>workspace_premium</span>
         </div>
         <h1 style={{ color: 'var(--accent-gold)', fontSize: '2rem', marginBottom: '0.5rem' }}>شهادة اجتياز</h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>كنيسة سان مارك — مدرسة الشمامسة</p>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>{CHURCH_NAME} — مدرسة الشمامسة</p>
 
         <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>تُمنح هذه الشهادة إلى</p>
         <div className="name" style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold)', margin: '1rem 0' }}>{cert.studentFullName}</div>

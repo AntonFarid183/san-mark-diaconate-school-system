@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRandomVerse } from '../data/bibleVerses';
 import Typewriter from '../components/Typewriter';
+import { CHURCH_NAME } from '../../constants/church';
 
 export default function HeroSection() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function HeroSection() {
       <div className="landing-hero-content">
         <span className="landing-hero-eyebrow">
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>church</span>
-          كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2
+          {CHURCH_NAME}
         </span>
 
         <h1 className="landing-hero-title">

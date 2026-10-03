@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../apiClient';
 import SchoolLogo from '../components/SchoolLogo';
 import ThemeToggle from '../components/ThemeToggle';
+import { CHURCH_NAME } from '../constants/church';
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const LoginScreen = () => {
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <SchoolLogo size={96} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.25rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-          <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
+          <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>{CHURCH_NAME}</p>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

@@ -5,6 +5,7 @@ import apiClient from './apiClient';
 import NotificationBell from './components/NotificationBell';
 import ThemeToggle from './components/ThemeToggle';
 import ChurchLogo from './components/ChurchLogo';
+import { CHURCH_NAME } from './constants/church';
 import { PageTitleProvider } from './context/PageTitleContext';
 
 const COLLAPSED_WIDTH = '64px';
@@ -349,7 +350,7 @@ const Layout = () => {
               {navOpen && (
                 <>
                   <h2 style={{ color: 'var(--accent-gold)', marginTop: '0.4rem', fontSize: '0.88rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h2>
-                  <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
+                  <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{CHURCH_NAME}</p>
                 </>
               )}
             </div>

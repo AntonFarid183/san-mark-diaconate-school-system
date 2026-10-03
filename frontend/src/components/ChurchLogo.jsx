@@ -1,3 +1,5 @@
+import { CHURCH_NAME } from '../constants/church';
+
 /**
  * The church's official crest, used wherever the UI speaks AS the church
  * (landing navbar, app sidebar header, auth screens).
@@ -14,7 +16,7 @@ export default function ChurchLogo({ size = 36, className }) {
   return (
     <img
       src="/church logo.png"
-      alt="شعار كنيسة مارمرقس الرسول — النزهة ٢"
+      alt={`شعار ${CHURCH_NAME}`}
       className={className}
       width={size}
       height={size}

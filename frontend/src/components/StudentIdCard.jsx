@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { BACKEND_URL as BACKEND } from '../config';
+import { CHURCH_NAME } from '../constants/church';
 
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND}${url}`);
 
@@ -142,7 +143,7 @@ export default function StudentIdCard({ student, className = '', theme = 'dark' 
         <img src="/church logo.png" alt="شعار الكنيسة" style={{ width: '7mm', height: '7mm', objectFit: 'contain', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.3mm' }}>
           <div style={{ fontSize: '2.4mm', fontWeight: 700, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            كنيسة مارمرقس الرسول
+            {CHURCH_NAME}
           </div>
           <div style={{ fontSize: '2.9mm', fontWeight: 800, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.1px' }}>
             مدرسة بي ثيؤريموس للألحان والتسبحة

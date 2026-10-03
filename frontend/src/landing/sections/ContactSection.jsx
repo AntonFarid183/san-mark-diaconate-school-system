@@ -1,9 +1,10 @@
 import Reveal from '../components/Reveal';
 import HighlightCard from '../components/HighlightCard';
+import { CHURCH_NAME } from '../../constants/church';
 
 // Placeholder — real church contact details will replace this content later.
 const CONTACT_ITEMS = [
-  { icon: 'location_on', title: 'العنوان', description: 'كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2 — نص عنوان مؤقت يُستبدل لاحقاً.' },
+  { icon: 'location_on', title: 'العنوان', description: `${CHURCH_NAME} — نص عنوان مؤقت يُستبدل لاحقاً.` },
   { icon: 'call', title: 'الهاتف', description: '01xxxxxxxxx' },
   { icon: 'mail', title: 'البريد الإلكتروني', description: 'info@example.com' },
   { icon: 'schedule', title: 'مواعيد الخدمة', description: 'نص مؤقت لمواعيد المدرسة والخدمة — يُستبدل لاحقاً.' },

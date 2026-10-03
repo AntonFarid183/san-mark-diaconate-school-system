@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from '../../components/ThemeToggle';
 import SchoolLogo from '../../components/SchoolLogo';
+import { CHURCH_NAME } from '../../constants/church';
 
 const CURRICULUM_SUBJECTS = [
   { slug: 'rites', label: 'الطقس' },
@@ -55,7 +56,7 @@ export default function LandingNavbar() {
           <SchoolLogo size={40} />
           <div className="landing-navbar-brand-text">
             <h1>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-            <p>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
+            <p>{CHURCH_NAME}</p>
           </div>
         </div>
 

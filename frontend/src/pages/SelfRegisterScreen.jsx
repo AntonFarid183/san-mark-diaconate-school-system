@@ -7,6 +7,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import PhotoCaptureField from '../components/PhotoCaptureField';
 import { BACKEND_URL } from '../config';
 import { STAGE_IDS, STAGES } from '../constants/stages';
+import { CHURCH_NAME } from '../constants/church';
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND_URL}${url}`);
 
 // Same capture-and-save pattern as RegisterStudentScreen's credentials
@@ -220,7 +221,7 @@ export default function SelfRegisterScreen() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <SchoolLogo size={84} className="auth-logo" />
           <h1 style={{ color: 'var(--accent-gold)', fontSize: '1.15rem', lineHeight: 1.4, marginBottom: '0.25rem' }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h1>
-          <p style={{ fontSize: '0.8rem' }}>كنيسة العذراء القديسة مريم والقديس مارمرقس - النزهة 2</p>
+          <p style={{ fontSize: '0.8rem' }}>{CHURCH_NAME}</p>
           <h2 style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.75rem', fontWeight: 600 }}>تسجيل عضو جديد</h2>
         </div>
 

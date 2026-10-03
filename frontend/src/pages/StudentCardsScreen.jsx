@@ -6,6 +6,7 @@ import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import StudentIdCard, { CARD_WIDTH_MM, CARD_HEIGHT_MM } from '../components/StudentIdCard';
 import { BACKEND_URL as BACKEND } from '../config';
+import { CHURCH_NAME } from '../constants/church';
 
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND}${url}`);
 // Mirrors DiaconateSchool.Domain.Enums.StudentLevel (Level1 = 1, Level2 = 2)
@@ -86,7 +87,7 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
       <div class="header">
         <img class="church-logo" src="${window.location.origin}/church logo.png" alt="" />
         <div class="header-text">
-          <div class="church-name">كنيسة مارمرقس الرسول</div>
+          <div class="church-name">${CHURCH_NAME}</div>
           <div class="school-name">مدرسة بي ثيؤريموس للألحان والتسبحة</div>
         </div>
         <div class="school-badge"><img src="${window.location.origin}/school logo.png" alt="" /></div>

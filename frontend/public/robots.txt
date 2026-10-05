@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /students
+Disallow: /student-
+Disallow: /register-student
+Disallow: /pending-approvals
+Disallow: /payment-reports
+Disallow: /attendance
+Disallow: /academic-years
+Disallow: /class-distribution
+Disallow: /profile
+Disallow: /homework
+Disallow: /change-password
+Disallow: /login

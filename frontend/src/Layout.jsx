@@ -4,7 +4,7 @@ import { useAuth } from './context/AuthContext';
 import apiClient from './apiClient';
 import NotificationBell from './components/NotificationBell';
 import ThemeToggle from './components/ThemeToggle';
-import ChurchLogo from './components/ChurchLogo';
+import SchoolLogo from './components/SchoolLogo';
 import { CHURCH_NAME } from './constants/church';
 import { PageTitleProvider } from './context/PageTitleContext';
 
@@ -346,7 +346,7 @@ const Layout = () => {
               </button>
             )}
             <div onClick={() => navigate('/dashboard')} style={{ padding: navOpen ? '1.25rem 1rem' : '1rem 0', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <ChurchLogo size={navOpen ? 52 : 36} />
+              <SchoolLogo size={navOpen ? 52 : 36} />
               {navOpen && (
                 <>
                   <h2 style={{ color: 'var(--accent-gold)', marginTop: '0.4rem', fontSize: '0.88rem', lineHeight: 1.4 }}>مدرسة بي ثيؤريموس للألحان والتسبحة</h2>

@@ -13,9 +13,12 @@ import StatisticsSection from '../landing/sections/StatisticsSection';
 import ContactSection from '../landing/sections/ContactSection';
 import FeedbackSection from '../landing/sections/FeedbackSection';
 import ScrollToTopButton from '../landing/components/ScrollToTopButton';
+import useSeo from '../seo/useSeo';
+import { SITE_NAME } from '../seo/keywords';
 
 export default function LandingPage() {
   const location = useLocation();
+  useSeo({ title: `${SITE_NAME} — تعليم الألحان والطقس والقبطي | النزهة` });
 
   // Supports navbar links that navigate here from another page with a hash
   // (e.g. /curriculum/rites -> "عن المدرسة" -> "/#about").

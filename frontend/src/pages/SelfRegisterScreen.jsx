@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import apiClient from '../apiClient';
 import SchoolLogo from '../components/SchoolLogo';
+import useSeo from '../seo/useSeo';
+import { SITE_NAME } from '../seo/keywords';
 import ThemeToggle from '../components/ThemeToggle';
 import PhotoCaptureField from '../components/PhotoCaptureField';
 import { BACKEND_URL } from '../config';
@@ -30,6 +32,10 @@ async function downloadCredentialsImage(node, studentName) {
 
 export default function SelfRegisterScreen() {
   const navigate = useNavigate();
+  useSeo({
+    title: `التسجيل في ${SITE_NAME}`,
+    description: `سجّل الآن في ${SITE_NAME}: تعليم الألحان والتسبحة والطقس والقبطي لجميع الأعمار. املأ البيانات وسيتم تفعيل حسابك بعد مراجعة الإدارة.`,
+  });
 
   const [formData, setFormData] = useState({
     fullName: '',

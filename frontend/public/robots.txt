@@ -13,3 +13,4 @@ Disallow: /profile
 Disallow: /homework
 Disallow: /change-password
 Disallow: /login
+Sitemap: https://ptheorimos.com/sitemap.xml

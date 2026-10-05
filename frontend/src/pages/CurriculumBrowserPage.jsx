@@ -11,6 +11,9 @@ import ScrollToTopButton from '../landing/components/ScrollToTopButton';
 import Reveal from '../landing/components/Reveal';
 import '../landing/Landing.css';
 
+import useSeo from '../seo/useSeo';
+import { SITE_NAME } from '../seo/keywords';
+
 const SUBJECTS = {
   rites: { value: 1, label: 'الطقس' },
   hymns: { value: 2, label: 'الألحان' },
@@ -22,6 +25,10 @@ export default function CurriculumBrowserPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const subjectMeta = SUBJECTS[subject];
+  useSeo({
+    title: `منهج ${subjectMeta?.label ?? ''} — ${SITE_NAME}`,
+    description: `ملفات ومناهج ${subjectMeta?.label ?? ''} لكل المراحل من الطفولة إلى الكبار، من ${SITE_NAME}. تصفح وحمّل المنهج حسب المرحلة الدراسية.`,
+  });
 
   const [stages, setStages] = useState([]);
   const [items, setItems] = useState([]);

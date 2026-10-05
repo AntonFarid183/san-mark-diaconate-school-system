@@ -13,6 +13,7 @@ import StatisticsSection from '../landing/sections/StatisticsSection';
 import ContactSection from '../landing/sections/ContactSection';
 import FeedbackSection from '../landing/sections/FeedbackSection';
 import ScrollToTopButton from '../landing/components/ScrollToTopButton';
+import UnderConstructionOverlay from '../landing/components/UnderConstructionOverlay';
 import useSeo from '../seo/useSeo';
 import { SITE_NAME } from '../seo/keywords';
 
@@ -42,6 +43,7 @@ export default function LandingPage() {
       <ContactSection />
       <FeedbackSection />
       <ScrollToTopButton />
+      <UnderConstructionOverlay />
     </div>
   );
 }

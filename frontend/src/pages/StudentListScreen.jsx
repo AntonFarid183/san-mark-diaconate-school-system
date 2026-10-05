@@ -1,9 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
+import { toAbsoluteBackendUrl } from '../config';
 import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
 import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
+
+// Photo beside the name so an admin can recognise a child at a glance. Falls back to the
+// first letter of the name when there is no photo yet (new registrations have none).
+const AVATAR_SIZE = 44;
+const StudentAvatar = ({ name, photoUrl }) => {
+  const src = toAbsoluteBackendUrl(photoUrl);
+  const box = {
+    width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: '50%', flexShrink: 0,
+    border: '1px solid var(--gold-tint-strong)', overflow: 'hidden',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'var(--surface-2)',
+  };
+  return (
+    <div style={box}>
+      {src
+        ? <img src={src} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : <span style={{ fontWeight: 700, color: 'var(--accent-gold)' }}>{(name || '?').trim().charAt(0)}</span>}
+    </div>
+  );
+};
 
 const StudentListScreen = () => {
   const navigate = useNavigate();
@@ -195,9 +216,14 @@ const StudentListScreen = () => {
                     <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>لا يوجد طلاب</td></tr>
                   ) : students.map(s => (
                     <tr key={s.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontWeight: 600 }}>{s.fullName}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.studentCode}</div>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                          <StudentAvatar name={s.fullName} photoUrl={s.profilePictureUrl} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600 }}>{s.fullName}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.studentCode}</div>
+                          </div>
+                        </div>
                       </td>
                       <td style={{ padding: '1rem' }}>{s.stageName}</td>
                       <td style={{ padding: '1rem' }}>

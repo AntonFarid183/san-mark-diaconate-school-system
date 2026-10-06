@@ -18,6 +18,7 @@ const subjectLabel = (v) => SUBJECT_OPTIONS.find(s => s.value === Number(v))?.la
 
 // Stages that have sub-grades in the DB
 const STAGES_WITH_GRADES = new Set([
+  '00000000-0000-0000-0000-000000000001', // طفولة (KG1 / KG2)
   '00000000-0000-0000-0001-000000000001', // ابتدائي
   '00000000-0000-0000-0002-000000000001', // إعدادي
   '00000000-0000-0000-0003-000000000001', // ثانوي

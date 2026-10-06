@@ -4,6 +4,7 @@ using DiaconateSchool.Application.Interfaces.Repositories;
 using DiaconateSchool.Domain.Entities;
 using DiaconateSchool.Domain.Enums;
 using System;
+using System.Text.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -329,6 +330,8 @@ public class HomeworkService : IHomeworkService
 
     private const int MaxQuestionTextLength = 1000;
     private const int MaxOptionTextLength = 300;
+    private const int MinOptions = 2;
+    private const int MaxOptions = 10;
 
     private static (string? Error, List<HomeworkQuestion>? Questions) BuildTypedQuestions(List<TypedQuestionDto> dtos)
     {
@@ -345,11 +348,13 @@ public class HomeworkService : IHomeworkService
                 return ($"نص السؤال {number} مطلوب.", null);
             if (q.Text.Trim().Length > MaxQuestionTextLength)
                 return ($"نص السؤال {number} طويل جدًا.", null);
-            if (q.Options.Count != 4 || q.Options.Any(string.IsNullOrWhiteSpace))
-                return ($"السؤال {number} يحتاج إلى أربعة اختيارات (أ، ب، ج، د).", null);
+            if (q.Options.Count < MinOptions || q.Options.Count > MaxOptions)
+                return ($"السؤال {number} يحتاج إلى من {MinOptions} إلى {MaxOptions} اختيارات.", null);
+            if (q.Options.Any(string.IsNullOrWhiteSpace))
+                return ($"اكتب نص كل اختيار في السؤال {number} أو احذف الاختيار الفارغ.", null);
             if (q.Options.Any(o => o.Trim().Length > MaxOptionTextLength))
                 return ($"أحد اختيارات السؤال {number} طويل جدًا.", null);
-            if (q.CorrectOption < 0 || q.CorrectOption > 3)
+            if (q.CorrectOption < 0 || q.CorrectOption >= q.Options.Count)
                 return ($"حدد الإجابة الصحيحة للسؤال {number}.", null);
 
             questions.Add(new HomeworkQuestion
@@ -357,10 +362,7 @@ public class HomeworkService : IHomeworkService
                 Id = Guid.NewGuid(),
                 QuestionNumber = number,
                 Text = q.Text.Trim(),
-                OptionA = q.Options[0].Trim(),
-                OptionB = q.Options[1].Trim(),
-                OptionC = q.Options[2].Trim(),
-                OptionD = q.Options[3].Trim(),
+                OptionsJson = JsonSerializer.Serialize(q.Options.Select(o => o.Trim())),
                 CorrectOption = q.CorrectOption
             });
         }
@@ -369,9 +371,7 @@ public class HomeworkService : IHomeworkService
     }
 
     private static List<string>? OptionsOf(HomeworkQuestion q)
-        => q.Text == null
-            ? null
-            : new List<string> { q.OptionA ?? "", q.OptionB ?? "", q.OptionC ?? "", q.OptionD ?? "" };
+        => q.OptionsJson == null ? null : JsonSerializer.Deserialize<List<string>>(q.OptionsJson);
 
     private static HomeworkListItemDto MapToListItem(Homework h) => new()
     {

@@ -14,11 +14,9 @@ public class HomeworkQuestion
 
     // Only set for Typed homeworks; PDF/image ones read the question off the file.
     public string? Text { get; set; }
-    public string? OptionA { get; set; }
-    public string? OptionB { get; set; }
-    public string? OptionC { get; set; }
-    public string? OptionD { get; set; }
+    // JSON array of option strings (2..10, in display order).
+    public string? OptionsJson { get; set; }
 
-    // 0=A, 1=B, 2=C, 3=D
+    // Zero-based index into the options (for PDF/image homeworks: 0=A .. 3=D)
     public int CorrectOption { get; set; }
 }

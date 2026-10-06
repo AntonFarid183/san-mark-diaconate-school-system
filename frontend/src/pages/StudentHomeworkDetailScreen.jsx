@@ -4,7 +4,7 @@ import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import { BACKEND_URL as BASE } from '../config';
 
-const OPTION_LABELS = ['أ', 'ب', 'ج', 'د'];
+const OPTION_LABELS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
 
 export default function StudentHomeworkDetailScreen() {
   const { id } = useParams();
@@ -162,7 +162,7 @@ export default function StudentHomeworkDetailScreen() {
                 <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', minWidth: '22px' }}>{q.questionNumber}.</span>
                   <div style={{ display: 'flex', gap: '0.35rem' }}>
-                    {OPTION_LABELS.map((label, i) => {
+                    {OPTION_LABELS.slice(0, 4).map((label, i) => {
                       const isSelected = selected === i;
                       const isCorrectOption = homework.hasSubmitted && q.correctOption === i;
                       const isWrongSelected = homework.hasSubmitted && isSelected && !isCorrectOption;

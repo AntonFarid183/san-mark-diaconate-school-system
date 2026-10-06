@@ -73,7 +73,7 @@ public class CreateHomeworkDto
 public class TypedQuestionDto
 {
     public string Text { get; set; } = string.Empty;
-    public List<string> Options { get; set; } = new(); // exactly 4: A..D
+    public List<string> Options { get; set; } = new(); // 2..10, in display order
     public int CorrectOption { get; set; }
 }
 

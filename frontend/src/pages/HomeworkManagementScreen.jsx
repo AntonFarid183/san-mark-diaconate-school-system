@@ -10,8 +10,12 @@ const STATUS_LABELS = {
 };
 
 const OPTION_LABELS = ['أ', 'ب', 'ج', 'د'];
+// Typed questions can have up to 10 choices.
+const TYPED_OPTION_LABELS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+const MIN_TYPED_OPTIONS = 2;
+const MAX_TYPED_OPTIONS = TYPED_OPTION_LABELS.length;
 
-const emptyTypedQuestion = () => ({ text: '', options: ['', '', '', ''], correct: 0 });
+const emptyTypedQuestion = () => ({ text: '', options: Array(MIN_TYPED_OPTIONS).fill(''), correct: 0 });
 
 const emptyForm = {
   title: '', subjectId: '', stageId: '', gradeId: '',
@@ -121,6 +125,28 @@ export default function HomeworkManagementScreen() {
       typedQuestions: f.typedQuestions.map((q, i) => i === idx
         ? { ...q, options: q.options.map((o, j) => j === optionIdx ? value : o) }
         : q),
+    }));
+  };
+
+  const addTypedOption = (idx) => {
+    setForm(f => ({
+      ...f,
+      typedQuestions: f.typedQuestions.map((q, i) => i === idx && q.options.length < MAX_TYPED_OPTIONS
+        ? { ...q, options: [...q.options, ''] }
+        : q),
+    }));
+  };
+
+  const removeTypedOption = (idx, optionIdx) => {
+    setForm(f => ({
+      ...f,
+      typedQuestions: f.typedQuestions.map((q, i) => {
+        if (i !== idx || q.options.length <= MIN_TYPED_OPTIONS) return q;
+        const options = q.options.filter((_, j) => j !== optionIdx);
+        // Keep the marked answer pointing at the same text, or fall back to the first choice.
+        const correct = q.correct === optionIdx ? 0 : q.correct > optionIdx ? q.correct - 1 : q.correct;
+        return { ...q, options, correct };
+      }),
     }));
   };
 
@@ -352,7 +378,7 @@ export default function HomeworkManagementScreen() {
             {isTyped ? (
               <>
                 <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>الأسئلة</h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>اكتب كل سؤال مع اختياراته الأربعة، ثم اضغط على الحرف الذي يمثل الإجابة الصحيحة.</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>اكتب كل سؤال مع اختياراته (اختياران على الأقل، ويمكنك إضافة المزيد)، ثم اضغط على الحرف الذي يمثل الإجابة الصحيحة.</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
                   {form.typedQuestions.map((q, idx) => (
                     <div key={idx} style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-1)', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -365,7 +391,9 @@ export default function HomeworkManagementScreen() {
                         )}
                       </div>
                       <textarea className="premium-input" rows={2} placeholder="نص السؤال" value={q.text} onChange={e => updateTypedQuestion(idx, { text: e.target.value })} style={{ resize: 'vertical' }} />
-                      {OPTION_LABELS.map((label, i) => (
+                      {q.options.map((_, i) => {
+                        const label = TYPED_OPTION_LABELS[i];
+                        return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <button type="button" aria-label={`الإجابة الصحيحة ${label}`} onClick={() => updateTypedQuestion(idx, { correct: i })} style={{
                             width: '28px', height: '28px', flexShrink: 0, borderRadius: '50%', border: `1px solid ${q.correct === i ? 'var(--accent-gold)' : 'var(--glass-border)'}`,
@@ -375,8 +403,17 @@ export default function HomeworkManagementScreen() {
                             {label}
                           </button>
                           <input className="premium-input" placeholder={`الاختيار ${label}`} value={q.options[i]} onChange={e => updateTypedOption(idx, i, e.target.value)} />
+                          {q.options.length > MIN_TYPED_OPTIONS && (
+                            <button type="button" aria-label={`حذف الاختيار ${label}`} onClick={() => removeTypedOption(idx, i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '1rem', padding: '0 0.3rem' }}>✕</button>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
+                      {q.options.length < MAX_TYPED_OPTIONS && (
+                        <button type="button" onClick={() => addTypedOption(idx)} style={{ alignSelf: 'flex-start', background: 'none', border: '1px dashed var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.3rem 0.9rem', fontSize: '0.82rem', fontFamily: 'inherit' }}>
+                          + إضافة اختيار
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -73,6 +73,10 @@ function gradeAccent(student) {
 // left behind -- appending it later, after the HTML is already inserted,
 // is too late: the browser starts loading the un-busted src the instant
 // innerHTML is parsed, firing a doomed extra request before any JS runs.
+// The print path loads the photo as a plain <img>, exactly like the on-screen card, so it
+// reuses the browser's cached copy. Adding crossorigin there makes the browser reject that
+// cached non-CORS copy and the photo comes out broken -- only the capture path (cacheBust)
+// needs crossorigin, because it reads the pixels back through a canvas.
 async function buildCardHtml(student, { cacheBust = false } = {}) {
   let photoUrl = toAbsUrl(student.profilePictureUrl);
   if (photoUrl && cacheBust) photoUrl += (photoUrl.includes('?') ? '&' : '?') + '_dl=' + Date.now();
@@ -97,7 +101,7 @@ async function buildCardHtml(student, { cacheBust = false } = {}) {
       <div class="body">
         <div class="photo-col">
           <div class="photo-frame">
-            ${photoUrl ? `<img src="${photoUrl}" crossorigin="anonymous" />` : `<span class="initials">${initials}</span>`}
+            ${photoUrl ? `<img src="${photoUrl}"${cacheBust ? ' crossorigin="anonymous"' : ''} />` : `<span class="initials">${initials}</span>`}
           </div>
           <div class="code-chip">${student.studentCode || ''}</div>
         </div>

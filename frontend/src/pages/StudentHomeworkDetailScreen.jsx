@@ -69,7 +69,61 @@ export default function StudentHomeworkDetailScreen() {
         </div>
       )}
 
+      {homework.materialType === 'typed' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <h2 style={{ color: 'var(--accent-gold)', fontSize: '1.1rem' }}>{homework.title}</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{homework.subjectName}</p>
+          </div>
+
+          {homework.questions.map(q => {
+            const selected = homework.hasSubmitted ? q.selectedOption : answers[q.id];
+            return (
+              <div key={q.id} className="glass-card" style={{ padding: '1.25rem' }}>
+                <p style={{ fontWeight: 700, marginBottom: '0.9rem', lineHeight: 1.9 }}>{q.questionNumber}. {q.text}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(q.options || []).map((optionText, i) => {
+                    const isSelected = selected === i;
+                    const isCorrectOption = homework.hasSubmitted && q.correctOption === i;
+                    const isWrongSelected = homework.hasSubmitted && isSelected && !isCorrectOption;
+                    const color = isCorrectOption ? 'var(--success)' : isWrongSelected ? 'var(--danger)' : isSelected ? 'var(--accent-gold)' : 'var(--glass-border)';
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={homework.hasSubmitted}
+                        onClick={() => selectOption(q.id, i)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.7rem', textAlign: 'start', width: '100%',
+                          padding: '0.6rem 0.9rem', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: '0.95rem',
+                          border: `1px solid ${color}`,
+                          background: (isCorrectOption || isWrongSelected || isSelected) ? `color-mix(in srgb, ${color} 16%, transparent)` : 'transparent',
+                          color: 'var(--text-primary)', cursor: homework.hasSubmitted ? 'default' : 'pointer',
+                        }}
+                      >
+                        <span style={{ fontWeight: 700, color: isCorrectOption || isWrongSelected || isSelected ? color : 'var(--text-muted)' }}>{OPTION_LABELS[i]}</span>
+                        <span style={{ lineHeight: 1.8 }}>{optionText}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {!homework.hasSubmitted && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <button onClick={submit} disabled={!allAnswered || submitting} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 2rem' }}>
+                {submitting ? 'جاري التسليم...' : 'تسليم الواجب'}
+              </button>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{answeredCount}/{homework.questions.length}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Split panel: material left, bubble sheet right (sticky) */}
+      {homework.materialType !== 'typed' && (
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         {/* Material viewer */}
         <div className="glass-card" style={{ padding: '1.5rem', flex: '2 1 480px', minWidth: '320px' }}>
@@ -144,6 +198,7 @@ export default function StudentHomeworkDetailScreen() {
           )}
         </div>
       </div>
+      )}
     </>
   );
 }

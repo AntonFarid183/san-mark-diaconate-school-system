@@ -45,6 +45,8 @@ public class HomeworkQuestionAdminDto
 {
     public Guid Id { get; set; }
     public int QuestionNumber { get; set; }
+    public string? Text { get; set; }
+    public List<string>? Options { get; set; }
     public int CorrectOption { get; set; }
 }
 
@@ -62,6 +64,17 @@ public class CreateHomeworkDto
 
     // Answer key — index 0 = question 1, value = correct option (0=A..3=D)
     public List<int> AnswerKey { get; set; } = new();
+
+    // Typed homeworks (MaterialType = "typed"): the questions themselves, in order.
+    // Replaces AnswerKey, which is derived from CorrectOption.
+    public List<TypedQuestionDto> Questions { get; set; } = new();
+}
+
+public class TypedQuestionDto
+{
+    public string Text { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = new(); // exactly 4: A..D
+    public int CorrectOption { get; set; }
 }
 
 // ── Student-facing ──────────────────────────────────────────────────
@@ -97,6 +110,8 @@ public class StudentHomeworkQuestionDto
 {
     public Guid Id { get; set; }
     public int QuestionNumber { get; set; }
+    public string? Text { get; set; }
+    public List<string>? Options { get; set; }
 
     // Only populated if the student already submitted
     public int? SelectedOption { get; set; }

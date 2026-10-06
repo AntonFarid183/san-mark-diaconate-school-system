@@ -48,18 +48,37 @@ public class HomeworkService : IHomeworkService
     {
         if (string.IsNullOrWhiteSpace(dto.Title))
             return (false, "العنوان مطلوب.", null);
-        if (string.IsNullOrWhiteSpace(dto.MaterialUrl))
-            return (false, "يجب رفع ملف الواجب.", null);
         if (dto.TotalMarks <= 0)
             return (false, "الدرجة الكلية يجب أن تكون أكبر من صفر.", null);
-        if (dto.AnswerKey.Count == 0)
-            return (false, "يجب تحديد عدد الأسئلة والإجابات الصحيحة.", null);
-
-        if (dto.AnswerKey.Any(a => a < 0 || a > 3))
-            return (false, "يجب تحديد إجابة صحيحة (أ، ب، ج، د) لكل سؤال.", null);
 
         if (!Enum.TryParse<HomeworkMaterialType>(dto.MaterialType, true, out var materialType))
-            return (false, "نوع الملف غير صحيح.", null);
+            return (false, "نوع الواجب غير صحيح.", null);
+
+        var isTyped = materialType == HomeworkMaterialType.Typed;
+        List<HomeworkQuestion> questions;
+
+        if (isTyped)
+        {
+            var (typedError, typedQuestions) = BuildTypedQuestions(dto.Questions);
+            if (typedError != null) return (false, typedError, null);
+            questions = typedQuestions!;
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(dto.MaterialUrl))
+                return (false, "يجب رفع ملف الواجب.", null);
+            if (dto.AnswerKey.Count == 0)
+                return (false, "يجب تحديد عدد الأسئلة والإجابات الصحيحة.", null);
+            if (dto.AnswerKey.Any(a => a < 0 || a > 3))
+                return (false, "يجب تحديد إجابة صحيحة (أ، ب، ج، د) لكل سؤال.", null);
+
+            questions = dto.AnswerKey.Select((correctOption, i) => new HomeworkQuestion
+            {
+                Id = Guid.NewGuid(),
+                QuestionNumber = i + 1,
+                CorrectOption = correctOption
+            }).ToList();
+        }
 
         var homework = new Homework
         {
@@ -69,20 +88,15 @@ public class HomeworkService : IHomeworkService
             StageId = dto.StageId,
             GradeId = dto.GradeId,
             MaterialType = materialType,
-            MaterialUrl = dto.MaterialUrl,
-            MaterialFileName = dto.MaterialFileName,
-            AllowDownload = dto.AllowDownload,
+            MaterialUrl = isTyped ? string.Empty : dto.MaterialUrl,
+            MaterialFileName = isTyped ? null : dto.MaterialFileName,
+            AllowDownload = !isTyped && dto.AllowDownload,
             TotalMarks = dto.TotalMarks,
             Status = LessonStatus.Draft,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Questions = dto.AnswerKey.Select((correctOption, i) => new HomeworkQuestion
-            {
-                Id = Guid.NewGuid(),
-                QuestionNumber = i + 1,
-                CorrectOption = correctOption
-            }).ToList()
+            Questions = questions
         };
 
         await _repo.AddAsync(homework);
@@ -241,6 +255,8 @@ public class HomeworkService : IHomeworkService
                 {
                     Id = q.Id,
                     QuestionNumber = q.QuestionNumber,
+                    Text = q.Text,
+                    Options = OptionsOf(q),
                     SelectedOption = answer?.SelectedOption,
                     IsCorrect = answer?.IsCorrect,
                     CorrectOption = submission != null ? q.CorrectOption : null
@@ -311,6 +327,52 @@ public class HomeworkService : IHomeworkService
         });
     }
 
+    private const int MaxQuestionTextLength = 1000;
+    private const int MaxOptionTextLength = 300;
+
+    private static (string? Error, List<HomeworkQuestion>? Questions) BuildTypedQuestions(List<TypedQuestionDto> dtos)
+    {
+        if (dtos.Count == 0)
+            return ("أضف سؤالًا واحدًا على الأقل.", null);
+
+        var questions = new List<HomeworkQuestion>();
+        for (var i = 0; i < dtos.Count; i++)
+        {
+            var q = dtos[i];
+            var number = i + 1;
+
+            if (string.IsNullOrWhiteSpace(q.Text))
+                return ($"نص السؤال {number} مطلوب.", null);
+            if (q.Text.Trim().Length > MaxQuestionTextLength)
+                return ($"نص السؤال {number} طويل جدًا.", null);
+            if (q.Options.Count != 4 || q.Options.Any(string.IsNullOrWhiteSpace))
+                return ($"السؤال {number} يحتاج إلى أربعة اختيارات (أ، ب، ج، د).", null);
+            if (q.Options.Any(o => o.Trim().Length > MaxOptionTextLength))
+                return ($"أحد اختيارات السؤال {number} طويل جدًا.", null);
+            if (q.CorrectOption < 0 || q.CorrectOption > 3)
+                return ($"حدد الإجابة الصحيحة للسؤال {number}.", null);
+
+            questions.Add(new HomeworkQuestion
+            {
+                Id = Guid.NewGuid(),
+                QuestionNumber = number,
+                Text = q.Text.Trim(),
+                OptionA = q.Options[0].Trim(),
+                OptionB = q.Options[1].Trim(),
+                OptionC = q.Options[2].Trim(),
+                OptionD = q.Options[3].Trim(),
+                CorrectOption = q.CorrectOption
+            });
+        }
+
+        return (null, questions);
+    }
+
+    private static List<string>? OptionsOf(HomeworkQuestion q)
+        => q.Text == null
+            ? null
+            : new List<string> { q.OptionA ?? "", q.OptionB ?? "", q.OptionC ?? "", q.OptionD ?? "" };
+
     private static HomeworkListItemDto MapToListItem(Homework h) => new()
     {
         Id = h.Id,
@@ -342,6 +404,8 @@ public class HomeworkService : IHomeworkService
         {
             Id = q.Id,
             QuestionNumber = q.QuestionNumber,
+            Text = q.Text,
+            Options = OptionsOf(q),
             CorrectOption = q.CorrectOption
         }).ToList()
     };

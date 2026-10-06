@@ -162,7 +162,9 @@ public enum HymnSubmissionStatus
 public enum HomeworkMaterialType
 {
     Pdf = 0,
-    Image = 1
+    Image = 1,
+    // No uploaded file: the admin types each question and its four options.
+    Typed = 2
 }
 
 public enum NotificationType

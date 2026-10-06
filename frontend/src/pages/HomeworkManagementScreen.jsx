@@ -11,12 +11,15 @@ const STATUS_LABELS = {
 
 const OPTION_LABELS = ['أ', 'ب', 'ج', 'د'];
 
+const emptyTypedQuestion = () => ({ text: '', options: ['', '', '', ''], correct: 0 });
+
 const emptyForm = {
   title: '', subjectId: '', stageId: '', gradeId: '',
   materialType: 'pdf', materialUrl: '', materialFileName: '',
   allowDownload: false, totalMarks: 10,
   questionCount: 5,
   answerKey: Array(5).fill(0),
+  typedQuestions: [emptyTypedQuestion()],
 };
 
 export default function HomeworkManagementScreen() {
@@ -67,7 +70,7 @@ export default function HomeworkManagementScreen() {
   };
 
   const openCreate = () => {
-    setForm(emptyForm);
+    setForm({ ...emptyForm, answerKey: Array(5).fill(0), typedQuestions: [emptyTypedQuestion()] });
     setFormGrades([]);
     setShowForm(true);
   };
@@ -106,10 +109,36 @@ export default function HomeworkManagementScreen() {
     setForm(f => ({ ...f, answerKey: f.answerKey.map((v, i) => i === idx ? option : v) }));
   };
 
+  const isTyped = form.materialType === 'typed';
+
+  const updateTypedQuestion = (idx, patch) => {
+    setForm(f => ({ ...f, typedQuestions: f.typedQuestions.map((q, i) => i === idx ? { ...q, ...patch } : q) }));
+  };
+
+  const updateTypedOption = (idx, optionIdx, value) => {
+    setForm(f => ({
+      ...f,
+      typedQuestions: f.typedQuestions.map((q, i) => i === idx
+        ? { ...q, options: q.options.map((o, j) => j === optionIdx ? value : o) }
+        : q),
+    }));
+  };
+
+  const addTypedQuestion = () => {
+    setForm(f => ({ ...f, typedQuestions: [...f.typedQuestions, emptyTypedQuestion()] }));
+  };
+
+  const removeTypedQuestion = (idx) => {
+    setForm(f => ({ ...f, typedQuestions: f.typedQuestions.filter((_, i) => i !== idx) }));
+  };
+
+  const isTypedQuestionComplete = (q) => q.text.trim() && q.options.every(o => o.trim());
+
   const isFormValid = () => {
-    if (!form.title.trim() || !form.subjectId || !form.stageId || !form.gradeId || !form.materialUrl) return false;
+    if (!form.title.trim() || !form.subjectId || !form.stageId || !form.gradeId) return false;
     if (form.totalMarks <= 0) return false;
-    return form.answerKey.length > 0;
+    if (isTyped) return form.typedQuestions.length > 0 && form.typedQuestions.every(isTypedQuestionComplete);
+    return !!form.materialUrl && form.answerKey.length > 0;
   };
 
   const submitCreate = async () => {
@@ -122,11 +151,21 @@ export default function HomeworkManagementScreen() {
         stageId: form.stageId,
         gradeId: form.gradeId,
         materialType: form.materialType,
-        materialUrl: form.materialUrl,
-        materialFileName: form.materialFileName,
-        allowDownload: form.allowDownload,
         totalMarks: Number(form.totalMarks),
-        answerKey: form.answerKey,
+        ...(isTyped
+          ? {
+              questions: form.typedQuestions.map(q => ({
+                text: q.text.trim(),
+                options: q.options.map(o => o.trim()),
+                correctOption: q.correct,
+              })),
+            }
+          : {
+              materialUrl: form.materialUrl,
+              materialFileName: form.materialFileName,
+              allowDownload: form.allowDownload,
+              answerKey: form.answerKey,
+            }),
       });
       setMsg({ type: 'success', text: 'تم إنشاء الواجب.' });
       setShowForm(false);
@@ -192,7 +231,7 @@ export default function HomeworkManagementScreen() {
   return (
     <>
       <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-        ارفع ملف المذاكرة (يحتوي على الأسئلة والاختيارات) وحدد الإجابة الصحيحة لكل سؤال فقط.
+        ارفع ملف المذاكرة (يحتوي على الأسئلة والاختيارات) وحدد الإجابة الصحيحة لكل سؤال، أو اكتب الأسئلة واختياراتها هنا مباشرة.
       </p>
 
       {msg && (
@@ -281,28 +320,72 @@ export default function HomeworkManagementScreen() {
                 <select className="premium-input" value={form.materialType} onChange={e => setForm({ ...form, materialType: e.target.value })} style={{ maxWidth: '140px' }}>
                   <option value="pdf">PDF</option>
                   <option value="image">صورة</option>
+                  <option value="typed">كتابة الأسئلة</option>
                 </select>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{uploading ? 'hourglass_top' : 'upload_file'}</span>
-                  {uploading ? 'جاري الرفع...' : form.materialFileName || (form.materialType === 'image' ? 'رفع صورة الواجب' : 'رفع ملف الواجب كـ PDF')}
-                  <input type="file" accept={form.materialType === 'pdf' ? '.pdf' : 'image/*'} onChange={e => e.target.files?.[0] && uploadMaterial(e.target.files[0])} style={{ display: 'none' }} />
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.allowDownload} onChange={e => setForm({ ...form, allowDownload: e.target.checked })} />
-                  السماح بالتنزيل
-                </label>
+                {!isTyped && (
+                  <>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{uploading ? 'hourglass_top' : 'upload_file'}</span>
+                      {uploading ? 'جاري الرفع...' : form.materialFileName || (form.materialType === 'image' ? 'رفع صورة الواجب' : 'رفع ملف الواجب كـ PDF')}
+                      <input type="file" accept={form.materialType === 'pdf' ? '.pdf' : 'image/*'} onChange={e => e.target.files?.[0] && uploadMaterial(e.target.files[0])} style={{ display: 'none' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={form.allowDownload} onChange={e => setForm({ ...form, allowDownload: e.target.checked })} />
+                      السماح بالتنزيل
+                    </label>
+                  </>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>الدرجة الكلية</label>
                   <input className="premium-input" type="number" min="1" value={form.totalMarks} onChange={e => setForm({ ...form, totalMarks: e.target.value })} style={{ width: '80px' }} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عدد الأسئلة</label>
-                <input className="premium-input" type="number" min="1" max="100" value={form.questionCount} onChange={e => setQuestionCount(e.target.value)} style={{ width: '90px' }} />
-              </div>
+              {!isTyped && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عدد الأسئلة</label>
+                  <input className="premium-input" type="number" min="1" max="100" value={form.questionCount} onChange={e => setQuestionCount(e.target.value)} style={{ width: '90px' }} />
+                </div>
+              )}
             </div>
 
+            {isTyped ? (
+              <>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>الأسئلة</h4>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>اكتب كل سؤال مع اختياراته الأربعة، ثم اضغط على الحرف الذي يمثل الإجابة الصحيحة.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+                  {form.typedQuestions.map((q, idx) => (
+                    <div key={idx} style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-1)', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--accent-gold)', fontWeight: 700 }}>سؤال {idx + 1}</span>
+                        {form.typedQuestions.length > 1 && (
+                          <button type="button" onClick={() => removeTypedQuestion(idx)} style={{ marginInlineStart: 'auto', background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'inherit' }}>
+                            حذف السؤال
+                          </button>
+                        )}
+                      </div>
+                      <textarea className="premium-input" rows={2} placeholder="نص السؤال" value={q.text} onChange={e => updateTypedQuestion(idx, { text: e.target.value })} style={{ resize: 'vertical' }} />
+                      {OPTION_LABELS.map((label, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <button type="button" aria-label={`الإجابة الصحيحة ${label}`} onClick={() => updateTypedQuestion(idx, { correct: i })} style={{
+                            width: '28px', height: '28px', flexShrink: 0, borderRadius: '50%', border: `1px solid ${q.correct === i ? 'var(--accent-gold)' : 'var(--glass-border)'}`,
+                            background: q.correct === i ? 'var(--accent-gold)' : 'transparent', color: q.correct === i ? 'var(--on-accent)' : 'var(--text-secondary)',
+                            cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'inherit',
+                          }}>
+                            {label}
+                          </button>
+                          <input className="premium-input" placeholder={`الاختيار ${label}`} value={q.options[i]} onChange={e => updateTypedOption(idx, i, e.target.value)} />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="btn-secondary" style={{ width: '100%', marginBottom: '1.5rem' }} onClick={addTypedQuestion}>
+                  + إضافة سؤال
+                </button>
+              </>
+            ) : (
+              <>
             <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>مفتاح الإجابات</h4>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>حدد الإجابة الصحيحة لكل سؤال كما تظهر في الملف المرفوع.</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.6rem', marginBottom: '1.5rem' }}>
@@ -323,6 +406,8 @@ export default function HomeworkManagementScreen() {
                 </div>
               ))}
             </div>
+              </>
+            )}
 
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button className="btn-primary" style={{ flex: 1 }} disabled={!isFormValid() || saving} onClick={submitCreate}>

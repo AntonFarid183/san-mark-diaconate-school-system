@@ -40,6 +40,7 @@ public class AttendanceRecordDto
     public Guid Id { get; set; }
     public Guid SessionId { get; set; }
     public string SessionTitle { get; set; } = string.Empty;
+    public DateTime SessionStartsAt { get; set; }
     public Guid StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
     public string StudentCode { get; set; } = string.Empty;

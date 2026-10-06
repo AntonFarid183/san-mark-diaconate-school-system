@@ -593,6 +593,7 @@ public class AttendanceService : IAttendanceService
         Id = r.Id,
         SessionId = r.SessionId,
         SessionTitle = r.Session != null ? r.Session.Title : string.Empty,
+        SessionStartsAt = r.Session != null ? r.Session.StartsAt : r.RecordedAt,
         StudentId = r.StudentId,
         StudentName = r.Student.User.FullName,
         StudentCode = r.Student.StudentCode,

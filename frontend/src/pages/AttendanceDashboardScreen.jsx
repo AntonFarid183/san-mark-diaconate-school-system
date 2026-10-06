@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
@@ -10,6 +10,43 @@ const STATUS_QUERY_NAMES = ['Present', 'Absent'];
 const METHOD_PIN = 1;
 
 const toInputDate = (d) => d.toISOString().slice(0, 10);
+
+// 5/10/2026 — day/month/year, Latin digits, no zero padding.
+const formatDay = (value) => {
+  const d = new Date(value);
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+};
+
+/**
+ * Pivots flat attendance records into one row per student and one column per
+ * session, ordered by session date. Two sessions on the same day get the
+ * session title appended so their columns stay distinguishable.
+ */
+const buildAttendanceMatrix = (records) => {
+  const sessions = new Map();
+  const students = new Map();
+
+  for (const r of records) {
+    if (!sessions.has(r.sessionId)) {
+      sessions.set(r.sessionId, { id: r.sessionId, title: r.sessionTitle, startsAt: new Date(r.sessionStartsAt) });
+    }
+    if (!students.has(r.studentId)) {
+      students.set(r.studentId, { id: r.studentId, name: r.studentName, code: r.studentCode, cells: {}, present: 0, absent: 0 });
+    }
+    const student = students.get(r.studentId);
+    student.cells[r.sessionId] = r;
+    if (r.status === 0) student.present += 1;
+    else student.absent += 1;
+  }
+
+  const sortedSessions = [...sessions.values()].sort((a, b) => a.startsAt - b.startsAt);
+  const dayCounts = {};
+  sortedSessions.forEach(s => { s.day = formatDay(s.startsAt); dayCounts[s.day] = (dayCounts[s.day] || 0) + 1; });
+  const columns = sortedSessions.map(s => ({ ...s, label: dayCounts[s.day] > 1 ? `${s.day} - ${s.title}` : s.day }));
+
+  const rows = [...students.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+  return { columns, rows };
+};
 
 const SummaryCard = ({ label, value, color }) => (
   <div className="glass-card" style={{ padding: '1.25rem', flex: 1, minWidth: '120px', textAlign: 'center' }}>
@@ -84,19 +121,24 @@ const AttendanceDashboardScreen = () => {
     }
   };
 
+  const matrix = useMemo(() => buildAttendanceMatrix(records), [records]);
+
   const exportExcel = () => {
-    const rows = records.map((r, i) => ({
-      '#': i + 1,
-      'الطالب': r.studentName,
-      'الكود': r.studentCode,
-      'الجلسة': r.sessionTitle,
-      'الحالة': STATUS_LABELS[r.status] ?? r.status,
-      'الطريقة': r.method === METHOD_PIN ? 'رمز دخول' : 'يدوي',
-      'تاريخ التسجيل': new Date(r.recordedAt).toLocaleDateString('ar-EG'),
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 14 }, { wch: 24 }, { wch: 8 }, { wch: 10 }, { wch: 16 }];
+    const header = ['الطالب', 'الكود', ...matrix.columns.map(c => c.label), 'حاضر', 'غائب'];
+    const body = matrix.rows.map(s => [
+      s.name,
+      s.code,
+      ...matrix.columns.map(c => {
+        const cell = s.cells[c.id];
+        return cell ? STATUS_LABELS[cell.status] : '';
+      }),
+      s.present,
+      s.absent,
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+    ws['!cols'] = [{ wch: 30 }, { wch: 16 }, ...matrix.columns.map(() => ({ wch: 14 })), { wch: 8 }, { wch: 8 }];
     const wb = XLSX.utils.book_new();
+    wb.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(wb, ws, 'الحضور');
     XLSX.writeFile(wb, `سجل_الحضور_${filters.from}_${filters.to}.xlsx`);
   };
@@ -172,32 +214,49 @@ const AttendanceDashboardScreen = () => {
         ) : records.length === 0 ? (
           <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>لا توجد سجلات في هذه الفترة</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'right' }}>
-                <th style={{ padding: '0.6rem' }}>الطالب</th>
-                <th style={{ padding: '0.6rem' }}>الجلسة</th>
-                <th style={{ padding: '0.6rem' }}>الحالة</th>
-                <th style={{ padding: '0.6rem' }}>الطريقة</th>
-                <th style={{ padding: '0.6rem' }}>التاريخ</th>
-                <th style={{ padding: '0.6rem' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map(r => (
-                <tr key={r.id} style={{ borderBottom: '1px solid var(--surface-2)' }}>
-                  <td style={{ padding: '0.6rem' }}>{r.studentName} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({r.studentCode})</span></td>
-                  <td style={{ padding: '0.6rem' }}>{r.sessionTitle}</td>
-                  <td style={{ padding: '0.6rem', color: STATUS_COLORS[r.status], fontWeight: 600 }}>{STATUS_LABELS[r.status]}</td>
-                  <td style={{ padding: '0.6rem', color: 'var(--text-muted)' }}>{r.method === METHOD_PIN ? 'رمز دخول' : 'يدوي'}</td>
-                  <td style={{ padding: '0.6rem', color: 'var(--text-muted)' }}>{new Date(r.recordedAt).toLocaleDateString('ar-EG')}</td>
-                  <td style={{ padding: '0.6rem' }}>
-                    <button onClick={() => openOverride(r)} style={{ background: 'none', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '6px', padding: '0.25rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem' }}>تعديل</button>
-                  </td>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'right' }}>
+                  <th style={{ padding: '0.6rem', position: 'sticky', right: 0, background: 'var(--bg-secondary)', minWidth: '200px' }}>الطالب</th>
+                  {matrix.columns.map(c => (
+                    <th key={c.id} title={c.title} style={{ padding: '0.6rem', textAlign: 'center', whiteSpace: 'nowrap' }}>{c.label}</th>
+                  ))}
+                  <th style={{ padding: '0.6rem', textAlign: 'center', color: STATUS_COLORS[0] }}>حاضر</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'center', color: STATUS_COLORS[1] }}>غائب</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {matrix.rows.map(student => (
+                  <tr key={student.id} style={{ borderBottom: '1px solid var(--surface-2)' }}>
+                    <td style={{ padding: '0.6rem', position: 'sticky', right: 0, background: 'var(--bg-secondary)', whiteSpace: 'nowrap' }}>
+                      {student.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({student.code})</span>
+                    </td>
+                    {matrix.columns.map(c => {
+                      const cell = student.cells[c.id];
+                      return (
+                        <td key={c.id} style={{ padding: '0.4rem', textAlign: 'center' }}>
+                          {cell ? (
+                            <button
+                              onClick={() => openOverride(cell)}
+                              title="تعديل"
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 600, color: STATUS_COLORS[cell.status], padding: '0.2rem 0.5rem' }}
+                            >
+                              {STATUS_LABELS[cell.status]}
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 700, color: STATUS_COLORS[0] }}>{student.present}</td>
+                    <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 700, color: STATUS_COLORS[1] }}>{student.absent}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

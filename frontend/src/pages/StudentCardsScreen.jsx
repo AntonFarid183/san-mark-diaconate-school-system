@@ -7,6 +7,8 @@ import { usePageTitle } from '../context/PageTitleContext';
 import StudentIdCard, { CARD_WIDTH_MM, CARD_HEIGHT_MM } from '../components/StudentIdCard';
 import { BACKEND_URL as BACKEND } from '../config';
 import { CHURCH_NAME } from '../constants/church';
+import RefreshBar from '../components/RefreshBar';
+import useRequestGuard from '../hooks/useRequestGuard';
 
 const toAbsUrl = (url) => (!url ? null : url.startsWith('http') ? url : `${BACKEND}${url}`);
 // Mirrors DiaconateSchool.Domain.Enums.StudentLevel (Level1 = 1, Level2 = 2)
@@ -332,7 +334,10 @@ const StudentCardsScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [students, setStudents] = useState([]);
-  const [selected, setSelected] = useState(new Set());
+  // id -> student, kept across searches/filter changes so a selection survives
+  // looking someone else up. Holding the whole student (not just the id) lets
+  // print/download work on people who are no longer in the visible results.
+  const [selected, setSelected] = useState(new Map());
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -362,7 +367,10 @@ const StudentCardsScreen = () => {
     }
   }, [gradeId, academicYears]);
 
+  const requests = useRequestGuard();
+
   const fetchStudents = async () => {
+    const requestId = requests.begin();
     setLoading(true);
     try {
       const params = { page: 1, pageSize: 1000 };
@@ -372,10 +380,10 @@ const StudentCardsScreen = () => {
       else if (stageId) params.stageId = stageId;
       if (level !== '') params.level = level;
       const res = await apiClient.get('/students', { params });
+      if (!requests.isCurrent(requestId)) return;
       setStudents(res.data.students);
-      setSelected(new Set());
-    } catch { setStudents([]); }
-    finally { setLoading(false); }
+    } catch { if (requests.isCurrent(requestId)) setStudents([]); }
+    finally { if (requests.isCurrent(requestId)) setLoading(false); }
   };
 
   useEffect(() => { fetchStudents(); }, [stageId, gradeId, classId, level]);
@@ -387,13 +395,16 @@ const StudentCardsScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
-  const toggleSelect = (id) => {
+  const toggleSelect = (student) => {
     setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      const next = new Map(prev);
+      if (next.has(student.id)) next.delete(student.id);
+      else next.set(student.id, student);
       return next;
     });
   };
+
+  const selectedStudents = [...selected.values()];
 
   const printStudents = async (list) => {
     if (list.length === 0) return;
@@ -481,7 +492,7 @@ const StudentCardsScreen = () => {
             className="btn-secondary"
             style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
             disabled={selected.size === 0 || printing}
-            onClick={() => printStudents(students.filter(s => selected.has(s.id)))}
+            onClick={() => printStudents(selectedStudents)}
           >
             طباعة المحدد ({selected.size})
           </button>
@@ -497,7 +508,7 @@ const StudentCardsScreen = () => {
             className="btn-secondary"
             style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
             disabled={selected.size === 0 || downloading}
-            onClick={() => downloadStudents(students.filter(s => selected.has(s.id)))}
+            onClick={() => downloadStudents(selectedStudents)}
           >
             تنزيل المحدد ({selected.size})
           </button>
@@ -509,11 +520,20 @@ const StudentCardsScreen = () => {
           >
             تنزيل الكل ({students.length})
           </button>
+          <button
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+            disabled={selected.size === 0}
+            onClick={() => setSelected(new Map())}
+          >
+            إلغاء التحديد
+          </button>
         </div>
       </div>
 
       {/* Grid */}
-      {loading ? (
+      <RefreshBar active={loading && students.length > 0} />
+      {loading && students.length === 0 ? (
         <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>
       ) : students.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
@@ -525,7 +545,7 @@ const StudentCardsScreen = () => {
           {students.map(s => (
             <div key={s.id} className="glass-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggleSelect(s.id)} />
+                <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggleSelect(s)} />
                 تحديد
               </label>
 

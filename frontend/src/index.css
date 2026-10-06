@@ -682,3 +682,22 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* Re-fetching a list that already has results (see components/RefreshBar.jsx) */
+.refresh-bar {
+  height: 3px;
+  margin: 0 0 0.6rem;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  background-size: 200% 100%;
+}
+.refresh-bar-active {
+  opacity: 1;
+  animation: refresh-bar-slide 1s linear infinite;
+}
+@keyframes refresh-bar-slide {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}

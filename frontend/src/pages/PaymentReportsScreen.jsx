@@ -4,6 +4,8 @@ import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
 import StudentPaymentModal from '../components/StudentPaymentModal';
+import RefreshBar from '../components/RefreshBar';
+import useRequestGuard from '../hooks/useRequestGuard';
 
 const PAYMENT_EXPORT_COLUMNS = [
   { key: 'studentCode', label: 'الكود' },
@@ -84,7 +86,10 @@ export default function PaymentReportsScreen() {
     }
   }, [filters.stageId]);
 
+  const requests = useRequestGuard();
+
   const fetchReport = async () => {
+    const requestId = requests.begin();
     setLoading(true);
     try {
       const params = {};
@@ -96,11 +101,12 @@ export default function PaymentReportsScreen() {
       if (filters.dateTo) params.dateTo = filters.dateTo;
 
       const res = await apiClient.get('/students/payment-report', { params });
+      if (!requests.isCurrent(requestId)) return;
       setData(res.data);
     } catch {
-      alert('فشل تحميل التقرير');
+      if (requests.isCurrent(requestId)) alert('فشل تحميل التقرير');
     } finally {
-      setLoading(false);
+      if (requests.isCurrent(requestId)) setLoading(false);
     }
   };
 
@@ -210,7 +216,8 @@ export default function PaymentReportsScreen() {
       </div>
 
       {/* Table */}
-      {loading ? (
+      <RefreshBar active={loading && !!data} />
+      {loading && !data ? (
         <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
       ) : !data || data.items.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>

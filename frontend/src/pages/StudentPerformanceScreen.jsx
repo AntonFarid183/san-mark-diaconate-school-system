@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
+import RefreshBar from '../components/RefreshBar';
+import useRequestGuard from '../hooks/useRequestGuard';
 
 const LEVEL_OPTIONS = [
   { value: '', label: 'كل المستويات' },
@@ -65,7 +67,10 @@ export default function StudentPerformanceScreen() {
     }
   }, [gradeId, academicYearId]);
 
+  const requests = useRequestGuard();
+
   const fetchPerformance = async () => {
+    const requestId = requests.begin();
     setLoading(true);
     try {
       const params = {};
@@ -75,11 +80,12 @@ export default function StudentPerformanceScreen() {
       if (classId) params.classId = classId;
       if (search.trim()) params.name = search.trim();
       const r = await apiClient.get('/students/performance', { params });
+      if (!requests.isCurrent(requestId)) return;
       setData(r.data);
     } catch {
-      setMsg('فشل تحميل بيانات الأداء.');
+      if (requests.isCurrent(requestId)) setMsg('فشل تحميل بيانات الأداء.');
     } finally {
-      setLoading(false);
+      if (requests.isCurrent(requestId)) setLoading(false);
     }
   };
 
@@ -242,7 +248,8 @@ export default function StudentPerformanceScreen() {
         </div>
       </div>
 
-      {loading ? (
+      <RefreshBar active={loading && !!data} />
+      {loading && !data ? (
         <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
       ) : students.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>

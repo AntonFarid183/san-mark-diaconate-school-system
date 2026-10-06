@@ -4,6 +4,8 @@ import apiClient from '../apiClient';
 import { toAbsoluteBackendUrl } from '../config';
 import { usePageTitle } from '../context/PageTitleContext';
 import ExportModal from '../components/ExportModal';
+import RefreshBar from '../components/RefreshBar';
+import useRequestGuard from '../hooks/useRequestGuard';
 import { STUDENT_EXPORT_COLUMNS, formatStudentForExport } from '../utils/studentExport';
 
 // Photo beside the name so an admin can recognise a child at a glance. Falls back to the
@@ -68,7 +70,10 @@ const StudentListScreen = () => {
     }
   }, [gradeId, academicYears]);
 
+  const requests = useRequestGuard();
+
   const fetchStudents = async (pg = page) => {
+    const requestId = requests.begin();
     setLoading(true);
     setError(null);
     try {
@@ -78,13 +83,14 @@ const StudentListScreen = () => {
       else if (gradeId) params.gradeId = gradeId;
       else if (stageId) params.stageId = stageId;
       const res = await apiClient.get('/students', { params });
+      if (!requests.isCurrent(requestId)) return;
       setStudents(res.data.students);
       setTotalPages(res.data.totalPages);
       setTotalCount(res.data.totalCount);
     } catch {
-      setError('فشل في تحميل قائمة الطلاب');
+      if (requests.isCurrent(requestId)) setError('فشل في تحميل قائمة الطلاب');
     } finally {
-      setLoading(false);
+      if (requests.isCurrent(requestId)) setLoading(false);
     }
   };
 
@@ -196,10 +202,11 @@ const StudentListScreen = () => {
         </button>
       </div>
 
-      {loading && <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>}
+      {loading && students.length === 0 && <p style={{ textAlign: 'center', padding: '3rem' }}>جاري التحميل...</p>}
       {error && <div className="error-box" style={{ textAlign: 'center' }}>{error}</div>}
+      <RefreshBar active={loading && students.length > 0} />
 
-      {!loading && !error && (
+      {(!loading || students.length > 0) && !error && (
         <>
           <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>

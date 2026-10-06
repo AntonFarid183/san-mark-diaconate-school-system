@@ -148,7 +148,7 @@ export default function HomeworkManagementScreen() {
   };
 
   const deleteHomework = async (hw) => {
-    if (!window.confirm(`حذف الواجب "${hw.title}"؟`)) return;
+    if (!window.confirm(`حذف الواجب "${hw.title}"؟\n\nتنبيه: سيتم حذف جميع إجابات الطلاب ودرجاتهم على هذا الواجب نهائيًا ولا يمكن التراجع.`)) return;
     try {
       await apiClient.delete(`/homework/${hw.id}`);
       load();

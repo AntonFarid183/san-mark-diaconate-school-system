@@ -50,10 +50,16 @@ public class HomeworkRepository : IHomeworkRepository
     public async Task AddAsync(Homework homework)
         => await _context.Homeworks.AddAsync(homework);
 
-    public Task DeleteAsync(Homework homework)
+    public async Task DeleteAsync(Homework homework)
     {
+        // Answers -> Question is Restrict, so SQL Server refuses the cascade
+        // (homework -> questions) while any student answer still points at a
+        // question. Clear the answers first; submissions cascade from homework.
+        await _context.HomeworkAnswers
+            .Where(a => a.HomeworkQuestion.HomeworkId == homework.Id)
+            .ExecuteDeleteAsync();
+
         _context.Homeworks.Remove(homework);
-        return Task.CompletedTask;
     }
 
     public async Task<List<Homework>> GetPublishedForGradeAsync(Guid gradeId)

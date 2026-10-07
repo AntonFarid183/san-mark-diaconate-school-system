@@ -328,8 +328,15 @@ const AttendanceDashboardScreen = () => {
                         onClick={() => deleteSession(c)}
                         title="حذف حضور هذا اليوم"
                         aria-label={`حذف حضور ${c.label}`}
-                        style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', padding: '0 0 0 0.35rem', opacity: 0.75 }}
-                      >✕</button>
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', verticalAlign: 'middle',
+                          width: '30px', height: '30px', marginInlineStart: '0.5rem', cursor: 'pointer',
+                          background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.5)',
+                          borderRadius: '8px', color: 'var(--danger)',
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
+                      </button>
                     </th>
                   ))}
                   <th style={{ padding: '0.6rem', textAlign: 'center', color: STATUS_COLORS[0] }}>حاضر</th>

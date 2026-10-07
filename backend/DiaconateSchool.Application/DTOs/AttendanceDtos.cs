@@ -127,7 +127,13 @@ public class RecordStageAttendanceDto
 public class QrScanDto
 {
     public string QrToken { get; set; } = string.Empty;
-    public Guid ClassId { get; set; }
+    // Class scope: ClassId set. Grade/stage scope: ClassId null, StageId + AcademicYearId
+    // set (GradeId narrows to one grade, Level to one level) — same filters as stage-roster.
+    public Guid? ClassId { get; set; }
+    public Guid? StageId { get; set; }
+    public Guid? GradeId { get; set; }
+    public Guid? AcademicYearId { get; set; }
+    public StudentLevel? Level { get; set; }
     public DateOnly Date { get; set; }
 }
 

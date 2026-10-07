@@ -404,12 +404,42 @@ public class AttendanceService : IAttendanceService
             return new QrScanResultDto { ResultCode = QrScanResultCode.InvalidQr, Message = "كود الطالب غير صالح" };
         }
 
-        if (student.ClassId != dto.ClassId)
+        Guid classId;
+        if (dto.ClassId.HasValue)
         {
-            return new QrScanResultDto { ResultCode = QrScanResultCode.WrongClass, Message = "الطالب لا ينتمي إلى هذا الفصل" };
+            if (student.ClassId != dto.ClassId)
+            {
+                return new QrScanResultDto { ResultCode = QrScanResultCode.WrongClass, Message = "الطالب لا ينتمي إلى هذا الفصل" };
+            }
+            classId = dto.ClassId.Value;
+        }
+        else
+        {
+            if (!dto.StageId.HasValue || !dto.AcademicYearId.HasValue)
+            {
+                return new QrScanResultDto { ResultCode = QrScanResultCode.WrongClass, Message = "حدد المرحلة والسنة الدراسية أولاً" };
+            }
+
+            // Same membership rule as the stage/grade roster (GetActiveStudentsByStageAsync).
+            var cls = student.Class;
+            var inScope = student.Status == StudentStatus.Active
+                && cls != null
+                && cls.AcademicYearId == dto.AcademicYearId.Value
+                && student.Grade.StageId == dto.StageId.Value
+                && (!dto.GradeId.HasValue || cls.GradeId == dto.GradeId.Value)
+                && (!dto.Level.HasValue || cls.Level == dto.Level.Value);
+            if (!inScope)
+            {
+                return new QrScanResultDto
+                {
+                    ResultCode = QrScanResultCode.WrongClass,
+                    Message = dto.GradeId.HasValue ? "الطالب لا ينتمي إلى هذا الصف" : "الطالب لا ينتمي إلى هذه المرحلة"
+                };
+            }
+            classId = cls!.Id;
         }
 
-        var session = await GetOrCreateSessionAsync(dto.ClassId, dto.Date, recordedByUserId);
+        var session = await GetOrCreateSessionAsync(classId, dto.Date, recordedByUserId);
         var existing = session.Records.FirstOrDefault(r => r.StudentId == student.Id);
 
         if (existing != null && existing.Status == AttendanceStatus.Present)

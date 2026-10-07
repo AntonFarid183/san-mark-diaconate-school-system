@@ -177,7 +177,12 @@ const AttendanceSessionsScreen = () => {
 
   const handleScan = async (qrToken) => {
     try {
-      const r = await apiClient.post('/attendance/scan', { qrToken, classId, date });
+      // Class scope matches the student against one class; grade/stage scope matches
+      // against the same stage/grade/year/level filter the roster on screen uses.
+      const scope_ = scope === 'class'
+        ? { classId }
+        : { stageId, gradeId: scope === 'grade' ? gradeId : null, academicYearId, level: level || null };
+      const r = await apiClient.post('/attendance/scan', { qrToken, date, ...scope_ });
       const result = r.data;
       const success = result.resultCode === QR_RESULT_SUCCESS || result.resultCode === QR_RESULT_ALREADY_PRESENT;
       if (success && result.record) {
@@ -361,15 +366,13 @@ const AttendanceSessionsScreen = () => {
               >
                 تغييب الجميع
               </button>
-              {scope === 'class' && (
-                <button
-                  onClick={() => setScannerOpen(true)}
-                  style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>qr_code_scanner</span>
-                  مسح كارنيه الطالب
-                </button>
-              )}
+              <button
+                onClick={() => setScannerOpen(true)}
+                style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginLeft: '0.3rem' }}>qr_code_scanner</span>
+                مسح كارنيه الطالب
+              </button>
             </div>
           </div>
 

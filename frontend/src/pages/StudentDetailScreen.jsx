@@ -111,7 +111,7 @@ export default function StudentDetailScreen() {
     setDeleteError(null);
     try {
       await apiClient.delete(`/students/${id}`);
-      navigate(getStudentListUrl());
+      navigate(getStudentListUrl(), { state: { restoreScroll: true } });
     } catch (e) {
       setDeleteError(e.response?.data?.message || 'فشل حذف الطالب.');
       setDeleting(false);
@@ -126,7 +126,7 @@ export default function StudentDetailScreen() {
     <div className="glass-card" style={{ textAlign: 'center', maxWidth: '500px', margin: '2rem auto' }}>
       <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--danger)', marginBottom: '1rem' }}>error</span>
       <p style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error || 'الطالب غير موجود'}</p>
-      <button onClick={() => navigate(getStudentListUrl())} className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.5rem' }}>
+      <button onClick={() => navigate(getStudentListUrl(), { state: { restoreScroll: true } })} className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.5rem' }}>
         العودة للقائمة
       </button>
     </div>
@@ -267,7 +267,7 @@ export default function StudentDetailScreen() {
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
                 تعديل
               </button>
-              <button onClick={() => navigate(getStudentListUrl())} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button onClick={() => navigate(getStudentListUrl(), { state: { restoreScroll: true } })} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
                 العودة
               </button>

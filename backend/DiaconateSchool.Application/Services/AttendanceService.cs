@@ -459,10 +459,29 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status)
+    public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null)
     {
-        var records = await _repo.GetRecordsAsync(gradeId, studentId, from, to, status);
+        var records = await _repo.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId);
         return records.Select(MapToRecordDto).ToList();
+    }
+
+    public Task<bool> DeleteRecordAsync(Guid recordId) => _repo.DeleteRecordAsync(recordId);
+
+    public Task<bool> DeleteSessionAsync(Guid sessionId) => _repo.DeleteSessionAsync(sessionId);
+
+    public async Task<(bool Success, string? Error, AttendanceResetResultDto? Result)> ResetAttendanceAsync(AttendanceResetRequestDto request)
+    {
+        if (request.StageId == null && request.GradeId == null && request.ClassId == null)
+            return (false, "حدد مرحلة أو صفًا أو فصلًا قبل مسح الحضور.", null);
+
+        if (!request.Confirm)
+        {
+            var (sessions, records) = await _repo.CountSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To);
+            return (true, null, new AttendanceResetResultDto { SessionsDeleted = sessions, RecordsDeleted = records, Deleted = false });
+        }
+
+        var deleted = await _repo.DeleteSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To);
+        return (true, null, new AttendanceResetResultDto { SessionsDeleted = deleted.Sessions, RecordsDeleted = deleted.Records, Deleted = true });
     }
 
     public async Task<AttendanceRecordDto?> OverrideRecordAsync(Guid recordId, UpdateAttendanceRecordDto dto, Guid changedByUserId)
@@ -505,10 +524,10 @@ public class AttendanceService : IAttendanceService
         }).ToList();
     }
 
-    public async Task<AttendanceSummaryDto> GetSummaryAsync(Guid? gradeId, DateTime from, DateTime to)
+    public async Task<AttendanceSummaryDto> GetSummaryAsync(Guid? gradeId, DateTime from, DateTime to, Guid? classId = null, Guid? stageId = null)
     {
-        var records = await _repo.GetRecordsAsync(gradeId, null, from, to, null);
-        var sessions = await _repo.GetSessionsAsync(gradeId, null, from, to, null);
+        var records = await _repo.GetRecordsAsync(gradeId, null, from, to, null, classId, stageId);
+        var sessions = await _repo.GetSessionsAsync(gradeId, classId, from, to, null, stageId);
 
         var byStudent = records
             .GroupBy(r => r.StudentId)

@@ -182,3 +182,22 @@ public class StudentAttendanceSummaryDto
     public int ConsecutiveAbsences { get; set; }
 }
 
+
+public class AttendanceResetRequestDto
+{
+    // At least one of Stage/Grade/Class is required so "reset" can never mean "wipe everything".
+    public Guid? StageId { get; set; }
+    public Guid? GradeId { get; set; }
+    public Guid? ClassId { get; set; }
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
+    // false = only count what would be deleted
+    public bool Confirm { get; set; }
+}
+
+public class AttendanceResetResultDto
+{
+    public int SessionsDeleted { get; set; }
+    public int RecordsDeleted { get; set; }
+    public bool Deleted { get; set; }
+}

@@ -19,7 +19,7 @@ public class AttendanceRepository : IAttendanceRepository
         _context = context;
     }
 
-    public async Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status)
+    public async Task<List<AttendanceSession>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status, Guid? stageId = null)
     {
         var query = _context.AttendanceSessions
             .Include(s => s.Grade)
@@ -27,6 +27,7 @@ public class AttendanceRepository : IAttendanceRepository
             .Include(s => s.Records)
             .AsQueryable();
 
+        if (stageId.HasValue) query = query.Where(s => s.Grade.StageId == stageId.Value);
         if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);
         if (classId.HasValue) query = query.Where(s => s.ClassId == classId.Value);
         if (from.HasValue) query = query.Where(s => s.StartsAt >= from.Value);
@@ -77,6 +78,36 @@ public class AttendanceRepository : IAttendanceRepository
         _context.AttendanceSessions.RemoveRange(sessions);
     }
 
+    public async Task<bool> DeleteRecordAsync(Guid recordId)
+        => await _context.AttendanceRecords.Where(r => r.Id == recordId).ExecuteDeleteAsync() > 0;
+
+    public async Task<bool> DeleteSessionAsync(Guid sessionId)
+        => await _context.AttendanceSessions.Where(s => s.Id == sessionId).ExecuteDeleteAsync() > 0;
+
+    private IQueryable<AttendanceSession> SessionsInScope(Guid? stageId, Guid? gradeId, Guid? classId, DateTime? from, DateTime? to)
+    {
+        var query = _context.AttendanceSessions.AsQueryable();
+        if (stageId.HasValue) query = query.Where(s => s.Grade.StageId == stageId.Value);
+        if (gradeId.HasValue) query = query.Where(s => s.GradeId == gradeId.Value);
+        if (classId.HasValue) query = query.Where(s => s.ClassId == classId.Value);
+        if (from.HasValue) query = query.Where(s => s.StartsAt >= from.Value);
+        if (to.HasValue) query = query.Where(s => s.StartsAt <= to.Value);
+        return query;
+    }
+
+    public async Task<(int Sessions, int Records)> CountSessionsInScopeAsync(Guid? stageId, Guid? gradeId, Guid? classId, DateTime? from, DateTime? to)
+    {
+        var sessions = SessionsInScope(stageId, gradeId, classId, from, to);
+        return (await sessions.CountAsync(), await sessions.SelectMany(s => s.Records).CountAsync());
+    }
+
+    public async Task<(int Sessions, int Records)> DeleteSessionsInScopeAsync(Guid? stageId, Guid? gradeId, Guid? classId, DateTime? from, DateTime? to)
+    {
+        var counts = await CountSessionsInScopeAsync(stageId, gradeId, classId, from, to);
+        await SessionsInScope(stageId, gradeId, classId, from, to).ExecuteDeleteAsync();
+        return counts;
+    }
+
     public async Task<List<AttendanceRecord>> GetRecordsBySessionAsync(Guid sessionId)
     {
         return await _context.AttendanceRecords
@@ -112,7 +143,7 @@ public class AttendanceRepository : IAttendanceRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<AttendanceRecord>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status)
+    public async Task<List<AttendanceRecord>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null)
     {
         var query = _context.AttendanceRecords
             .Include(r => r.Student).ThenInclude(s => s.User)
@@ -120,7 +151,9 @@ public class AttendanceRepository : IAttendanceRepository
             .Include(r => r.RecordedByUser)
             .AsQueryable();
 
+        if (stageId.HasValue) query = query.Where(r => r.Session.Grade.StageId == stageId.Value);
         if (gradeId.HasValue) query = query.Where(r => r.Session.GradeId == gradeId.Value);
+        if (classId.HasValue) query = query.Where(r => r.Session.ClassId == classId.Value);
         if (studentId.HasValue) query = query.Where(r => r.StudentId == studentId.Value);
         if (from.HasValue) query = query.Where(r => r.Session.StartsAt >= from.Value);
         if (to.HasValue) query = query.Where(r => r.Session.StartsAt <= to.Value);

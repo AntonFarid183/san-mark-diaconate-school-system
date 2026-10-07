@@ -174,10 +174,30 @@ public class AttendanceController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("records")]
-    public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status)
+    public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status, [FromQuery] Guid? classId, [FromQuery] Guid? stageId)
     {
-        var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status);
+        var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId);
         return Ok(result);
+    }
+
+    // Admin reset tools: remove one student's record, one whole session (a class on a date),
+    // or every session in a stage/grade/class (optionally within a date range).
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("records/{id}")]
+    public async Task<IActionResult> DeleteRecord(Guid id)
+        => await _service.DeleteRecordAsync(id) ? NoContent() : NotFound();
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("sessions/{id}")]
+    public async Task<IActionResult> DeleteSession(Guid id)
+        => await _service.DeleteSessionAsync(id) ? NoContent() : NotFound();
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("reset")]
+    public async Task<IActionResult> Reset([FromBody] AttendanceResetRequestDto request)
+    {
+        var (success, error, result) = await _service.ResetAttendanceAsync(request);
+        return success ? Ok(result) : BadRequest(new { Message = error });
     }
 
     // Self-scoped mirror of the admin "records?studentId=" call, for the student's own
@@ -211,9 +231,9 @@ public class AttendanceController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("summary")]
-    public async Task<IActionResult> GetSummary([FromQuery] Guid? gradeId, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    public async Task<IActionResult> GetSummary([FromQuery] Guid? gradeId, [FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] Guid? classId, [FromQuery] Guid? stageId)
     {
-        var result = await _service.GetSummaryAsync(gradeId, from, to);
+        var result = await _service.GetSummaryAsync(gradeId, from, to, classId, stageId);
         return Ok(result);
     }
 

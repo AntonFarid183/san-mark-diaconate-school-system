@@ -33,9 +33,12 @@ public interface IAttendanceService
     // QR is just another way to record Present on the same class+day flow above.
     Task<QrScanResultDto> ScanQrAsync(QrScanDto dto, Guid recordedByUserId);
 
-    Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status);
+    Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null);
+    Task<bool> DeleteRecordAsync(Guid recordId);
+    Task<bool> DeleteSessionAsync(Guid sessionId);
+    Task<(bool Success, string? Error, AttendanceResetResultDto? Result)> ResetAttendanceAsync(AttendanceResetRequestDto request);
     Task<AttendanceRecordDto?> OverrideRecordAsync(Guid recordId, UpdateAttendanceRecordDto dto, Guid changedByUserId);
     Task<List<AttendanceAuditLogDto>> GetAuditLogAsync(Guid recordId);
 
-    Task<AttendanceSummaryDto> GetSummaryAsync(Guid? gradeId, DateTime from, DateTime to);
+    Task<AttendanceSummaryDto> GetSummaryAsync(Guid? gradeId, DateTime from, DateTime to, Guid? classId = null, Guid? stageId = null);
 }

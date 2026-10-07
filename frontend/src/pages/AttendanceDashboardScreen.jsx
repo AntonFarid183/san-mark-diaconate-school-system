@@ -60,9 +60,12 @@ const AttendanceDashboardScreen = () => {
   const today = new Date();
   const weekAgo = new Date(today.getTime() - 7 * 86400000);
 
+  const [stages, setStages] = useState([]);
   const [grades, setGrades] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
   const [filters, setFilters] = useState({
-    gradeId: '', status: '', from: toInputDate(weekAgo), to: toInputDate(today),
+    stageId: '', gradeId: '', classId: '', status: '', from: toInputDate(weekAgo), to: toInputDate(today),
   });
   const [summary, setSummary] = useState(null);
   const [records, setRecords] = useState([]);
@@ -72,8 +75,28 @@ const AttendanceDashboardScreen = () => {
   const [overrideForm, setOverrideForm] = useState({ status: 0, reason: '' });
 
   useEffect(() => {
-    apiClient.get('/students/grades').then(r => setGrades(r.data)).catch(() => {});
+    apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
+    apiClient.get('/academic-years').then(r => setAcademicYears(r.data)).catch(() => {});
   }, []);
+
+  // Grades narrow to the chosen stage; classes narrow to the chosen grade (across all academic years).
+  useEffect(() => {
+    const request = filters.stageId ? `/students/grades/${filters.stageId}` : '/students/grades';
+    apiClient.get(request).then(r => setGrades(r.data)).catch(() => setGrades([]));
+  }, [filters.stageId]);
+
+  useEffect(() => {
+    if (!filters.gradeId || academicYears.length === 0) return;
+    Promise.all(
+      academicYears.map(y =>
+        apiClient.get('/classes', { params: { gradeId: filters.gradeId, academicYearId: y.id } })
+          .then(r => r.data)
+          .catch(() => [])
+      )
+    ).then(results => setClasses(results.flat()));
+  }, [filters.gradeId, academicYears]);
+
+  const setScopeFilter = (patch) => setFilters(f => ({ ...f, ...patch }));
 
   useEffect(() => { fetchData(); }, [filters]);
 
@@ -83,11 +106,13 @@ const AttendanceDashboardScreen = () => {
       const from = `${filters.from}T00:00:00`;
       const to = `${filters.to}T23:59:59`;
 
-      const summaryParams = { from, to };
-      if (filters.gradeId) summaryParams.gradeId = filters.gradeId;
+      const scopeParams = { from, to };
+      if (filters.stageId) scopeParams.stageId = filters.stageId;
+      if (filters.gradeId) scopeParams.gradeId = filters.gradeId;
+      if (filters.classId) scopeParams.classId = filters.classId;
 
-      const recordParams = { from, to };
-      if (filters.gradeId) recordParams.gradeId = filters.gradeId;
+      const summaryParams = scopeParams;
+      const recordParams = { ...scopeParams };
       if (filters.status !== '') recordParams.status = filters.status;
 
       const [summaryRes, recordsRes] = await Promise.all([
@@ -123,6 +148,60 @@ const AttendanceDashboardScreen = () => {
 
   const matrix = useMemo(() => buildAttendanceMatrix(records), [records]);
 
+  // ── Reset tools (the admin tried things out and wants a clean slate) ──────
+  const failWith = (e, fallback) => setMsg({ type: 'error', text: e.response?.data?.message || fallback });
+
+  const deleteRecord = async () => {
+    if (!window.confirm(`حذف تسجيل ${editing.studentName} في "${editing.sessionTitle}"؟`)) return;
+    try {
+      await apiClient.delete(`/attendance/records/${editing.id}`);
+      setMsg({ type: 'success', text: 'تم حذف التسجيل.' });
+      setEditing(null);
+      fetchData();
+    } catch (e) { failWith(e, 'فشل حذف التسجيل.'); }
+  };
+
+  const deleteSession = async (column) => {
+    if (!window.confirm(`حذف حضور يوم ${column.label} بالكامل (كل الطلاب)؟\nلا يمكن التراجع.`)) return;
+    try {
+      await apiClient.delete(`/attendance/sessions/${column.id}`);
+      setMsg({ type: 'success', text: 'تم حذف الحضور لهذا اليوم.' });
+      fetchData();
+    } catch (e) { failWith(e, 'فشل الحذف.'); }
+  };
+
+  const hasScope = !!(filters.stageId || filters.gradeId || filters.classId);
+  const scopeLabel = () => {
+    if (filters.classId) return `الفصل ${classes.find(c => c.id === filters.classId)?.name ?? ''}`;
+    if (filters.gradeId) return grades.find(g => g.id === filters.gradeId)?.name ?? 'الصف المحدد';
+    return stages.find(s => s.id === filters.stageId)?.name ?? 'المرحلة المحددة';
+  };
+
+  const resetAttendance = async () => {
+    const body = {
+      stageId: filters.stageId || null,
+      gradeId: filters.gradeId || null,
+      classId: filters.classId || null,
+      from: `${filters.from}T00:00:00`,
+      to: `${filters.to}T23:59:59`,
+    };
+    try {
+      const preview = (await apiClient.post('/attendance/reset', { ...body, confirm: false })).data;
+      if (preview.sessionsDeleted === 0) {
+        setMsg({ type: 'error', text: 'لا يوجد حضور مسجل في هذا النطاق.' });
+        return;
+      }
+      const ok = window.confirm(
+        `سيتم حذف حضور ${scopeLabel()} من ${filters.from} إلى ${filters.to}:\n` +
+        `${preview.sessionsDeleted} جلسة و${preview.recordsDeleted} تسجيل.\n\nلا يمكن التراجع. هل أنت متأكد؟`
+      );
+      if (!ok) return;
+      await apiClient.post('/attendance/reset', { ...body, confirm: true });
+      setMsg({ type: 'success', text: 'تم مسح الحضور.' });
+      fetchData();
+    } catch (e) { failWith(e, 'فشل مسح الحضور.'); }
+  };
+
   const exportExcel = () => {
     const header = ['الطالب', 'الكود', ...matrix.columns.map(c => c.label), 'حاضر', 'غائب'];
     const body = matrix.rows.map(s => [
@@ -155,10 +234,24 @@ const AttendanceDashboardScreen = () => {
       {/* Filters */}
       <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
         <div>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>المرحلة</label>
+          <select className="premium-input" value={filters.stageId} onChange={e => setScopeFilter({ stageId: e.target.value, gradeId: '', classId: '' })}>
+            <option value="">كل المراحل</option>
+            {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div>
           <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>الصف</label>
-          <select className="premium-input" value={filters.gradeId} onChange={e => setFilters({ ...filters, gradeId: e.target.value })}>
+          <select className="premium-input" value={filters.gradeId} onChange={e => setScopeFilter({ gradeId: e.target.value, classId: '' })}>
             <option value="">كل الصفوف</option>
             {grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>الفصل</label>
+          <select className="premium-input" value={filters.classId} onChange={e => setScopeFilter({ classId: e.target.value })} disabled={!filters.gradeId}>
+            <option value="">كل الفصول</option>
+            {(filters.gradeId ? classes : []).map(c => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
           </select>
         </div>
         <div>
@@ -183,6 +276,15 @@ const AttendanceDashboardScreen = () => {
         </div>
         <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.25rem', marginRight: 'auto' }} onClick={exportExcel} disabled={records.length === 0}>
           تصدير Excel
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ width: 'auto', padding: '0.5rem 1.25rem', color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.4)' }}
+          onClick={resetAttendance}
+          disabled={!hasScope}
+          title={hasScope ? '' : 'اختر مرحلة أو صفًا أو فصلًا أولًا'}
+        >
+          مسح الحضور
         </button>
       </div>
 
@@ -220,7 +322,15 @@ const AttendanceDashboardScreen = () => {
                 <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'right' }}>
                   <th style={{ padding: '0.6rem', position: 'sticky', right: 0, background: 'var(--bg-secondary)', minWidth: '200px' }}>الطالب</th>
                   {matrix.columns.map(c => (
-                    <th key={c.id} title={c.title} style={{ padding: '0.6rem', textAlign: 'center', whiteSpace: 'nowrap' }}>{c.label}</th>
+                    <th key={c.id} title={c.title} style={{ padding: '0.6rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {c.label}
+                      <button
+                        onClick={() => deleteSession(c)}
+                        title="حذف حضور هذا اليوم"
+                        aria-label={`حذف حضور ${c.label}`}
+                        style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', padding: '0 0 0 0.35rem', opacity: 0.75 }}
+                      >✕</button>
+                    </th>
                   ))}
                   <th style={{ padding: '0.6rem', textAlign: 'center', color: STATUS_COLORS[0] }}>حاضر</th>
                   <th style={{ padding: '0.6rem', textAlign: 'center', color: STATUS_COLORS[1] }}>غائب</th>
@@ -284,6 +394,12 @@ const AttendanceDashboardScreen = () => {
               <button className="btn-primary" style={{ flex: 1 }} disabled={!overrideForm.reason.trim()} onClick={submitOverride}>حفظ</button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setEditing(null)}>إلغاء</button>
             </div>
+            <button
+              onClick={deleteRecord}
+              style={{ marginTop: '1rem', width: '100%', background: 'none', border: '1px solid rgba(239,68,68,0.4)', color: 'var(--danger)', borderRadius: 'var(--radius-sm)', padding: '0.5rem', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              حذف هذا التسجيل
+            </button>
           </div>
         </div>
       )}

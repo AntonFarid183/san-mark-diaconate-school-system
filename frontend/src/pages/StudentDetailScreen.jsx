@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getStudentListUrl } from '../utils/studentListView';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
 import StudentPaymentModal from '../components/StudentPaymentModal';
@@ -110,7 +111,7 @@ export default function StudentDetailScreen() {
     setDeleteError(null);
     try {
       await apiClient.delete(`/students/${id}`);
-      navigate('/students');
+      navigate(getStudentListUrl());
     } catch (e) {
       setDeleteError(e.response?.data?.message || 'فشل حذف الطالب.');
       setDeleting(false);
@@ -125,7 +126,7 @@ export default function StudentDetailScreen() {
     <div className="glass-card" style={{ textAlign: 'center', maxWidth: '500px', margin: '2rem auto' }}>
       <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--danger)', marginBottom: '1rem' }}>error</span>
       <p style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error || 'الطالب غير موجود'}</p>
-      <button onClick={() => navigate('/students')} className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.5rem' }}>
+      <button onClick={() => navigate(getStudentListUrl())} className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.5rem' }}>
         العودة للقائمة
       </button>
     </div>
@@ -266,7 +267,7 @@ export default function StudentDetailScreen() {
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
                 تعديل
               </button>
-              <button onClick={() => navigate('/students')} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button onClick={() => navigate(getStudentListUrl())} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
                 العودة
               </button>

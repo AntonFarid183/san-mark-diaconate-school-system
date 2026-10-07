@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { rememberStudentListUrl } from '../utils/studentListView';
 import apiClient from '../apiClient';
 import { toAbsoluteBackendUrl } from '../config';
 import { usePageTitle } from '../context/PageTitleContext';
@@ -30,7 +31,7 @@ const StudentAvatar = ({ name, photoUrl }) => {
 
 const StudentListScreen = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const gradeId = searchParams.get('gradeId') || '';
   const stageId = searchParams.get('stageId') || '';
   const gradeName = searchParams.get('gradeName') || '';
@@ -38,10 +39,12 @@ const StudentListScreen = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
+  // Page, search and class live in the URL too, so coming back from a student's page
+  // (browser back, or the back buttons there) lands on the same page of the same search.
+  const [page, setPage] = useState(() => Math.max(1, Number(searchParams.get('page')) || 1));
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') || '');
   const [showExport, setShowExport] = useState(false);
   const [exportRows, setExportRows] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
@@ -51,14 +54,21 @@ const StudentListScreen = () => {
   // this grade across every academic year rather than assuming "current".
   const [academicYears, setAcademicYears] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [classId, setClassId] = useState('');
+  const [classId, setClassId] = useState(() => searchParams.get('classId') || '');
 
   useEffect(() => {
     apiClient.get('/academic-years').then(r => setAcademicYears(r.data)).catch(() => {});
   }, []);
 
+  // Changing grade (via the sidebar) clears the class — but not on first load, where
+  // the class may have been restored from the URL.
+  const lastGradeId = useRef(gradeId);
   useEffect(() => {
-    setClassId(''); setClasses([]);
+    if (lastGradeId.current !== gradeId) {
+      lastGradeId.current = gradeId;
+      setClassId('');
+    }
+    setClasses([]);
     if (gradeId && academicYears.length > 0) {
       Promise.all(
         academicYears.map(y =>
@@ -94,14 +104,35 @@ const StudentListScreen = () => {
     }
   };
 
-  useEffect(() => { setPage(1); fetchStudents(1); }, [gradeId, stageId, classId]);
+  // Filters changed -> back to page 1. Compared against the last value (not a "first run"
+  // flag) so a page restored from the URL sticks, even when effects run twice in dev.
+  const lastFilters = useRef(`${gradeId}|${stageId}|${classId}`);
+  useEffect(() => {
+    const key = `${gradeId}|${stageId}|${classId}`;
+    if (lastFilters.current === key) return;
+    lastFilters.current = key;
+    setPage(1); fetchStudents(1);
+  }, [gradeId, stageId, classId]);
   useEffect(() => { fetchStudents(); }, [page]);
 
-  // Live search — debounced so we don't hit the server on every keystroke
-  const isFirstRender = useRef(true);
+  // Mirror page / search / class into the URL (replace, so it doesn't pile up history) and
+  // remember it for the back buttons on the student pages.
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
-    const timer = setTimeout(() => { setPage(1); fetchStudents(1); }, 400);
+    const next = new URLSearchParams(searchParams);
+    const setOrDelete = (key, value) => (value ? next.set(key, value) : next.delete(key));
+    setOrDelete('page', page > 1 ? String(page) : '');
+    setOrDelete('q', searchTerm.trim());
+    setOrDelete('classId', classId);
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+    rememberStudentListUrl(`/students${next.toString() ? `?${next}` : ''}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchTerm, classId]);
+
+  // Live search — debounced so we don't hit the server on every keystroke
+  const lastSearchTerm = useRef(searchTerm);
+  useEffect(() => {
+    if (lastSearchTerm.current === searchTerm) return;
+    const timer = setTimeout(() => { lastSearchTerm.current = searchTerm; setPage(1); fetchStudents(1); }, 400);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);

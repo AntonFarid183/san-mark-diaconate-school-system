@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import ScrollToTop from './components/ScrollToTop';
+import ScrollManager from './components/ScrollManager';
 import './App.css';
 import LoginScreen from './pages/LoginScreen';
 import ChangePasswordScreen from './pages/ChangePasswordScreen';
@@ -129,7 +129,7 @@ function AppRoutes() {
 function App() {
     return (
         <BrowserRouter>
-            <ScrollToTop />
+            <ScrollManager />
             <AuthProvider>
                 <AppRoutes />
             </AuthProvider>

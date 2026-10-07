@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams, useLocation, useNavigationType } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { rememberStudentListUrl } from '../utils/studentListView';
-import useScrollRestoration from '../hooks/useScrollRestoration';
 import apiClient from '../apiClient';
 import { toAbsoluteBackendUrl } from '../config';
 import { usePageTitle } from '../context/PageTitleContext';
@@ -33,8 +32,6 @@ const StudentAvatar = ({ name, photoUrl }) => {
 const StudentListScreen = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const navigationType = useNavigationType();
   const gradeId = searchParams.get('gradeId') || '';
   const stageId = searchParams.get('stageId') || '';
   const gradeName = searchParams.get('gradeName') || '';
@@ -117,13 +114,6 @@ const StudentListScreen = () => {
     setPage(1); fetchStudents(1);
   }, [gradeId, stageId, classId]);
   useEffect(() => { fetchStudents(); }, [page]);
-
-  // Back from a student's page (browser back, or the in-app العودة button) -> same scroll spot.
-  useScrollRestoration({
-    key: `${location.pathname}${location.search}`,
-    restore: navigationType === 'POP' || location.state?.restoreScroll === true,
-    ready: !loading && students.length > 0,
-  });
 
   // Mirror page / search / class into the URL (replace, so it doesn't pile up history) and
   // remember it for the back buttons on the student pages.

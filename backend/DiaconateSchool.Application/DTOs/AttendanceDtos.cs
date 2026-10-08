@@ -197,6 +197,8 @@ public class AttendanceResetRequestDto
     public Guid? ClassId { get; set; }
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
+    // When set, exactly these sessions are deleted and the stage/grade/class requirement is waived.
+    public List<Guid>? SessionIds { get; set; }
     // false = only count what would be deleted
     public bool Confirm { get; set; }
 }

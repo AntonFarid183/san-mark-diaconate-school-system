@@ -26,9 +26,9 @@ public class AttendanceService : IAttendanceService
         _uow = uow;
     }
 
-    public async Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status)
+    public async Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status, Guid? stageId = null)
     {
-        var sessions = await _repo.GetSessionsAsync(gradeId, classId, from, to, status);
+        var sessions = await _repo.GetSessionsAsync(gradeId, classId, from, to, status, stageId);
         return sessions.Select(MapToSessionDto).ToList();
     }
 
@@ -489,9 +489,9 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null)
+    public async Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null, IReadOnlyCollection<Guid>? sessionIds = null)
     {
-        var records = await _repo.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId);
+        var records = await _repo.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId, sessionIds);
         return records.Select(MapToRecordDto).ToList();
     }
 
@@ -501,16 +501,17 @@ public class AttendanceService : IAttendanceService
 
     public async Task<(bool Success, string? Error, AttendanceResetResultDto? Result)> ResetAttendanceAsync(AttendanceResetRequestDto request)
     {
-        if (request.StageId == null && request.GradeId == null && request.ClassId == null)
-            return (false, "حدد مرحلة أو صفًا أو فصلًا قبل مسح الحضور.", null);
+        var hasSessionIds = request.SessionIds is { Count: > 0 };
+        if (!hasSessionIds && request.StageId == null && request.GradeId == null && request.ClassId == null)
+            return (false, "حدد مرحلة أو صفًا أو فصلًا (أو جلسات بعينها) قبل مسح الحضور.", null);
 
         if (!request.Confirm)
         {
-            var (sessions, records) = await _repo.CountSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To);
+            var (sessions, records) = await _repo.CountSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To, request.SessionIds);
             return (true, null, new AttendanceResetResultDto { SessionsDeleted = sessions, RecordsDeleted = records, Deleted = false });
         }
 
-        var deleted = await _repo.DeleteSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To);
+        var deleted = await _repo.DeleteSessionsInScopeAsync(request.StageId, request.GradeId, request.ClassId, request.From, request.To, request.SessionIds);
         return (true, null, new AttendanceResetResultDto { SessionsDeleted = deleted.Sessions, RecordsDeleted = deleted.Records, Deleted = true });
     }
 

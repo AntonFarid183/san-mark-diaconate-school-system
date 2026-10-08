@@ -8,7 +8,7 @@ namespace DiaconateSchool.Application.Interfaces;
 
 public interface IAttendanceService
 {
-    Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status);
+    Task<List<AttendanceSessionDto>> GetSessionsAsync(Guid? gradeId, Guid? classId, DateTime? from, DateTime? to, AttendanceSessionStatus? status, Guid? stageId = null);
     Task<List<AttendanceSessionDto>> GetOpenSessionsForStudentAsync(Guid currentUserId);
     Task<AttendanceSessionDetailDto?> GetSessionByIdAsync(Guid id);
     Task<AttendanceSessionDetailDto> CreateSessionAsync(CreateAttendanceSessionDto dto, Guid createdByUserId);
@@ -33,7 +33,7 @@ public interface IAttendanceService
     // QR is just another way to record Present on the same class+day flow above.
     Task<QrScanResultDto> ScanQrAsync(QrScanDto dto, Guid recordedByUserId);
 
-    Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null);
+    Task<List<AttendanceRecordDto>> GetRecordsAsync(Guid? gradeId, Guid? studentId, DateTime? from, DateTime? to, AttendanceStatus? status, Guid? classId = null, Guid? stageId = null, IReadOnlyCollection<Guid>? sessionIds = null);
     Task<bool> DeleteRecordAsync(Guid recordId);
     Task<bool> DeleteSessionAsync(Guid sessionId);
     Task<(bool Success, string? Error, AttendanceResetResultDto? Result)> ResetAttendanceAsync(AttendanceResetRequestDto request);

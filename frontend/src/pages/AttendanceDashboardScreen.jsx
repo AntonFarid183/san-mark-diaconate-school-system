@@ -9,8 +9,6 @@ const STATUS_COLORS = ['var(--success)', 'var(--danger)'];
 const STATUS_QUERY_NAMES = ['Present', 'Absent'];
 const METHOD_PIN = 1;
 
-const toInputDate = (d) => d.toISOString().slice(0, 10);
-
 // 5/10/2026 — day/month/year, Latin digits, no zero padding.
 const formatDay = (value) => {
   const d = new Date(value);
@@ -48,6 +46,22 @@ const buildAttendanceMatrix = (records) => {
   return { columns, rows };
 };
 
+// Chip text for a session: its date, plus the class when the list spans several classes
+// (two classes on the same day would otherwise look identical).
+const sessionLabel = (all) => {
+  const multipleClasses = new Set(all.map(x => x.classId)).size > 1;
+  return (x) => `${formatDay(x.startsAt)}${multipleClasses ? ` — ${x.gradeName} ${x.className}` : ''}`;
+};
+
+const chipStyle = (on) => ({
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem',
+  padding: '0.45rem 0.9rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.82rem',
+  border: `1px solid ${on ? 'var(--accent-gold)' : 'var(--glass-border)'}`,
+  background: on ? 'rgba(251,191,36,0.14)' : 'transparent',
+  color: on ? 'var(--accent-gold)' : 'var(--text-secondary)',
+  transition: 'all 0.15s',
+});
+
 const SummaryCard = ({ label, value, color }) => (
   <div className="glass-card" style={{ padding: '1.25rem', flex: 1, minWidth: '120px', textAlign: 'center' }}>
     <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>{label}</p>
@@ -57,19 +71,20 @@ const SummaryCard = ({ label, value, color }) => (
 
 const AttendanceDashboardScreen = () => {
   usePageTitle('لوحة تحكم الحضور');
-  const today = new Date();
-  const weekAgo = new Date(today.getTime() - 7 * 86400000);
-
   const [stages, setStages] = useState([]);
   const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
-  const [filters, setFilters] = useState({
-    stageId: '', gradeId: '', classId: '', status: '', from: toInputDate(weekAgo), to: toInputDate(today),
-  });
+  const [filters, setFilters] = useState({ stageId: '', gradeId: '', classId: '', status: '' });
+  // Sessions the admin has recorded for the chosen stage/grade/class — shown as buttons.
+  // Picking one (or several) is what fills the table below.
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoadedFor, setSessionsLoadedFor] = useState(null); // request key the sessions list was loaded for
+  const [selectedIds, setSelectedIds] = useState([]);
   const [summary, setSummary] = useState(null);
   const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [recordsLoadedFor, setRecordsLoadedFor] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [msg, setMsg] = useState(null);
   const [editing, setEditing] = useState(null);
   const [overrideForm, setOverrideForm] = useState({ status: 0, reason: '' });
@@ -87,48 +102,88 @@ const AttendanceDashboardScreen = () => {
 
   useEffect(() => {
     if (!filters.gradeId || academicYears.length === 0) return;
-    Promise.all(
-      academicYears.map(y =>
-        apiClient.get('/classes', { params: { gradeId: filters.gradeId, academicYearId: y.id } })
-          .then(r => r.data)
-          .catch(() => [])
-      )
-    ).then(results => setClasses(results.flat()));
+    // The classes endpoint returns one level at a time (Level 1 unless told otherwise), so ask for both.
+    const requests = academicYears.flatMap(y => [1, 2].map(level =>
+      apiClient.get('/classes', { params: { gradeId: filters.gradeId, academicYearId: y.id, level } })
+        .then(r => r.data)
+        .catch(() => [])
+    ));
+    Promise.all(requests).then(results => setClasses(results.flat()));
   }, [filters.gradeId, academicYears]);
 
   const setScopeFilter = (patch) => setFilters(f => ({ ...f, ...patch }));
 
-  useEffect(() => { fetchData(); }, [filters]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const from = `${filters.from}T00:00:00`;
-      const to = `${filters.to}T23:59:59`;
-
-      const scopeParams = { from, to };
-      if (filters.stageId) scopeParams.stageId = filters.stageId;
-      if (filters.gradeId) scopeParams.gradeId = filters.gradeId;
-      if (filters.classId) scopeParams.classId = filters.classId;
-
-      const summaryParams = scopeParams;
-      const recordParams = { ...scopeParams };
-      if (filters.status !== '') recordParams.status = filters.status;
-
-      const [summaryRes, recordsRes] = await Promise.all([
-        apiClient.get('/attendance/summary', { params: summaryParams }),
-        apiClient.get('/attendance/records', { params: recordParams }),
-      ]);
-      setSummary(summaryRes.data);
-      setRecords(recordsRes.data);
-    } catch { setMsg({ type: 'error', text: 'فشل تحميل بيانات الحضور.' }); }
-    finally { setLoading(false); }
+  const scopeParams = () => {
+    const params = {};
+    if (filters.stageId) params.stageId = filters.stageId;
+    if (filters.gradeId) params.gradeId = filters.gradeId;
+    if (filters.classId) params.classId = filters.classId;
+    return params;
   };
 
-  const applyQuickRange = (days) => {
-    const from = new Date(today.getTime() - days * 86400000);
-    setFilters(f => ({ ...f, from: toInputDate(from), to: toInputDate(today) }));
+  const sessionsRequestKey = `${filters.stageId}|${filters.gradeId}|${filters.classId}|${reloadTick}`;
+  const sessionsLoading = sessionsLoadedFor !== sessionsRequestKey;
+
+  // 1) Which sessions exist for this scope (only ones with attendance actually recorded).
+  useEffect(() => {
+    let current = true;
+    const requestKey = sessionsRequestKey;
+    apiClient.get('/attendance/sessions', { params: scopeParams() })
+      .then(r => {
+        if (!current) return;
+        const recorded = r.data
+          .filter(x => x.presentCount + x.absentCount > 0)
+          .sort((a, b) => new Date(b.startsAt) - new Date(a.startsAt));
+        setSessions(recorded);
+        // Keep what was picked if it still exists; otherwise start from the latest session.
+        setSelectedIds(prev => {
+          const kept = prev.filter(id => recorded.some(x => x.id === id));
+          return kept.length > 0 ? kept : recorded.slice(0, 1).map(x => x.id);
+        });
+      })
+      .catch(() => { if (current) { setSessions([]); setMsg({ type: 'error', text: 'فشل تحميل الجلسات.' }); } })
+      .finally(() => { if (current) setSessionsLoadedFor(requestKey); });
+    return () => { current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.stageId, filters.gradeId, filters.classId, reloadTick]);
+
+  // 2) The records of the picked sessions.
+  const selectedKey = selectedIds.join(',');
+  const recordsRequestKey = `${selectedKey}|${reloadTick}`;
+  const loading = selectedIds.length > 0 && recordsLoadedFor !== recordsRequestKey;
+  useEffect(() => {
+    if (!selectedKey) return;
+    let current = true;
+    apiClient.get('/attendance/records', { params: { sessionIds: selectedKey } })
+      .then(r => { if (current) setRecords(r.data); })
+      .catch(() => { if (current) setMsg({ type: 'error', text: 'فشل تحميل بيانات الحضور.' }); })
+      .finally(() => { if (current) setRecordsLoadedFor(recordsRequestKey); });
+    return () => { current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, reloadTick]);
+
+  // 3) Consecutive-absence alert — looks across every recorded session in scope, not only the picked ones.
+  const sessionRangeKey = sessions.length === 0 ? '' : `${sessions[sessions.length - 1].startsAt}|${sessions[0].startsAt}`;
+  useEffect(() => {
+    if (!sessionRangeKey) return;
+    const [first, last] = sessionRangeKey.split('|');
+    const lastDay = new Date(last); lastDay.setHours(23, 59, 59, 0);
+    let current = true;
+    apiClient.get('/attendance/summary', { params: { ...scopeParams(), from: first, to: lastDay.toISOString().slice(0, 19) } })
+      .then(r => { if (current) setSummary(r.data); })
+      .catch(() => { if (current) setSummary(null); });
+    return () => { current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionRangeKey, filters.stageId, filters.gradeId, filters.classId, reloadTick]);
+
+  const alertSummary = sessionRangeKey ? summary : null;
+  const refresh = () => setReloadTick(t => t + 1);
+
+  const toggleSession = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
+  const allSelected = sessions.length > 0 && selectedIds.length === sessions.length;
+  const toggleAll = () => setSelectedIds(allSelected ? [] : sessions.map(x => x.id));
 
   const openOverride = (record) => {
     setEditing(record);
@@ -140,13 +195,21 @@ const AttendanceDashboardScreen = () => {
       await apiClient.put(`/attendance/records/${editing.id}`, overrideForm);
       setMsg({ type: 'success', text: 'تم تعديل السجل.' });
       setEditing(null);
-      fetchData();
+      refresh();
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'فشل التعديل.' });
     }
   };
 
-  const matrix = useMemo(() => buildAttendanceMatrix(records), [records]);
+  // The status filter only changes what the table shows; the cards count everything picked.
+  const pickedRecords = useMemo(() => (selectedIds.length === 0 ? [] : records), [selectedIds.length, records]);
+  const visibleRecords = useMemo(
+    () => (filters.status === '' ? pickedRecords : pickedRecords.filter(r => r.status === STATUS_QUERY_NAMES.indexOf(filters.status))),
+    [pickedRecords, filters.status],
+  );
+  const matrix = useMemo(() => buildAttendanceMatrix(visibleRecords), [visibleRecords]);
+  const presentCount = pickedRecords.filter(r => r.status === 0).length;
+  const absentCount = pickedRecords.length - presentCount;
 
   // ── Reset tools (the admin tried things out and wants a clean slate) ──────
   const failWith = (e, fallback) => setMsg({ type: 'error', text: e.response?.data?.message || fallback });
@@ -157,7 +220,7 @@ const AttendanceDashboardScreen = () => {
       await apiClient.delete(`/attendance/records/${editing.id}`);
       setMsg({ type: 'success', text: 'تم حذف التسجيل.' });
       setEditing(null);
-      fetchData();
+      refresh();
     } catch (e) { failWith(e, 'فشل حذف التسجيل.'); }
   };
 
@@ -166,39 +229,28 @@ const AttendanceDashboardScreen = () => {
     try {
       await apiClient.delete(`/attendance/sessions/${column.id}`);
       setMsg({ type: 'success', text: 'تم حذف الحضور لهذا اليوم.' });
-      fetchData();
+      refresh();
     } catch (e) { failWith(e, 'فشل الحذف.'); }
   };
 
-  const hasScope = !!(filters.stageId || filters.gradeId || filters.classId);
-  const scopeLabel = () => {
-    if (filters.classId) return `الفصل ${classes.find(c => c.id === filters.classId)?.name ?? ''}`;
-    if (filters.gradeId) return grades.find(g => g.id === filters.gradeId)?.name ?? 'الصف المحدد';
-    return stages.find(s => s.id === filters.stageId)?.name ?? 'المرحلة المحددة';
-  };
-
+  // Wipe exactly the sessions that are currently picked.
   const resetAttendance = async () => {
-    const body = {
-      stageId: filters.stageId || null,
-      gradeId: filters.gradeId || null,
-      classId: filters.classId || null,
-      from: `${filters.from}T00:00:00`,
-      to: `${filters.to}T23:59:59`,
-    };
+    const body = { sessionIds: selectedIds };
     try {
       const preview = (await apiClient.post('/attendance/reset', { ...body, confirm: false })).data;
       if (preview.sessionsDeleted === 0) {
-        setMsg({ type: 'error', text: 'لا يوجد حضور مسجل في هذا النطاق.' });
+        setMsg({ type: 'error', text: 'لا يوجد حضور مسجل في الجلسات المحددة.' });
         return;
       }
+      const days = sessions.filter(x => selectedIds.includes(x.id)).map(sessionLabel(sessions)).join('، ');
       const ok = window.confirm(
-        `سيتم حذف حضور ${scopeLabel()} من ${filters.from} إلى ${filters.to}:\n` +
+        `سيتم حذف حضور الجلسات المحددة:\n${days}\n\n` +
         `${preview.sessionsDeleted} جلسة و${preview.recordsDeleted} تسجيل.\n\nلا يمكن التراجع. هل أنت متأكد؟`
       );
       if (!ok) return;
       await apiClient.post('/attendance/reset', { ...body, confirm: true });
       setMsg({ type: 'success', text: 'تم مسح الحضور.' });
-      fetchData();
+      refresh();
     } catch (e) { failWith(e, 'فشل مسح الحضور.'); }
   };
 
@@ -219,7 +271,9 @@ const AttendanceDashboardScreen = () => {
     const wb = XLSX.utils.book_new();
     wb.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(wb, ws, 'الحضور');
-    XLSX.writeFile(wb, `سجل_الحضور_${filters.from}_${filters.to}.xlsx`);
+    const dayNames = [...new Set(matrix.columns.map(c => c.day.replaceAll('/', '-')))];
+    const datePart = dayNames.length <= 1 ? dayNames[0] : `${dayNames[0]}_الى_${dayNames[dayNames.length - 1]}`;
+    XLSX.writeFile(wb, `سجل_الحضور_${datePart ?? ''}.xlsx`);
   };
 
   return (
@@ -251,7 +305,7 @@ const AttendanceDashboardScreen = () => {
           <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>الفصل</label>
           <select className="premium-input" value={filters.classId} onChange={e => setScopeFilter({ classId: e.target.value })} disabled={!filters.gradeId}>
             <option value="">كل الفصول</option>
-            {(filters.gradeId ? classes : []).map(c => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
+            {(filters.gradeId ? classes : []).map(c => <option key={c.id} value={c.id}>فصل {c.name}{c.level === 2 ? ' — المستوى 2' : ''}</option>)}
           </select>
         </div>
         <div>
@@ -261,47 +315,68 @@ const AttendanceDashboardScreen = () => {
             {STATUS_QUERY_NAMES.map((name, i) => <option key={name} value={name}>{STATUS_LABELS[i]}</option>)}
           </select>
         </div>
-        <div>
-          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>من</label>
-          <input className="premium-input" type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} />
-        </div>
-        <div>
-          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>إلى</label>
-          <input className="premium-input" type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} />
-        </div>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          <button className="btn-secondary" style={{ width: 'auto', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => applyQuickRange(0)}>اليوم</button>
-          <button className="btn-secondary" style={{ width: 'auto', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => applyQuickRange(7)}>أسبوع</button>
-          <button className="btn-secondary" style={{ width: 'auto', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => applyQuickRange(30)}>شهر</button>
-        </div>
-        <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.25rem', marginRight: 'auto' }} onClick={exportExcel} disabled={records.length === 0}>
+        <button className="btn-primary" style={{ width: 'auto', padding: '0.5rem 1.25rem', marginRight: 'auto' }} onClick={exportExcel} disabled={visibleRecords.length === 0}>
           تصدير Excel
         </button>
         <button
           className="btn-secondary"
           style={{ width: 'auto', padding: '0.5rem 1.25rem', color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.4)' }}
           onClick={resetAttendance}
-          disabled={!hasScope}
-          title={hasScope ? '' : 'اختر مرحلة أو صفًا أو فصلًا أولًا'}
+          disabled={selectedIds.length === 0}
+          title={selectedIds.length === 0 ? 'اختر جلسة أو أكثر أولًا' : ''}
         >
-          مسح الحضور
+          مسح الحضور المحدد ({selectedIds.length})
         </button>
+
+        {/* Recorded sessions — click to show, click again to hide; several can be shown together */}
+        <div style={{ flexBasis: '100%' }}>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>
+            الجلسات المسجلة {sessions.length > 0 && `(${sessions.length})`}
+          </label>
+          {sessionsLoading && sessions.length === 0 ? (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
+          ) : sessions.length === 0 ? (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>لا توجد جلسات حضور مسجلة لهذا الاختيار</p>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '9.5rem', overflowY: 'auto', padding: '0.1rem' }}>
+              <button
+                type="button"
+                onClick={toggleAll}
+                style={chipStyle(allSelected)}
+              >
+                <span style={{ fontWeight: 700 }}>الكل</span>
+              </button>
+              {sessions.map(x => {
+                const label = sessionLabel(sessions)(x);
+                const on = selectedIds.includes(x.id);
+                return (
+                  <button key={x.id} type="button" onClick={() => toggleSession(x.id)} aria-pressed={on} style={chipStyle(on)}>
+                    <span style={{ fontWeight: 700 }}>{label}</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      <span style={{ color: STATUS_COLORS[0] }}>{x.presentCount} حاضر</span>
+                      {' · '}
+                      <span style={{ color: STATUS_COLORS[1] }}>{x.absentCount} غائب</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
-      {summary && (
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <SummaryCard label="عدد الجلسات" value={summary.totalSessions} />
-          <SummaryCard label="حاضر" value={summary.presentCount} color={STATUS_COLORS[0]} />
-          <SummaryCard label="غائب" value={summary.absentCount} color={STATUS_COLORS[1]} />
-        </div>
-      )}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <SummaryCard label="عدد الجلسات المحددة" value={selectedIds.length} />
+        <SummaryCard label="حاضر" value={presentCount} color={STATUS_COLORS[0]} />
+        <SummaryCard label="غائب" value={absentCount} color={STATUS_COLORS[1]} />
+      </div>
 
       {/* Consecutive absences alert */}
-      {summary && summary.byStudent.some(s => s.consecutiveAbsences >= 3) && (
+      {alertSummary && alertSummary.byStudent.some(s => s.consecutiveAbsences >= 3) && (
         <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', border: '1px solid var(--danger)' }}>
           <p style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: '0.5rem' }}>⚠ تنبيه: غياب متتالٍ</p>
-          {summary.byStudent.filter(s => s.consecutiveAbsences >= 3).map(s => (
+          {alertSummary.byStudent.filter(s => s.consecutiveAbsences >= 3).map(s => (
             <p key={s.studentId} style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               {s.studentName} — {s.consecutiveAbsences} غيابات متتالية
             </p>
@@ -313,8 +388,10 @@ const AttendanceDashboardScreen = () => {
       <div className="glass-card" style={{ padding: '1.25rem' }}>
         {loading ? (
           <p style={{ textAlign: 'center', padding: '2rem' }}>جاري التحميل...</p>
-        ) : records.length === 0 ? (
-          <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>لا توجد سجلات في هذه الفترة</p>
+        ) : selectedIds.length === 0 ? (
+          <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>اختر جلسة من الأزرار بالأعلى لعرض الحضور</p>
+        ) : visibleRecords.length === 0 ? (
+          <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>لا توجد سجلات مطابقة</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>

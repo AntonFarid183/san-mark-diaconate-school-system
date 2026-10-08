@@ -5,6 +5,7 @@ using DiaconateSchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -43,9 +44,9 @@ public class AttendanceController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("sessions")]
-    public async Task<IActionResult> GetSessions([FromQuery] Guid? gradeId, [FromQuery] Guid? classId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceSessionStatus? status)
+    public async Task<IActionResult> GetSessions([FromQuery] Guid? gradeId, [FromQuery] Guid? classId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceSessionStatus? status, [FromQuery] Guid? stageId)
     {
-        var result = await _service.GetSessionsAsync(gradeId, classId, from, to, status);
+        var result = await _service.GetSessionsAsync(gradeId, classId, from, to, status, stageId);
         return Ok(result);
     }
 
@@ -174,9 +175,18 @@ public class AttendanceController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("records")]
-    public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status, [FromQuery] Guid? classId, [FromQuery] Guid? stageId)
+    public async Task<IActionResult> GetRecords([FromQuery] Guid? gradeId, [FromQuery] Guid? studentId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] AttendanceStatus? status, [FromQuery] Guid? classId, [FromQuery] Guid? stageId, [FromQuery] string? sessionIds)
     {
-        var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId);
+        // Comma-separated ids: a few sessions picked on the dashboard (an empty list = no records).
+        IReadOnlyCollection<Guid>? ids = null;
+        if (sessionIds != null)
+        {
+            ids = sessionIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty)
+                .ToList();
+        }
+        var result = await _service.GetRecordsAsync(gradeId, studentId, from, to, status, classId, stageId, ids);
         return Ok(result);
     }
 

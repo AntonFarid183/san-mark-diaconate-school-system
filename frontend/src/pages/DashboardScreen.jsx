@@ -46,7 +46,7 @@ const StudentDashboard = () => {
           apiClient.get('/hymn-lessons/my-progress'),
           apiClient.get('/attendance/mine'),
           apiClient.get('/notifications/summary'),
-          apiClient.get('/announcement', { params: { activeOnly: true, stageId: profileRes.data.stageId } }),
+          apiClient.get('/announcement', { params: { activeOnly: true, stageId: profileRes.data.stageId, gradeId: profileRes.data.gradeId } }),
           apiClient.get('/certificate/my'),
         ]);
         if (hwRes.status === 'fulfilled') setHomework(hwRes.value.data);

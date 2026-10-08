@@ -11,29 +11,62 @@ const AnnouncementsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title: '', body: '', isActive: true });
+  const emptyForm = { title: '', body: '', isActive: true, targetStageId: '', targetGradeId: '' };
+  const [form, setForm] = useState(emptyForm);
   const [msg, setMsg] = useState(null);
+  const [stages, setStages] = useState([]);
+  const [formGrades, setFormGrades] = useState([]);
 
   useEffect(() => { fetchAll(); }, []);
+
+  useEffect(() => {
+    if (isAdmin) apiClient.get('/students/stages').then(r => setStages(r.data)).catch(() => {});
+  }, [isAdmin]);
+
+  // Grades of the stage picked in the form (KG1 / KG2 under طفولة, the single pseudo-grade elsewhere).
+  const loadFormGrades = (stageId) => {
+    if (!stageId) { setFormGrades([]); return; }
+    apiClient.get(`/students/grades/${stageId}`).then(r => setFormGrades(r.data)).catch(() => setFormGrades([]));
+  };
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const r = await apiClient.get('/announcement', { params: { activeOnly: !isAdmin } });
+      const params = { activeOnly: !isAdmin };
+      if (!isAdmin) {
+        // A student only sees announcements for everyone, their stage, or their own grade.
+        const me = (await apiClient.get('/students/me')).data;
+        params.stageId = me.stageId;
+        params.gradeId = me.gradeId;
+      }
+      const r = await apiClient.get('/announcement', { params });
       setItems(r.data);
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
-  const openCreate = () => { setEditing(null); setForm({ title: '', body: '', isActive: true }); setShowForm(true); };
-  const openEdit = (item) => { setEditing(item); setForm({ title: item.title, body: item.body, isActive: item.isActive }); setShowForm(true); };
+  const openCreate = () => { setEditing(null); setForm(emptyForm); setFormGrades([]); setShowForm(true); };
+  const openEdit = (item) => {
+    setEditing(item);
+    setForm({
+      title: item.title, body: item.body, isActive: item.isActive,
+      targetStageId: item.targetStageId || '', targetGradeId: item.targetGradeId || '',
+    });
+    loadFormGrades(item.targetStageId);
+    setShowForm(true);
+  };
 
   const submit = async () => {
     try {
+      const target = { targetStageId: form.targetStageId || null, targetGradeId: form.targetGradeId || null };
       if (editing) {
-        await apiClient.put(`/announcement/${editing.id}`, form);
+        await apiClient.put(`/announcement/${editing.id}`, {
+          title: form.title, body: form.body, isActive: form.isActive,
+          ...target,
+          clearTarget: !form.targetStageId, // back to "everyone"
+        });
         setMsg({ type: 'success', text: 'تم التحديث.' });
       } else {
-        await apiClient.post('/announcement', form);
+        await apiClient.post('/announcement', { title: form.title, body: form.body, ...target });
         setMsg({ type: 'success', text: 'تم النشر.' });
       }
       setShowForm(false);
@@ -90,7 +123,9 @@ const AnnouncementsScreen = () => {
                   <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.body}</p>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
                     {new Date(item.createdAt).toLocaleDateString('ar-EG')}
-                    {item.targetStageName && ` — ${item.targetStageName}`}
+                    {item.targetStageName
+                      ? ` — ${item.targetStageName}${item.targetGradeName && item.targetGradeName !== item.targetStageName ? ` / ${item.targetGradeName}` : ''}`
+                      : ' — للجميع'}
                   </div>
                 </div>
                 {isAdmin && (
@@ -112,6 +147,25 @@ const AnnouncementsScreen = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <input className="premium-input" placeholder="عنوان الإعلان" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
               <textarea className="premium-input" placeholder="نص الإعلان" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} rows={5} style={{ resize: 'vertical' }} />
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <select
+                  className="premium-input" style={{ flex: 1, minWidth: '160px' }}
+                  value={form.targetStageId}
+                  onChange={e => { setForm({ ...form, targetStageId: e.target.value, targetGradeId: '' }); loadFormGrades(e.target.value); }}
+                >
+                  <option value="">للجميع (كل المراحل)</option>
+                  {stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <select
+                  className="premium-input" style={{ flex: 1, minWidth: '160px' }}
+                  value={form.targetGradeId}
+                  onChange={e => setForm({ ...form, targetGradeId: e.target.value })}
+                  disabled={!form.targetStageId}
+                >
+                  <option value="">كل صفوف المرحلة</option>
+                  {formGrades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} />
                 نشر مباشرة

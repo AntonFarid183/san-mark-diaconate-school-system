@@ -176,6 +176,14 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(a => a.TargetStageId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Announcement -> Grade (optional). Restrict, not SetNull: SQL Server rejects a second
+        // cascading path from Stage -> Grades, and a grade is never deleted in practice.
+        modelBuilder.Entity<Announcement>()
+            .HasOne(a => a.TargetGrade)
+            .WithMany()
+            .HasForeignKey(a => a.TargetGradeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // GradeHistory -> Student, FromGrade, ToGrade
         modelBuilder.Entity<GradeHistory>()
             .HasOne(gh => gh.Student)
@@ -529,6 +537,7 @@ public class ApplicationDbContext : DbContext
         var universityId = Guid.Parse("00000000-0000-0000-0004-000000000001");
         var graduatesId  = Guid.Parse("00000000-0000-0000-0005-000000000001");
         var seniorsId    = Guid.Parse("00000000-0000-0000-0006-000000000001");
+        var tenThenoId   = Guid.Parse("00000000-0000-0000-0007-000000000001");
 
         var stages = new List<Stage>
         {
@@ -539,6 +548,7 @@ public class ApplicationDbContext : DbContext
             new() { Id = universityId, Name = "جامعة",   DisplayOrder = 4 },
             new() { Id = graduatesId,  Name = "خريجون",  DisplayOrder = 5 },
             new() { Id = seniorsId,    Name = "كبار",    DisplayOrder = 6 },
+            new() { Id = tenThenoId,   Name = "معهد تين ثينو", DisplayOrder = 7 },
         };
 
         modelBuilder.Entity<Stage>().HasData(stages);
@@ -584,6 +594,7 @@ public class ApplicationDbContext : DbContext
         grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0004-000000000011"), Name = "جامعة", Level = 1, StageId = universityId });
         grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0005-000000000011"), Name = "خريجون", Level = 1, StageId = graduatesId });
         grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0006-000000000011"), Name = "كبار", Level = 1, StageId = seniorsId });
+        grades.Add(new Grade { Id = Guid.Parse("00000000-0000-0000-0007-000000000011"), Name = "معهد تين ثينو", Level = 1, StageId = tenThenoId });
 
         modelBuilder.Entity<Grade>().HasData(grades);
     }

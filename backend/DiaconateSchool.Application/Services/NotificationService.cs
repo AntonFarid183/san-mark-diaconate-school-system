@@ -299,9 +299,9 @@ public class NotificationService : INotificationService
         await _uow.SaveChangesAsync();
     }
 
-    public async Task NotifyAnnouncementPostedAsync(Guid announcementId, Guid? targetStageId, string title)
+    public async Task NotifyAnnouncementPostedAsync(Guid announcementId, Guid? targetStageId, Guid? targetGradeId, string title)
     {
-        var students = await _studentRepo.GetActiveStudentsForNotificationAsync(targetStageId, null);
+        var students = await _studentRepo.GetActiveStudentsForNotificationAsync(targetStageId, targetGradeId);
         var notifications = students.Select(s => new Notification
         {
             Id = Guid.NewGuid(),

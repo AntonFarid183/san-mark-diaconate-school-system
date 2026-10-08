@@ -193,6 +193,7 @@ const Layout = () => {
     { id: '00000000-0000-0000-0004-000000000001', label: 'جامعة',   hasSubGrades: false },
     { id: '00000000-0000-0000-0005-000000000001', label: 'خريجون',  hasSubGrades: false },
     { id: '00000000-0000-0000-0006-000000000001', label: 'كبار',    hasSubGrades: false },
+    { id: '00000000-0000-0000-0007-000000000001', label: 'معهد تين ثينو', hasSubGrades: false },
   ];
 
   useEffect(() => {

@@ -7,7 +7,7 @@ namespace DiaconateSchool.Application.Interfaces.Repositories;
 
 public interface IAnnouncementRepository
 {
-    Task<List<Announcement>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null);
+    Task<List<Announcement>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null, Guid? gradeId = null);
     Task<Announcement?> GetByIdAsync(Guid id);
     Task AddAsync(Announcement announcement);
     Task UpdateAsync(Announcement announcement);

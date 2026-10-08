@@ -23,9 +23,9 @@ public class AnnouncementController : ControllerBase
 
     [Authorize(Policy = "AllAuthenticated")]
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] bool? activeOnly, [FromQuery] Guid? stageId)
+    public async Task<IActionResult> GetAll([FromQuery] bool? activeOnly, [FromQuery] Guid? stageId, [FromQuery] Guid? gradeId)
     {
-        var items = await _service.GetAllAsync(activeOnly, stageId);
+        var items = await _service.GetAllAsync(activeOnly, stageId, gradeId);
         return Ok(items);
     }
 

@@ -19,11 +19,12 @@ public class HymnLessonRepository : IHymnLessonRepository
         return await q.OrderBy(h => h.DisplayOrder).ThenBy(h => h.CreatedAt).ToListAsync();
     }
 
-    public async Task<IEnumerable<HymnLesson>> GetPublishedForStageAsync(Guid stageId) =>
+    public async Task<IEnumerable<HymnLesson>> GetPublishedForStageAsync(Guid stageId, Guid? gradeId = null) =>
         await _ctx.HymnLessons
             .Include(h => h.Stage)
             .Include(h => h.Grade)
-            .Where(h => h.StageId == stageId && h.Status == LessonStatus.Published)
+            .Where(h => h.StageId == stageId && h.Status == LessonStatus.Published
+                && (gradeId == null || h.GradeId == null || h.GradeId == gradeId))
             .OrderBy(h => h.DisplayOrder)
             .ToListAsync();
 

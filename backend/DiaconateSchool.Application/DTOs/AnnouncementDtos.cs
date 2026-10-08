@@ -10,6 +10,8 @@ public class AnnouncementDto
     public bool IsActive { get; set; }
     public Guid? TargetStageId { get; set; }
     public string? TargetStageName { get; set; }
+    public Guid? TargetGradeId { get; set; }
+    public string? TargetGradeName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -19,6 +21,7 @@ public class CreateAnnouncementDto
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public Guid? TargetStageId { get; set; }
+    public Guid? TargetGradeId { get; set; }
 }
 
 public class UpdateAnnouncementDto
@@ -27,4 +30,7 @@ public class UpdateAnnouncementDto
     public string? Body { get; set; }
     public bool? IsActive { get; set; }
     public Guid? TargetStageId { get; set; }
+    public Guid? TargetGradeId { get; set; }
+    // true = clear the stage/grade targeting (a plain null can't be told apart from "unchanged")
+    public bool? ClearTarget { get; set; }
 }

@@ -37,7 +37,9 @@ public class HymnLessonController : ControllerBase
         if (string.IsNullOrEmpty(stageIdClaim))
             return BadRequest(new { Message = "Stage not found in token." });
 
-        var result = await _service.GetMyAsync(Guid.Parse(stageIdClaim));
+        var gradeIdClaim = User.FindFirst("GradeId")?.Value;
+        Guid? gradeId = Guid.TryParse(gradeIdClaim, out var g) ? g : null;
+        var result = await _service.GetMyAsync(Guid.Parse(stageIdClaim), gradeId);
         return Ok(result);
     }
 

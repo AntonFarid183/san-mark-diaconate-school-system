@@ -20,11 +20,12 @@ public class CurriculumRepository : ICurriculumRepository
         return await q.OrderBy(c => c.DisplayOrder).ThenBy(c => c.CreatedAt).ToListAsync();
     }
 
-    public async Task<IEnumerable<Curriculum>> GetPublishedForStageAsync(Guid stageId) =>
+    public async Task<IEnumerable<Curriculum>> GetPublishedForStageAsync(Guid stageId, Guid? gradeId = null) =>
         await _ctx.Curriculums
             .Include(c => c.Stage)
             .Include(c => c.Grade)
-            .Where(c => c.StageId == stageId && c.Status == CurriculumStatus.Published)
+            .Where(c => c.StageId == stageId && c.Status == CurriculumStatus.Published
+                && (gradeId == null || c.GradeId == null || c.GradeId == gradeId))
             .OrderBy(c => c.DisplayOrder)
             .ToListAsync();
 

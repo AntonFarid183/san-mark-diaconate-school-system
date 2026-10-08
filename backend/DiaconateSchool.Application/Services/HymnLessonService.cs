@@ -26,9 +26,9 @@ public class HymnLessonService : IHymnLessonService
         return items.Select(Map);
     }
 
-    public async Task<IEnumerable<HymnLessonDto>> GetMyAsync(Guid studentStageId)
+    public async Task<IEnumerable<HymnLessonDto>> GetMyAsync(Guid studentStageId, Guid? studentGradeId = null)
     {
-        var items = await _repo.GetPublishedForStageAsync(studentStageId);
+        var items = await _repo.GetPublishedForStageAsync(studentStageId, studentGradeId);
         return items.Select(Map);
     }
 

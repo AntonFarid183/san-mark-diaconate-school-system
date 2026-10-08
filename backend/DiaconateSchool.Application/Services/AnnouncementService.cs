@@ -22,9 +22,9 @@ public class AnnouncementService : IAnnouncementService
         _uow = uow;
     }
 
-    public async Task<List<AnnouncementDto>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null)
+    public async Task<List<AnnouncementDto>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null, Guid? gradeId = null)
     {
-        var items = await _repo.GetAllAsync(activeOnly, stageId);
+        var items = await _repo.GetAllAsync(activeOnly, stageId, gradeId);
         return items.Select(MapToDto).ToList();
     }
 
@@ -43,6 +43,7 @@ public class AnnouncementService : IAnnouncementService
             Body = dto.Body,
             IsActive = true,
             TargetStageId = dto.TargetStageId,
+            TargetGradeId = dto.TargetStageId.HasValue ? dto.TargetGradeId : null,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -51,7 +52,7 @@ public class AnnouncementService : IAnnouncementService
         await _repo.AddAsync(a);
         await _uow.SaveChangesAsync();
 
-        await _notificationService.NotifyAnnouncementPostedAsync(a.Id, a.TargetStageId, a.Title);
+        await _notificationService.NotifyAnnouncementPostedAsync(a.Id, a.TargetStageId, a.TargetGradeId, a.Title);
 
         return MapToDto(a);
     }
@@ -64,7 +65,12 @@ public class AnnouncementService : IAnnouncementService
         if (dto.Title != null) a.Title = dto.Title;
         if (dto.Body != null) a.Body = dto.Body;
         if (dto.IsActive.HasValue) a.IsActive = dto.IsActive.Value;
-        if (dto.TargetStageId.HasValue) a.TargetStageId = dto.TargetStageId;
+        if (dto.ClearTarget == true) { a.TargetStageId = null; a.TargetGradeId = null; }
+        else if (dto.TargetStageId.HasValue)
+        {
+            a.TargetStageId = dto.TargetStageId;
+            a.TargetGradeId = dto.TargetGradeId;
+        }
         a.UpdatedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(a);
@@ -85,6 +91,8 @@ public class AnnouncementService : IAnnouncementService
         IsActive = a.IsActive,
         TargetStageId = a.TargetStageId,
         TargetStageName = a.TargetStage?.Name,
+        TargetGradeId = a.TargetGradeId,
+        TargetGradeName = a.TargetGrade?.Name,
         CreatedAt = a.CreatedAt,
         UpdatedAt = a.UpdatedAt
     };

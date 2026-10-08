@@ -18,15 +18,19 @@ public class AnnouncementRepository : IAnnouncementRepository
         _context = context;
     }
 
-    public async Task<List<Announcement>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null)
+    public async Task<List<Announcement>> GetAllAsync(bool? activeOnly = null, Guid? stageId = null, Guid? gradeId = null)
     {
         var query = _context.Announcements
             .Include(a => a.TargetStage)
+            .Include(a => a.TargetGrade)
             .AsQueryable();
 
         if (activeOnly == true) query = query.Where(a => a.IsActive);
         if (stageId.HasValue)
             query = query.Where(a => a.TargetStageId == null || a.TargetStageId == stageId.Value);
+        // A student also only sees announcements aimed at their own grade (or at the whole stage).
+        if (gradeId.HasValue)
+            query = query.Where(a => a.TargetGradeId == null || a.TargetGradeId == gradeId.Value);
 
         return await query.OrderByDescending(a => a.CreatedAt).ToListAsync();
     }
@@ -35,6 +39,7 @@ public class AnnouncementRepository : IAnnouncementRepository
     {
         return await _context.Announcements
             .Include(a => a.TargetStage)
+            .Include(a => a.TargetGrade)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 

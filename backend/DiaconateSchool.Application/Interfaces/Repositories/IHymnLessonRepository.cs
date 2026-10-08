@@ -6,7 +6,7 @@ namespace DiaconateSchool.Application.Interfaces.Repositories;
 public interface IHymnLessonRepository
 {
     Task<IEnumerable<HymnLesson>> GetAllAsync(Guid? stageId, LessonStatus? status);
-    Task<IEnumerable<HymnLesson>> GetPublishedForStageAsync(Guid stageId);
+    Task<IEnumerable<HymnLesson>> GetPublishedForStageAsync(Guid stageId, Guid? gradeId = null);
     Task<HymnLesson?> GetByIdAsync(Guid id);
     Task AddAsync(HymnLesson lesson);
     void Update(HymnLesson lesson);

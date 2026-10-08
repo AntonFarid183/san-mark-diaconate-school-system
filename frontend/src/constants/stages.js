@@ -16,6 +16,7 @@ export const STAGE_IDS = {
   university:  '00000000-0000-0000-0004-000000000001',
   graduates:   '00000000-0000-0000-0005-000000000001',
   adults:      '00000000-0000-0000-0006-000000000001',
+  tenTheno:    '00000000-0000-0000-0007-000000000001',
 };
 
 export const STAGES = [
@@ -36,6 +37,8 @@ export const STAGES = [
     localGrades: [{ id: '00000000-0000-0000-0005-000000000011', name: 'خريجون' }] },
   { id: STAGE_IDS.adults,    label: 'كبار',    hasGrade: true, fetchGrades: false, hidePicker: true,
     localGrades: [{ id: '00000000-0000-0000-0006-000000000011', name: 'كبار' }] },
+  { id: STAGE_IDS.tenTheno, label: 'معهد تين ثينو', hasGrade: true, fetchGrades: false, hidePicker: true,
+    localGrades: [{ id: '00000000-0000-0000-0007-000000000011', name: 'معهد تين ثينو' }] },
 ];
 
 // The API serializes Gender/DeaconRank as their *names* when reading a student

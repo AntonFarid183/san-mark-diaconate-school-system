@@ -6,7 +6,7 @@ namespace DiaconateSchool.Application.Interfaces;
 public interface IHymnLessonService
 {
     Task<IEnumerable<HymnLessonDto>> GetAllAsync(Guid? stageId, LessonStatus? status);
-    Task<IEnumerable<HymnLessonDto>> GetMyAsync(Guid studentStageId);
+    Task<IEnumerable<HymnLessonDto>> GetMyAsync(Guid studentStageId, Guid? studentGradeId = null);
     Task<HymnLessonDto?> GetByIdAsync(Guid id);
     Task<HymnLessonDto> CreateAsync(CreateHymnLessonDto dto, Guid createdByUserId);
     Task<HymnLessonDto?> UpdateAsync(Guid id, UpdateHymnLessonDto dto);

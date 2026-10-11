@@ -788,7 +788,19 @@
 }
 
 .landing-leader-simple-card .landing-leader-portrait {
-  max-width: 180px;
+  max-width: 220px;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.landing-leader-simple-card .landing-leader-portrait img {
+  object-position: top center;
+}
+
+.landing-leader-simple-card:hover .landing-leader-portrait {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 32px rgba(251, 191, 36, 0.22);
 }
 
 .landing-leader-simple-name {
@@ -796,6 +808,16 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.landing-leader-simple-name::after {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 3px;
+  margin: 0.55rem auto 0;
+  border-radius: 3px;
+  background: var(--accent-gold);
 }
 
 /* ── LeaderImage — architecture ready for shape/frame/glow/watermark,

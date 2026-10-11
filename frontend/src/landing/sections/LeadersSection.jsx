@@ -5,12 +5,12 @@ import LeaderImage from '../components/LeaderImage';
 // purely a matter of editing this array; the section markup doesn't change.
 // Photos still on the placeholder get replaced by dropping a file in public/fathers.
 const LEADERS = [
-  { id: 'leader-1', name: 'أبونا يوحنا زاخر', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-2', name: 'أبونا فيلوباتير مجدي', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-3', name: 'أبونا إيلاريون جرجس', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-4', name: 'أبونا مرقس نسيم', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-5', name: 'أبونا صموئيل القمص صليب', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-6', name: 'أبونا موسى', photoSrc: '/san-mark.jpg' },
+  { id: 'leader-1', name: 'أبونا يوحنا زاخر', photoSrc: '/fathers/youhanna.jpg' },
+  { id: 'leader-2', name: 'أبونا فيلوباتير مجدي', photoSrc: '/fathers/philopateer.jpg' },
+  { id: 'leader-3', name: 'أبونا إيلاريون جرجس', photoSrc: '/fathers/hilarion.jpg' },
+  { id: 'leader-4', name: 'أبونا مرقس نسيم', photoSrc: '/fathers/marcos.jpg' },
+  { id: 'leader-5', name: 'أبونا صموئيل القمص صليب', photoSrc: '/fathers/samuel.jpg' },
+  { id: 'leader-6', name: 'أبونا موسى وجدي', photoSrc: '/fathers/moses.jpg' },
 ];
 
 export default function LeadersSection() {
@@ -23,7 +23,7 @@ export default function LeadersSection() {
       <div className="landing-leaders-grid">
         {LEADERS.map(leader => (
           <Reveal key={leader.id} className="landing-leader-simple-card">
-            <LeaderImage src={leader.photoSrc} alt={leader.name} shape="circle" />
+            <LeaderImage src={leader.photoSrc} alt={leader.name} framed />
             <p className="landing-leader-simple-name">{leader.name}</p>
           </Reveal>
         ))}

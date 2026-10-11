@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import apiClient from '../../apiClient';
 
-export default function FeedbackSection() {
+export default function FeedbackSection({ showHeading = true }) {
   const [form, setForm] = useState({ name: '', contactInfo: '', message: '' });
   const [status, setStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
 
@@ -22,12 +22,14 @@ export default function FeedbackSection() {
   };
 
   return (
-    <section className="landing-section" id="feedback">
-      <div className="landing-section-heading">
-        <span className="landing-section-eyebrow">رأيك يهمنا</span>
-        <h2 className="landing-section-title">الاقتراحات والتعليقات</h2>
-        <p className="landing-section-subtitle">شاركنا رأيك أو اقتراحك حول المدرسة وخدماتها.</p>
-      </div>
+    <section className="landing-section" id="feedback" style={showHeading ? undefined : { paddingTop: 0 }}>
+      {showHeading && (
+        <div className="landing-section-heading">
+          <span className="landing-section-eyebrow">رأيك يهمنا</span>
+          <h2 className="landing-section-title">الاقتراحات والتعليقات</h2>
+          <p className="landing-section-subtitle">شاركنا رأيك أو اقتراحك حول المدرسة وخدماتها.</p>
+        </div>
+      )}
 
       <form onSubmit={submit} className="glass-card landing-feedback-form">
         <div>

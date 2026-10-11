@@ -15,16 +15,16 @@ const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
  */
 export default function AnimatedNumber({ value, start, duration = 1800, suffix = '' }) {
   const [display, setDisplay] = useState(0);
-  const hasRun = useRef(false);
+  const done = useRef(false); // set only when the count has landed, so a cancelled run (StrictMode, value change) can start over
   const frameRef = useRef(null);
 
   useEffect(() => {
-    if (!start || hasRun.current) return;
-    hasRun.current = true;
+    if (!start || done.current) return;
 
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
       setDisplay(value);
+      done.current = true;
       return;
     }
 
@@ -40,6 +40,7 @@ export default function AnimatedNumber({ value, start, duration = 1800, suffix =
         frameRef.current = requestAnimationFrame(tick);
       } else {
         setDisplay(value); // guarantee it lands exactly on the target
+        done.current = true;
       }
     };
 

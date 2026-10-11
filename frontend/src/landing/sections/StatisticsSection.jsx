@@ -21,7 +21,7 @@ export default function StatisticsSection() {
       <div className="landing-section-heading">
         <span className="landing-section-eyebrow">بالأرقام</span>
         <h2 className="landing-section-title">أثر متنامٍ في خدمة الكنيسة</h2>
-        <p className="landing-section-subtitle">نص فرعي مؤقت يصف نمو المدرسة وأثرها — يُستبدل بمحتوى نهائي لاحقاً.</p>
+        <p className="landing-section-subtitle">أرقام حقيقية من مدرستنا اليوم.</p>
       </div>
 
       <Reveal onReveal={() => setStart(true)}>

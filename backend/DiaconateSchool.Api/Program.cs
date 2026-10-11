@@ -137,6 +137,7 @@ builder.Services.AddScoped<IStudentPerformanceService, StudentPerformanceService
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<ISynaxariumService, SynaxariumService>();
+builder.Services.AddScoped<IPublicStatsService, PublicStatsService>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 

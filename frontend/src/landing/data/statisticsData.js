@@ -1,43 +1,25 @@
-/**
- * Data source for the Statistics section — deliberately isolated from
- * StatisticsSection.jsx so swapping placeholders for a real backend call
- * later touches only this file's `getStatistics()` body, never the
- * section's JSX or the StatisticCard/AnimatedNumber components.
- *
- * Expected shape per statistic (matches StatisticCard's contract exactly):
- *   {
- *     id: string,
- *     icon: string,            // any Material Symbols Outlined name
- *     value: number,           // animated count target
- *     suffix?: string,         // appended after the number, e.g. '+', '%'
- *     title: string,
- *     description: string,
- *     animate?: boolean,       // false for non-numeric stats (e.g. "24/7")
- *     staticValue?: string,    // used when animate === false
- *     accentColor?: string,    // reserved, unused today
- *   }
- *
- * Future backend integration (e.g. total registered students, active
- * classes, hymn lessons, curriculum files, announcements):
- *
- *   export async function getStatistics() {
- *     const res = await apiClient.get('/public/landing-stats');
- *     return res.data; // must already match the shape above
- *   }
- *
- * No component downstream needs to change when that swap happens.
- */
+import apiClient from '../../apiClient';
 
-const PLACEHOLDER_STATISTICS = [
-  { id: 'stat-1', icon: 'groups', value: 250, suffix: '+', title: 'عنوان مؤقت', description: 'وصف مختصر مؤقت — يُستبدل لاحقاً.' },
-  { id: 'stat-2', icon: 'school', value: 12, suffix: '+', title: 'عنوان مؤقت', description: 'وصف مختصر مؤقت — يُستبدل لاحقاً.' },
-  { id: 'stat-3', icon: 'military_tech', value: 95, suffix: '%', title: 'عنوان مؤقت', description: 'وصف مختصر مؤقت — يُستبدل لاحقاً.' },
-  { id: 'stat-4', icon: 'church', value: 0, animate: false, staticValue: '24/7', title: 'عنوان مؤقت', description: 'وصف مختصر مؤقت — يُستبدل لاحقاً.' },
+/**
+ * Data source for the home page "بالأرقام" strip. The numbers are the school's real,
+ * current counts from GET /public/stats (aggregate only, no personal data).
+ *
+ * Each tile matches StatisticCard's contract:
+ *   { id, icon, value, suffix?, title, description, animate?, staticValue? }
+ */
+const TILES = [
+  { id: 'students', key: 'activeStudents', icon: 'groups', title: 'طالب وطالبة', description: 'مسجلون حاليًا في مراحل المدرسة المختلفة.' },
+  { id: 'classes', key: 'classes', icon: 'school', title: 'فصل دراسي', description: 'فصول العام الدراسي الحالي.' },
+  { id: 'curricula', key: 'publishedCurricula', icon: 'menu_book', title: 'منهج منشور', description: 'مناهج الألحان والطقس واللغة القبطية المتاحة للتحميل.' },
+  { id: 'hymns', key: 'publishedHymnLessons', icon: 'music_note', title: 'درس ألحان', description: 'دروس الألحان والتسبحة المنشورة للتعلّم.' },
 ];
 
 export async function getStatistics() {
-  // Placeholder "fetch" — replace the body with the apiClient.get call
-  // documented above once a backend endpoint exists. The return shape
-  // must stay identical.
-  return PLACEHOLDER_STATISTICS;
+  try {
+    const { data } = await apiClient.get('/public/stats');
+    return TILES.map(({ key, ...tile }) => ({ ...tile, value: Number(data[key]) || 0 }));
+  } catch {
+    // No numbers is better than wrong ones — the section hides itself when this is empty.
+    return [];
+  }
 }

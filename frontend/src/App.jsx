@@ -40,6 +40,11 @@ import StudentHomeworkDetailScreen from './pages/StudentHomeworkDetailScreen';
 import NotificationsScreen from './pages/NotificationsScreen';
 import PublicFeedbackScreen from './pages/PublicFeedbackScreen';
 import LandingPage from './pages/LandingPage';
+import AboutPage from './pages/public/AboutPage';
+import OrdinationPage from './pages/public/OrdinationPage';
+import BylawsPage from './pages/public/BylawsPage';
+import ContactPage from './pages/public/ContactPage';
+import FeedbackPage from './pages/public/FeedbackPage';
 import StudentPerformanceScreen from './pages/StudentPerformanceScreen';
 import CurriculumBrowserPage from './pages/CurriculumBrowserPage';
 import Layout from './Layout';
@@ -69,6 +74,11 @@ function AppRoutes() {
     return (
         <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/ordination" element={<OrdinationPage />} />
+            <Route path="/bylaws" element={<BylawsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
             <Route path="/self-register" element={<SelfRegisterScreen />} />
             <Route path="/curriculum/:subject" element={<CurriculumBrowserPage />} />

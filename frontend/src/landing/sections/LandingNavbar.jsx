@@ -10,13 +10,14 @@ const CURRICULUM_SUBJECTS = [
   { slug: 'coptic', label: 'القبطي' },
 ];
 
+// Every entry is its own page (a real route), not a scroll target on the home page.
 const NAV_LINKS = [
-  { type: 'scroll', href: '#about', label: 'عن المدرسة' },
-  { type: 'scroll', href: '#ordination', label: 'شروط الرسامة' },
-  { type: 'scroll', href: '#bylaws', label: 'لائحة المدرسة' },
+  { type: 'page', to: '/about', label: 'من نحن' },
+  { type: 'page', to: '/ordination', label: 'لائحة الرسامة' },
+  { type: 'page', to: '/bylaws', label: 'لائحة المدرسة' },
   { type: 'dropdown', label: 'المناهج', items: CURRICULUM_SUBJECTS },
-  { type: 'scroll', href: '#contact', label: 'تواصل معنا' },
-  { type: 'scroll', href: '#feedback', label: 'الاقتراحات والتعليقات' },
+  { type: 'page', to: '/contact', label: 'تواصل معنا' },
+  { type: 'page', to: '/feedback', label: 'الاقتراحات والتعليقات' },
 ];
 
 export default function LandingNavbar() {
@@ -33,15 +34,12 @@ export default function LandingNavbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const scrollToSection = (href) => {
+  const goToPage = (to) => {
     setMobileOpen(false);
-    if (location.pathname !== '/') {
-      navigate(`/${href}`);
-      return;
-    }
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    navigate(to);
   };
+
+  const isActive = (to) => location.pathname === to;
 
   const goToCurriculum = (slug) => {
     setMobileOpen(false);
@@ -76,7 +74,12 @@ export default function LandingNavbar() {
               </div>
             </div>
           ) : (
-            <button key={link.href} className="landing-navbar-link" onClick={() => scrollToSection(link.href)}>
+            <button
+              key={link.to}
+              className={`landing-navbar-link${isActive(link.to) ? ' landing-navbar-link-active' : ''}`}
+              aria-current={isActive(link.to) ? 'page' : undefined}
+              onClick={() => goToPage(link.to)}
+            >
               {link.label}
             </button>
           ))}
@@ -126,7 +129,12 @@ export default function LandingNavbar() {
                 )}
               </div>
             ) : (
-              <button key={link.href} className="landing-navbar-link" style={{ textAlign: 'right', width: '100%' }} onClick={() => scrollToSection(link.href)}>
+              <button
+                key={link.to}
+                className={`landing-navbar-link${isActive(link.to) ? ' landing-navbar-link-active' : ''}`}
+                style={{ textAlign: 'right', width: '100%' }}
+                onClick={() => goToPage(link.to)}
+              >
                 {link.label}
               </button>
             ))}

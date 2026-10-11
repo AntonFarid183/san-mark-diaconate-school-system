@@ -28,7 +28,7 @@ export default function HeroSection() {
         </h1>
 
         <p className="landing-hero-subtitle">
-          نص فرعي تعريفي بالمدرسة ورسالتها الروحية والتعليمية — يُستبدل بمحتوى نهائي لاحقاً.
+          معًا نتعلّم ألحان كنيستنا، ونحفظ تراثها، وننمو في محبتها.
         </p>
 
         <div className="landing-hero-actions">

@@ -12,6 +12,7 @@ public class AttendanceSessionDto
     public string GradeName { get; set; } = string.Empty;
     public Guid ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
+    public StudentLevel ClassLevel { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public AttendanceSessionStatus Status { get; set; }

@@ -388,11 +388,15 @@ public class AttendanceService : IAttendanceService
         await _uow.SaveChangesAsync();
 
         var studentIds = dto.Entries.Select(e => e.StudentId).ToHashSet();
-        var allRecords = (await Task.WhenAll(sessionIds.Select(_repo.GetRecordsBySessionAsync)))
-            .SelectMany(r => r)
-            .Where(r => studentIds.Contains(r.StudentId))
-            .Select(MapToRecordDto)
-            .ToList();
+        // One at a time: a DbContext can't run two queries at once, so firing a query per class
+        // together (Task.WhenAll) threw as soon as the stage had two classes -- the attendance was
+        // saved, but the screen got an error instead of the result.
+        var allRecords = new List<AttendanceRecordDto>();
+        foreach (var sessionId in sessionIds)
+        {
+            var records = await _repo.GetRecordsBySessionAsync(sessionId);
+            allRecords.AddRange(records.Where(r => studentIds.Contains(r.StudentId)).Select(MapToRecordDto));
+        }
         return allRecords;
     }
 
@@ -607,6 +611,7 @@ public class AttendanceService : IAttendanceService
         GradeName = s.Grade.Name,
         ClassId = s.ClassId,
         ClassName = s.Class.Name,
+        ClassLevel = s.Class.Level,
         StartsAt = s.StartsAt,
         EndsAt = s.EndsAt,
         Status = s.Status,

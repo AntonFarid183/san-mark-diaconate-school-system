@@ -78,7 +78,7 @@ function AppRoutes() {
             <Route path="/ordination" element={<OrdinationPage />} />
             <Route path="/bylaws" element={<BylawsPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/suggestions" element={<FeedbackPage />} />
             <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
             <Route path="/self-register" element={<SelfRegisterScreen />} />
             <Route path="/curriculum/:subject" element={<CurriculumBrowserPage />} />

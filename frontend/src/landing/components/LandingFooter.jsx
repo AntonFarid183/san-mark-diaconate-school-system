@@ -9,7 +9,7 @@ const PAGES = [
   { to: '/ordination', label: 'لائحة الرسامة' },
   { to: '/bylaws', label: 'لائحة المدرسة' },
   { to: '/contact', label: 'تواصل معنا' },
-  { to: '/feedback', label: 'الاقتراحات والتعليقات' },
+  { to: '/suggestions', label: 'الاقتراحات والتعليقات' },
 ];
 
 const external = { target: '_blank', rel: 'noopener noreferrer' };

@@ -17,7 +17,7 @@ const NAV_LINKS = [
   { type: 'page', to: '/bylaws', label: 'لائحة المدرسة' },
   { type: 'dropdown', label: 'المناهج', items: CURRICULUM_SUBJECTS },
   { type: 'page', to: '/contact', label: 'تواصل معنا' },
-  { type: 'page', to: '/feedback', label: 'الاقتراحات والتعليقات' },
+  { type: 'page', to: '/suggestions', label: 'الاقتراحات والتعليقات' },
 ];
 
 export default function LandingNavbar() {

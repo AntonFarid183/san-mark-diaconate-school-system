@@ -8,7 +8,7 @@ const LEADERS = [
   { id: 'leader-1', name: 'أبونا يوحنا زاخر', photoSrc: '/san-mark.jpg' },
   { id: 'leader-2', name: 'أبونا فيلوباتير مجدي', photoSrc: '/san-mark.jpg' },
   { id: 'leader-3', name: 'أبونا إيلاريون جرجس', photoSrc: '/san-mark.jpg' },
-  { id: 'leader-4', name: 'أبونا مرقس نسيم', photoSrc: '/fathers/marcos.jpg' },
+  { id: 'leader-4', name: 'أبونا مرقس نسيم', photoSrc: '/san-mark.jpg' },
   { id: 'leader-5', name: 'أبونا صموئيل القمص صليب', photoSrc: '/san-mark.jpg' },
   { id: 'leader-6', name: 'أبونا موسى', photoSrc: '/san-mark.jpg' },
 ];

@@ -101,18 +101,55 @@ export default function StudentPerformanceScreen() {
   }, [search]);
 
   const subjects = data?.subjects ?? [];
-  const students = data?.students ?? [];
+  const allStudents = data?.students ?? [];
   const summary = data?.summary;
+
+  // Quick filters toggled from the summary cards. Several can be on at once and they narrow
+  // each other (needs follow-up AND has missing homework).
+  const [quick, setQuick] = useState({ followUp: false, missingHomework: false });
+  const toggleQuick = (key) => setQuick(q => ({ ...q, [key]: !q[key] }));
+  const anyQuick = quick.followUp || quick.missingHomework;
+  const students = allStudents.filter(s =>
+    (!quick.followUp || s.requiresFollowUp) && (!quick.missingHomework || s.isMissingHomework));
 
   const subjectScoreFor = (student, key) => student.subjectScores.find(s => s.subjectKey === key);
 
-  const statCard = (icon, label, value, color) => (
-    <div className="glass-card" style={{ padding: '1.1rem', textAlign: 'center', flex: 1, minWidth: '150px' }}>
-      <span className="material-symbols-outlined" style={{ fontSize: '28px', color, marginBottom: '0.4rem', display: 'block' }}>{icon}</span>
-      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{label}</div>
-      <div style={{ fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
-    </div>
-  );
+  // A card is a plain info tile, or — when given `filterKey` — a button that toggles that
+  // quick filter on the table below (and shows a ring while it's on).
+  const statCard = (icon, label, value, color, filterKey) => {
+    const active = filterKey && quick[filterKey];
+    const clickable = !!filterKey && Number(value) > 0;
+    return (
+      <div
+        className="glass-card"
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        aria-pressed={filterKey ? !!active : undefined}
+        onClick={clickable ? () => toggleQuick(filterKey) : undefined}
+        onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleQuick(filterKey); } } : undefined}
+        style={{
+          padding: '1.1rem', textAlign: 'center', flex: 1, minWidth: '150px', position: 'relative',
+          cursor: clickable ? 'pointer' : 'default',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
+          borderColor: active ? color : undefined,
+          boxShadow: active ? `0 0 0 2px ${color}` : undefined,
+          transform: active ? 'translateY(-2px)' : undefined,
+        }}
+      >
+        {active && (
+          <span className="material-symbols-outlined" style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '18px', color }}>filter_alt</span>
+        )}
+        <span className="material-symbols-outlined" style={{ fontSize: '28px', color, marginBottom: '0.4rem', display: 'block' }}>{icon}</span>
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{label}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 700, color }}>{value}</div>
+        {filterKey && (
+          <div style={{ fontSize: '0.66rem', marginTop: '0.3rem', color: active ? color : 'var(--text-muted)' }}>
+            {active ? 'اضغط لإلغاء التصفية' : clickable ? 'اضغط لعرضهم فقط' : ''}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const buildExportRows = () => students.map(s => {
     const row = {
@@ -251,7 +288,7 @@ export default function StudentPerformanceScreen() {
       <RefreshBar active={loading && !!data} />
       {loading && !data ? (
         <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
-      ) : students.length === 0 ? (
+      ) : allStudents.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>insights</span>
           <p style={{ color: 'var(--text-muted)' }}>لا يوجد طلاب مطابقين لهذا الفلتر</p>
@@ -263,8 +300,8 @@ export default function StudentPerformanceScreen() {
             {statCard('groups', 'إجمالي الطلاب', summary.totalStudents, 'var(--text-primary)')}
             {statCard('trending_up', 'متوسط الأداء العام', formatPct(summary.averageOverall), 'var(--accent-gold)')}
             {statCard('emoji_events', 'الطالب الأعلى', summary.topStudentName || '—', 'var(--success)')}
-            {statCard('report', 'يحتاجون متابعة', summary.followUpCount, 'var(--danger)')}
-            {statCard('edit_note', 'واجبات ناقصة', summary.missingHomeworkCount, 'var(--accent-gold)')}
+            {statCard('report', 'يحتاجون متابعة', summary.followUpCount, 'var(--danger)', 'followUp')}
+            {statCard('edit_note', 'واجبات ناقصة', summary.missingHomeworkCount, 'var(--accent-gold)', 'missingHomework')}
             {statCard('how_to_reg', 'متوسط الحضور', formatPct(summary.averageAttendance), 'var(--success)')}
           </div>
 
@@ -284,7 +321,25 @@ export default function StudentPerformanceScreen() {
             </button>
           </div>
 
+          {anyQuick && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.9rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>filter_alt</span>
+              يعرض {students.length} من {allStudents.length} طالب
+              {quick.followUp && <button onClick={() => toggleQuick('followUp')} style={chipStyle('var(--danger)')}>يحتاجون متابعة ✕</button>}
+              {quick.missingHomework && <button onClick={() => toggleQuick('missingHomework')} style={chipStyle('var(--accent-gold)')}>واجبات ناقصة ✕</button>}
+              <button onClick={() => setQuick({ followUp: false, missingHomework: false })} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: '0.8rem' }}>
+                عرض الكل
+              </button>
+            </div>
+          )}
+
           {/* Main table */}
+          {students.length === 0 ? (
+            <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '44px', color: 'var(--success)', display: 'block', marginBottom: '0.6rem' }}>task_alt</span>
+              <p style={{ color: 'var(--text-secondary)' }}>لا يوجد طلاب بهذه التصفية.</p>
+            </div>
+          ) : (
           <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -354,6 +409,7 @@ export default function StudentPerformanceScreen() {
               </table>
             </div>
           </div>
+          )}
         </>
       )}
 
@@ -399,6 +455,11 @@ export default function StudentPerformanceScreen() {
     </>
   );
 }
+
+const chipStyle = (color) => ({
+  background: 'transparent', border: `1px solid ${color}`, color, borderRadius: '999px',
+  padding: '0.15rem 0.7rem', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.78rem', fontWeight: 700,
+});
 
 const labelStyle = {
   display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem', fontWeight: 600,

@@ -32,7 +32,16 @@ public class StudentPerformanceService : IStudentPerformanceService
     public async Task<StudentPerformanceResponseDto> GetPerformanceAsync(
         Guid? stageId, Guid? gradeId, StudentLevel? level, Guid? classId, string? name)
     {
-        var students = await _studentRepo.GetAllAsync(1, 500, name, gradeId, stageId, classId, level);
+        // Every matching student, not just the first page: this used to take 500 and quietly
+        // drop the rest, so the school's total (800+) was reported as 500.
+        const int pageSize = 500;
+        var students = new List<Student>();
+        for (var page = 1; ; page++)
+        {
+            var batch = await _studentRepo.GetAllAsync(page, pageSize, name, gradeId, stageId, classId, level);
+            students.AddRange(batch);
+            if (batch.Count < pageSize) break;
+        }
 
         var subjects = await _homeworkRepo.GetSubjectsAsync();
         var subjectDefs = new List<PerformanceSubjectDefDto> { new() { Key = "hymns", Name = "الألحان" } };

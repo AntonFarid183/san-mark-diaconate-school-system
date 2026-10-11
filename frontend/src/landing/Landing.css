@@ -1779,6 +1779,12 @@
   flex-wrap: wrap;
 }
 
+.info-subheading {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 1.25rem 0 0.9rem;
+}
+
 .info-heading-center {
   justify-content: center;
   text-align: center;

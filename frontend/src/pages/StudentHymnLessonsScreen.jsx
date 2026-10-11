@@ -53,14 +53,14 @@ export default function StudentHymnLessonsScreen() {
                 {/* Top row: icon + title + completion badge */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '30px', color: done ? 'var(--success)' : 'var(--accent-gold)', flexShrink: 0 }}>
-                    {done ? 'check_circle' : item.videoType === 2 ? 'smart_display' : item.videoType === 1 ? 'videocam' : 'music_note'}
+                    {done ? 'check_circle' : item.videoType === 2 ? 'smart_display' : item.videoType === 1 ? 'videocam' : item.audioUrl ? 'headphones' : 'music_note'}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: '0.97rem' }}>{item.title}</div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{item.stageName}</div>
                   </div>
                   {/* % badge */}
-                  {item.videoType !== 0 && (done || pct > 0) && (
+                  {(item.videoType !== 0 || item.audioUrl) && (done || pct > 0) && (
                     <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.55rem', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0,
                       background: done ? 'rgba(16,185,129,0.15)' : 'rgba(251,191,36,0.12)',
                       color: done ? 'var(--success)' : 'var(--accent-gold)' }}>
@@ -72,7 +72,7 @@ export default function StudentHymnLessonsScreen() {
                 {item.description && <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '0.75rem' }}>{item.description}</p>}
 
                 {/* Progress bar */}
-                {item.videoType !== 0 && pct > 0 && (
+                {(item.videoType !== 0 || item.audioUrl) && pct > 0 && (
                   <div style={{ marginBottom: '0.75rem' }}>
                     <div style={{ height: '3px', background: 'var(--surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: done ? 'var(--success)' : 'var(--accent-gold)', borderRadius: '2px' }} />
@@ -86,6 +86,9 @@ export default function StudentHymnLessonsScreen() {
                     <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(96,165,250,0.12)', color: 'var(--c-blue)' }}>
                       {item.videoType === 2 ? 'يوتيوب' : 'فيديو'}
                     </span>
+                  )}
+                  {item.audioUrl && (
+                    <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(167,139,250,0.15)', color: 'var(--accent-violet, #a78bfa)' }}>صوت</span>
                   )}
                   {(item.lyricsType === 1 || item.lyricsType === 3) && (
                     <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'rgba(239,68,68,0.12)', color: 'var(--c-red)' }}>PDF</span>

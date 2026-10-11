@@ -21,6 +21,10 @@ public class HymnLesson
     public string? VideoUrl { get; set; }
     public string? VideoFileName { get; set; }
 
+    // Audio recording (any audio file) — independent of the video, so a lesson can have both
+    public string? AudioUrl { get; set; }
+    public string? AudioFileName { get; set; }
+
     // Lyrics
     public HymnLyricsType LyricsType { get; set; } = HymnLyricsType.None;
     public string? LyricsPdfUrl { get; set; }

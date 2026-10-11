@@ -88,6 +88,48 @@ public class HymnLessonController : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
+    // Any common audio recording: MP3, M4A, WAV, OGG/OPUS (WhatsApp voice notes), AAC, AMR, FLAC, WMA…
+    // Judged by the extension rather than the browser's reported type, which is empty or generic
+    // for several of these (.opus, .amr, .m4a on some systems).
+    private static readonly string[] AudioExtensions =
+        { ".mp3", ".m4a", ".aac", ".wav", ".ogg", ".oga", ".opus", ".flac", ".wma", ".amr", ".weba", ".3gp", ".aif", ".aiff", ".caf" };
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/upload-audio")]
+    [RequestSizeLimit(100_000_000)]
+    public async Task<IActionResult> UploadAudio(Guid id)
+    {
+        var file = Request.Form.Files.GetFile("file");
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "الملف مطلوب." });
+
+        var extension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AudioExtensions.Contains(extension))
+            return BadRequest(new { Message = "يجب أن يكون ملفًا صوتيًا (MP3 أو M4A أو WAV أو OGG أو OPUS أو AAC أو غيرها)." });
+
+        // Not a program or a web page wearing an audio extension.
+        var head = new byte[2];
+        await using (var peek = file.OpenReadStream())
+        {
+            var read = await peek.ReadAsync(head.AsMemory(0, 2));
+            if (read == 2 && ((head[0] == 0x4D && head[1] == 0x5A) || head[0] == (byte)'<'))
+                return BadRequest(new { Message = "الملف ليس ملفًا صوتيًا صالحًا." });
+        }
+
+        await using var stream = file.OpenReadStream();
+        var url = await _storage.SaveAsync(stream, file.FileName, "hymn-audio");
+        var result = await _service.SetAudioFileAsync(id, url, file.FileName);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("{id}/audio")]
+    public async Task<IActionResult> RemoveAudio(Guid id)
+    {
+        var result = await _service.RemoveAudioAsync(id);
+        return result == null ? NotFound() : Ok(result);
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{id}/upload-lyrics-pdf")]
     [RequestSizeLimit(10_000_000)]

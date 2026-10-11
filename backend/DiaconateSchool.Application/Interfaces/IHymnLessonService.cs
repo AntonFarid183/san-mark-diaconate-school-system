@@ -11,6 +11,8 @@ public interface IHymnLessonService
     Task<HymnLessonDto> CreateAsync(CreateHymnLessonDto dto, Guid createdByUserId);
     Task<HymnLessonDto?> UpdateAsync(Guid id, UpdateHymnLessonDto dto);
     Task<HymnLessonDto?> SetVideoFileAsync(Guid id, string videoUrl, string videoFileName);
+    Task<HymnLessonDto?> SetAudioFileAsync(Guid id, string audioUrl, string audioFileName);
+    Task<HymnLessonDto?> RemoveAudioAsync(Guid id);
     Task<HymnLessonDto?> SetLyricsPdfAsync(Guid id, string pdfUrl, string pdfFileName);
     Task<HymnLessonDto?> SetLyricsImageAsync(Guid id, string imageUrl);
     Task<bool> PublishAsync(Guid id);

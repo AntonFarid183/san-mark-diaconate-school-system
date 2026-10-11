@@ -224,6 +224,11 @@ export default function HymnLessonDetailScreen() {
   const hasPdf   = (lesson.lyricsType === 1 || lesson.lyricsType === 3) && lesson.lyricsPdfUrl;
   const hasImage = (lesson.lyricsType === 2 || lesson.lyricsType === 3) && lesson.lyricsImageUrl;
   const hasVideo = lesson.videoType !== 0;
+  const hasAudio = !!lesson.audioUrl;
+  // One progress record per lesson: an uploaded video is what gets tracked when there is one,
+  // otherwise the audio recording is (a YouTube iframe can't be measured from here).
+  const tracksAudio = hasAudio && lesson.videoType !== 1;
+  const hasProgress = hasVideo || hasAudio;
   const pct      = progress?.watchedPercent ?? 0;
 
   return (
@@ -245,7 +250,7 @@ export default function HymnLessonDetailScreen() {
           </div>
 
           {/* Progress ring — only show once the student has started */}
-          {hasVideo && (pct > 0 || progress?.isCompleted) && (
+          {hasProgress && (pct > 0 || progress?.isCompleted) && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
               <svg width="72" height="72" viewBox="0 0 72 72">
                 <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface-3)" strokeWidth="6" />
@@ -266,7 +271,7 @@ export default function HymnLessonDetailScreen() {
         </div>
 
         {/* Progress bar */}
-        {hasVideo && pct > 0 && (
+        {hasProgress && pct > 0 && (
           <div style={{ marginTop: '1rem' }}>
             <div style={{ height: '4px', background: 'var(--surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: progress?.isCompleted ? 'var(--success)' : 'var(--accent-gold)', borderRadius: '2px', transition: 'width 0.6s ease' }} />
@@ -334,6 +339,39 @@ export default function HymnLessonDetailScreen() {
         </div>
       )}
 
+      {/* Audio recording */}
+      {lesson.audioUrl && (
+        <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>headphones</span>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>التسجيل الصوتي</span>
+            {tracksAudio && !progress?.isCompleted ? (
+              <span style={{ marginRight: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0.15rem 0.5rem', borderRadius: '20px', background: 'var(--surface-3)', border: '1px solid var(--glass-border)' }}>
+                لا يمكن التخطي إلى أجزاء لم تُسمع بعد
+              </span>
+            ) : lesson.audioFileName && (
+              <span style={{ marginRight: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lesson.audioFileName}</span>
+            )}
+          </div>
+          {tracksAudio ? (
+            <audio
+              ref={videoRef}
+              controls
+              preload="metadata"
+              src={`${BASE}${lesson.audioUrl}`}
+              style={{ width: '100%' }}
+              onPlay={startPinging}
+              onPause={stopPinging}
+              onEnded={stopPinging}
+              onTimeUpdate={handleTimeUpdate}
+              onSeeking={handleSeeking}
+            />
+          ) : (
+            <audio controls preload="metadata" src={`${BASE}${lesson.audioUrl}`} style={{ width: '100%' }} />
+          )}
+        </div>
+      )}
+
       {/* Lyrics image */}
       {hasImage && (
         <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
@@ -372,7 +410,7 @@ export default function HymnLessonDetailScreen() {
         </div>
       )}
 
-      {!hasVideo && !hasPdf && !hasImage && (
+      {!hasVideo && !hasAudio && !hasPdf && !hasImage && (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', display: 'block', marginBottom: '1rem' }}>music_note</span>
           لم يُضف محتوى لهذا الدرس بعد.

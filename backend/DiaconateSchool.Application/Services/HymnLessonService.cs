@@ -115,6 +115,36 @@ public class HymnLessonService : IHymnLessonService
         return Map(result!);
     }
 
+    public async Task<HymnLessonDto?> SetAudioFileAsync(Guid id, string audioUrl, string audioFileName)
+    {
+        var h = await _repo.GetByIdAsync(id);
+        if (h == null) return null;
+
+        h.AudioUrl = audioUrl;
+        h.AudioFileName = audioFileName;
+        h.UpdatedAt = DateTime.UtcNow;
+
+        _repo.Update(h);
+        await _uow.SaveChangesAsync();
+        var result = await _repo.GetByIdAsync(id);
+        return Map(result!);
+    }
+
+    public async Task<HymnLessonDto?> RemoveAudioAsync(Guid id)
+    {
+        var h = await _repo.GetByIdAsync(id);
+        if (h == null) return null;
+
+        h.AudioUrl = null;
+        h.AudioFileName = null;
+        h.UpdatedAt = DateTime.UtcNow;
+
+        _repo.Update(h);
+        await _uow.SaveChangesAsync();
+        var result = await _repo.GetByIdAsync(id);
+        return Map(result!);
+    }
+
     public async Task<HymnLessonDto?> SetLyricsPdfAsync(Guid id, string pdfUrl, string pdfFileName)
     {
         var h = await _repo.GetByIdAsync(id);
@@ -222,6 +252,8 @@ public class HymnLessonService : IHymnLessonService
         VideoType = h.VideoType,
         VideoUrl = h.VideoUrl,
         VideoFileName = h.VideoFileName,
+        AudioUrl = h.AudioUrl,
+        AudioFileName = h.AudioFileName,
         LyricsType = h.LyricsType,
         LyricsPdfUrl = h.LyricsPdfUrl,
         LyricsPdfFileName = h.LyricsPdfFileName,

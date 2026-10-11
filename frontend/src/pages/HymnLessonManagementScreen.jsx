@@ -41,6 +41,7 @@ export default function HymnLessonManagementScreen() {
   const [msg, setMsg] = useState(null);
 
   const videoInputRef = useRef();
+  const audioInputRef = useRef();
   const pdfInputRef   = useRef();
   const imgInputRef   = useRef();
 
@@ -122,6 +123,16 @@ export default function HymnLessonManagementScreen() {
     finally { setUploading(null); }
   };
 
+  const removeAudio = async () => {
+    if (!uploadTarget || !window.confirm('حذف الملف الصوتي من هذا الدرس؟')) return;
+    try {
+      const r = await apiClient.delete(`/hymn-lessons/${uploadTarget.id}/audio`);
+      setUploadTarget(r.data);
+      flash('success', 'تم حذف الملف الصوتي.');
+      fetchAll();
+    } catch (e) { flash('error', e.response?.data?.message || 'فشل الحذف.'); }
+  };
+
   // ── status actions ────────────────────────────────────────────────────────
   const publish = async (id) => {
     try { await apiClient.post(`/hymn-lessons/${id}/publish`); flash('success', 'تم النشر.'); fetchAll(); }
@@ -145,6 +156,7 @@ export default function HymnLessonManagementScreen() {
 
       {/* Hidden file inputs — each has its own clean handler */}
       <input ref={videoInputRef} type="file" accept="video/*"          style={{ display: 'none' }} onChange={e => { doUpload('upload-video',        e.target.files[0]); e.target.value = ''; }} />
+      <input ref={audioInputRef} type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.wma,.amr,.weba,.3gp,.aif,.aiff,.caf" style={{ display: 'none' }} onChange={e => { doUpload('upload-audio', e.target.files[0]); e.target.value = ''; }} />
       <input ref={pdfInputRef}   type="file" accept="application/pdf"  style={{ display: 'none' }} onChange={e => { doUpload('upload-lyrics-pdf',   e.target.files[0]); e.target.value = ''; }} />
       <input ref={imgInputRef}   type="file" accept="image/*"           style={{ display: 'none' }} onChange={e => { doUpload('upload-lyrics-image', e.target.files[0]); e.target.value = ''; }} />
 
@@ -217,6 +229,7 @@ export default function HymnLessonManagementScreen() {
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                           <span>{item.stageName}{item.gradeName ? ` — ${item.gradeName}` : ''}</span>
                           <span>فيديو: {item.videoType === 0 ? 'لا يوجد' : item.videoType === 1 ? 'ملف مرفوع' : 'يوتيوب'}</span>
+                          <span>صوت: {item.audioUrl ? 'مرفوع' : 'لا يوجد'}</span>
                           <span>كلمات: {item.lyricsType === 0 ? 'لا يوجد' : item.lyricsType === 1 ? 'PDF' : item.lyricsType === 2 ? 'صورة' : 'PDF + صورة'}</span>
                         </div>
                       </div>
@@ -285,6 +298,34 @@ export default function HymnLessonManagementScreen() {
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
                   {uploading === 'upload-video' ? 'جاري الرفع...' : uploadTarget.videoType === 1 ? 'استبدال الفيديو' : 'رفع فيديو (MP4 / WebM)'}
                 </button>
+              </div>
+
+              {/* Audio recording */}
+              <div style={uploadSection}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--accent-violet, #a78bfa)' }}>headphones</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>تسجيل صوتي</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {uploadTarget.audioUrl ? `مرفوع: ${uploadTarget.audioFileName || ''}` : 'لم يُرفع ملف صوتي بعد (أي صيغة: MP3 / M4A / WAV / OGG…)'}
+                    </div>
+                  </div>
+                </div>
+                {uploadTarget.audioUrl && (
+                  <audio controls preload="none" src={`${BACKEND_URL}${uploadTarget.audioUrl}`} style={{ width: '100%', marginBottom: '0.6rem' }} />
+                )}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => audioInputRef.current.click()} disabled={uploading === 'upload-audio'} style={{ ...uploadBtn('var(--accent-violet, #a78bfa)'), flex: 1 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
+                    {uploading === 'upload-audio' ? 'جاري الرفع...' : uploadTarget.audioUrl ? 'استبدال الملف الصوتي' : 'رفع ملف صوتي'}
+                  </button>
+                  {uploadTarget.audioUrl && (
+                    <button onClick={removeAudio} style={{ ...uploadBtn('var(--danger)'), flex: '0 0 auto' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                      حذف
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Lyrics PDF */}
@@ -375,6 +416,17 @@ export default function HymnLessonManagementScreen() {
               </div>
             )}
 
+            {/* Audio */}
+            {previewLesson.audioUrl && (
+              <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent-gold)' }}>headphones</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>التسجيل الصوتي</span>
+                </div>
+                <audio controls preload="metadata" src={`${BACKEND_URL}${previewLesson.audioUrl}`} style={{ width: '100%' }} />
+              </div>
+            )}
+
             {/* Lyrics image */}
             {(previewLesson.lyricsType === 2 || previewLesson.lyricsType === 3) && previewLesson.lyricsImageUrl && (
               <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
@@ -408,7 +460,7 @@ export default function HymnLessonManagementScreen() {
               </div>
             )}
 
-            {previewLesson.videoType === 0 && previewLesson.lyricsType === 0 && (
+            {previewLesson.videoType === 0 && previewLesson.lyricsType === 0 && !previewLesson.audioUrl && (
               <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '48px', display: 'block', marginBottom: '1rem' }}>music_note</span>
                 لم يُضف محتوى لهذا الدرس بعد.

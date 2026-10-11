@@ -106,7 +106,8 @@ public class HymnLessonProgressService : IHymnLessonProgressService
             WatchedPercent     = p.WatchedPercent,
             IsCompleted        = p.IsCompleted,
             LastViewedAt       = p.LastViewedAt,
-            HasVideo           = p.HymnLesson.VideoType != HymnVideoType.None,
+            // Playable media of any kind (video or the audio recording) — both feed the same progress.
+            HasVideo           = p.HymnLesson.VideoType != HymnVideoType.None || p.HymnLesson.AudioUrl != null,
         }).ToList();
     }
 

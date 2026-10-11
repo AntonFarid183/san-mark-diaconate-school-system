@@ -186,10 +186,27 @@ app.UseStaticFiles();
 // at /uploads/. Stored URLs stay "/uploads/{category}/{name}", so moving the
 // physical directory does not invalidate anything already in the database.
 Directory.CreateDirectory(uploadsPath);
+// Static files answer 404 for an extension they don't know a content type for, which would break
+// playback of audio formats like WhatsApp voice notes (.opus) or .amr recordings.
+var uploadContentTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+uploadContentTypes.Mappings[".opus"] = "audio/ogg";
+uploadContentTypes.Mappings[".oga"] = "audio/ogg";
+uploadContentTypes.Mappings[".ogg"] = "audio/ogg";
+uploadContentTypes.Mappings[".amr"] = "audio/amr";
+uploadContentTypes.Mappings[".m4a"] = "audio/mp4";
+uploadContentTypes.Mappings[".aac"] = "audio/aac";
+uploadContentTypes.Mappings[".flac"] = "audio/flac";
+uploadContentTypes.Mappings[".weba"] = "audio/webm";
+uploadContentTypes.Mappings[".wma"] = "audio/x-ms-wma";
+uploadContentTypes.Mappings[".3gp"] = "audio/3gpp";
+uploadContentTypes.Mappings[".caf"] = "audio/x-caf";
+uploadContentTypes.Mappings[".aif"] = "audio/aiff";
+uploadContentTypes.Mappings[".aiff"] = "audio/aiff";
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
+    RequestPath = "/uploads",
+    ContentTypeProvider = uploadContentTypes
 });
 
 // Rescues files still sitting in the pre-fix location inside the deployable

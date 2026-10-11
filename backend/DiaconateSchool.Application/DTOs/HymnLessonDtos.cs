@@ -18,6 +18,9 @@ public class HymnLessonDto
     public string? VideoUrl { get; set; }
     public string? VideoFileName { get; set; }
 
+    public string? AudioUrl { get; set; }
+    public string? AudioFileName { get; set; }
+
     public HymnLyricsType LyricsType { get; set; }
     public string? LyricsPdfUrl { get; set; }
     public string? LyricsPdfFileName { get; set; }

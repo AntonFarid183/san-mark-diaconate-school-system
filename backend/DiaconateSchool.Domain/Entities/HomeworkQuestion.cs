@@ -1,3 +1,4 @@
+using DiaconateSchool.Domain.Enums;
 using System;
 
 namespace DiaconateSchool.Domain.Entities;
@@ -14,6 +15,8 @@ public class HomeworkQuestion
 
     // Only set for Typed homeworks; PDF/image ones read the question off the file.
     public string? Text { get; set; }
+    public HomeworkQuestionKind Kind { get; set; } = HomeworkQuestionKind.MultipleChoice;
+
     // JSON array of option strings (2..10, in display order).
     public string? OptionsJson { get; set; }
 

@@ -23,6 +23,11 @@ public interface IHomeworkRepository
     Task<List<Homework>> GetPublishedForGradesAsync(IEnumerable<Guid> gradeIds);
     Task AddSubmissionAsync(HomeworkSubmission submission);
 
+    // Essay review
+    Task<List<HomeworkSubmission>> GetSubmissionsWithEssayAnswersAsync(Guid homeworkId);
+    Task<HomeworkAnswer?> GetAnswerWithContextAsync(Guid answerId);
+    Task<Dictionary<Guid, int>> GetPendingEssayCountsAsync(IEnumerable<Guid> homeworkIds);
+
     Task<int> GetDraftCountAsync();
     Task<Homework?> GetFirstDraftAsync();
 }

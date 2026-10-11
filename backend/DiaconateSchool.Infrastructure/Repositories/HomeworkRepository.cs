@@ -100,6 +100,34 @@ public class HomeworkRepository : IHomeworkRepository
     public async Task AddSubmissionAsync(HomeworkSubmission submission)
         => await _context.HomeworkSubmissions.AddAsync(submission);
 
+    public async Task<List<HomeworkSubmission>> GetSubmissionsWithEssayAnswersAsync(Guid homeworkId)
+        => await _context.HomeworkSubmissions
+            .Include(s => s.Student).ThenInclude(st => st.User)
+            .Include(s => s.Answers).ThenInclude(a => a.HomeworkQuestion)
+            .Where(s => s.HomeworkId == homeworkId
+                && s.Answers.Any(a => a.HomeworkQuestion.Kind == HomeworkQuestionKind.Essay))
+            .OrderBy(s => s.SubmittedAt)
+            .ToListAsync();
+
+    public async Task<HomeworkAnswer?> GetAnswerWithContextAsync(Guid answerId)
+        => await _context.HomeworkAnswers
+            .Include(a => a.HomeworkQuestion)
+            .Include(a => a.HomeworkSubmission).ThenInclude(s => s.Answers).ThenInclude(x => x.HomeworkQuestion)
+            .Include(a => a.HomeworkSubmission).ThenInclude(s => s.Homework).ThenInclude(h => h.Questions)
+            .FirstOrDefaultAsync(a => a.Id == answerId);
+
+    public async Task<Dictionary<Guid, int>> GetPendingEssayCountsAsync(IEnumerable<Guid> homeworkIds)
+    {
+        var ids = homeworkIds.ToList();
+        return await _context.HomeworkAnswers
+            .Where(a => a.HomeworkQuestion.Kind == HomeworkQuestionKind.Essay
+                && a.EssayScore == null
+                && ids.Contains(a.HomeworkQuestion.HomeworkId))
+            .GroupBy(a => a.HomeworkQuestion.HomeworkId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
+    }
+
     public async Task<int> GetDraftCountAsync()
         => await _context.Homeworks.CountAsync(h => h.Status == LessonStatus.Draft);
 

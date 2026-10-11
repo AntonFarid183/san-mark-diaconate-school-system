@@ -35,7 +35,13 @@ public class HomeworkService : IHomeworkService
     public async Task<List<HomeworkListItemDto>> GetAllAsync(Guid? stageId, Guid? gradeId, Guid? subjectId, LessonStatus? status)
     {
         var items = await _repo.GetAllAsync(stageId, gradeId, subjectId, status);
-        return items.Select(MapToListItem).ToList();
+        var pending = await _repo.GetPendingEssayCountsAsync(items.Select(h => h.Id));
+        return items.Select(h =>
+        {
+            var dto = MapToListItem(h);
+            dto.PendingEssayCount = pending.GetValueOrDefault(h.Id);
+            return dto;
+        }).ToList();
     }
 
     public async Task<HomeworkAdminDetailDto?> GetByIdAsync(Guid id)
@@ -237,6 +243,7 @@ public class HomeworkService : IHomeworkService
         var submission = await _repo.GetSubmissionAsync(homeworkId, studentId);
         var answersByQuestion = submission?.Answers.ToDictionary(a => a.HomeworkQuestionId) ?? new Dictionary<Guid, HomeworkAnswer>();
 
+        var weight = QuestionWeight(homework);
         var dto = new StudentHomeworkDetailDto
         {
             Id = homework.Id,
@@ -249,18 +256,28 @@ public class HomeworkService : IHomeworkService
             TotalMarks = homework.TotalMarks,
             HasSubmitted = submission != null,
             Score = submission?.Score,
+            HasPendingReview = submission != null && homework.Questions.Any(q =>
+                q.Kind == HomeworkQuestionKind.Essay
+                && !(answersByQuestion.TryGetValue(q.Id, out var a) && a.EssayScore.HasValue)),
             Questions = homework.Questions.OrderBy(q => q.QuestionNumber).Select(q =>
             {
                 answersByQuestion.TryGetValue(q.Id, out var answer);
+                var essay = q.Kind == HomeworkQuestionKind.Essay;
                 return new StudentHomeworkQuestionDto
                 {
                     Id = q.Id,
                     QuestionNumber = q.QuestionNumber,
                     Text = q.Text,
+                    Kind = essay ? "essay" : "choice",
                     Options = OptionsOf(q),
-                    SelectedOption = answer?.SelectedOption,
-                    IsCorrect = answer?.IsCorrect,
-                    CorrectOption = submission != null ? q.CorrectOption : null
+                    MaxMark = weight,
+                    SelectedOption = essay ? null : answer?.SelectedOption,
+                    IsCorrect = essay ? null : answer?.IsCorrect,
+                    CorrectOption = (submission != null && !essay) ? q.CorrectOption : null,
+                    AnswerText = essay ? answer?.AnswerText : null,
+                    AnswerFileUrl = essay ? answer?.AnswerFileUrl : null,
+                    AnswerFileName = essay ? answer?.AnswerFileName : null,
+                    EssayScore = essay ? answer?.EssayScore : null
                 };
             }).ToList()
         };
@@ -284,49 +301,182 @@ public class HomeworkService : IHomeworkService
 
         var questionsById = homework.Questions.ToDictionary(q => q.Id);
         var answers = new List<HomeworkAnswer>();
-        int correctCount = 0;
+        var seen = new HashSet<Guid>();
 
         foreach (var answerDto in dto.Answers)
         {
             if (!questionsById.TryGetValue(answerDto.QuestionId, out var question))
                 return (false, "سؤال غير صحيح.", null);
+            if (!seen.Add(question.Id))
+                return (false, "إجابة مكررة لنفس السؤال.", null);
 
-            var isCorrect = answerDto.SelectedOption == question.CorrectOption;
-            if (isCorrect) correctCount++;
+            if (question.Kind == HomeworkQuestionKind.Essay)
+            {
+                var text = answerDto.Text?.Trim();
+                var hasText = !string.IsNullOrEmpty(text);
+                var hasFile = !string.IsNullOrWhiteSpace(answerDto.FileUrl);
+                if (!hasText && !hasFile)
+                    return (false, $"اكتب إجابة السؤال {question.QuestionNumber} أو ارفع صورة أو ملف PDF.", null);
+                if (hasText && text!.Length > MaxEssayAnswerLength)
+                    return (false, $"إجابة السؤال {question.QuestionNumber} طويلة جدًا.", null);
+                // Only files that came through our own answer-upload endpoint.
+                if (hasFile && !answerDto.FileUrl!.StartsWith(AnswerUploadPrefix, StringComparison.Ordinal))
+                    return (false, "ملف غير صالح.", null);
+                if (hasFile && answerDto.FileUrl!.Contains("..", StringComparison.Ordinal))
+                    return (false, "ملف غير صالح.", null);
 
+                answers.Add(new HomeworkAnswer
+                {
+                    Id = Guid.NewGuid(),
+                    HomeworkQuestionId = question.Id,
+                    SelectedOption = 0,
+                    IsCorrect = false,
+                    AnswerText = hasText ? text : null,
+                    AnswerFileUrl = hasFile ? answerDto.FileUrl : null,
+                    AnswerFileName = hasFile ? Truncate(answerDto.FileName, 200) : null
+                });
+                continue;
+            }
+
+            if (!answerDto.SelectedOption.HasValue)
+                return (false, $"اختر إجابة السؤال {question.QuestionNumber}.", null);
+            var optionCount = OptionsOf(question)?.Count ?? 4;
+            if (answerDto.SelectedOption.Value < 0 || answerDto.SelectedOption.Value >= optionCount)
+                return (false, "اختيار غير صحيح.", null);
+
+            var isCorrect = answerDto.SelectedOption.Value == question.CorrectOption;
             answers.Add(new HomeworkAnswer
             {
                 Id = Guid.NewGuid(),
                 HomeworkQuestionId = question.Id,
-                SelectedOption = answerDto.SelectedOption,
+                SelectedOption = answerDto.SelectedOption.Value,
                 IsCorrect = isCorrect
             });
         }
 
         var totalQuestions = homework.Questions.Count;
-        var score = totalQuestions == 0 ? 0 : Math.Round(homework.TotalMarks * correctCount / totalQuestions, 2);
+        var correctCount = answers.Count(a => a.IsCorrect);
+        var pending = answers.Count(a => a.AnswerFileUrl != null || a.AnswerText != null);
 
         var submission = new HomeworkSubmission
         {
             Id = Guid.NewGuid(),
             HomeworkId = homeworkId,
             StudentId = studentId,
-            Score = score,
             SubmittedAt = DateTime.UtcNow,
             Answers = answers
         };
+        // Choice questions are marked now; essays add to the score once the admin marks them.
+        submission.Score = ComputeScore(homework, answers, questionsById);
 
         await _repo.AddSubmissionAsync(submission);
         await _uow.SaveChangesAsync();
 
         return (true, null, new SubmitHomeworkResultDto
         {
-            Score = score,
+            Score = submission.Score,
             TotalMarks = homework.TotalMarks,
             CorrectCount = correctCount,
-            TotalQuestions = totalQuestions
+            TotalQuestions = totalQuestions,
+            PendingReviewCount = pending
         });
     }
+
+    // ── Essay review ─────────────────────────────────────────────────
+
+    public async Task<(bool Success, string? Error, List<EssayReviewSubmissionDto>? Result)> GetEssayReviewAsync(Guid homeworkId)
+    {
+        var homework = await _repo.GetByIdAsync(homeworkId);
+        if (homework == null) return (false, "الواجب غير موجود.", null);
+
+        var weight = QuestionWeight(homework);
+        var submissions = await _repo.GetSubmissionsWithEssayAnswersAsync(homeworkId);
+        var result = submissions.Select(s => new EssayReviewSubmissionDto
+        {
+            SubmissionId = s.Id,
+            StudentId = s.StudentId,
+            StudentName = s.Student.User.FullName,
+            StudentCode = s.Student.StudentCode,
+            SubmittedAt = s.SubmittedAt,
+            Score = s.Score,
+            Answers = s.Answers
+                .Where(a => a.HomeworkQuestion.Kind == HomeworkQuestionKind.Essay)
+                .OrderBy(a => a.HomeworkQuestion.QuestionNumber)
+                .Select(a => new EssayReviewAnswerDto
+                {
+                    AnswerId = a.Id,
+                    QuestionNumber = a.HomeworkQuestion.QuestionNumber,
+                    QuestionText = a.HomeworkQuestion.Text ?? string.Empty,
+                    Text = a.AnswerText,
+                    FileUrl = a.AnswerFileUrl,
+                    FileName = a.AnswerFileName,
+                    Score = a.EssayScore,
+                    MaxMark = weight
+                }).ToList()
+        })
+        // Unmarked work first, so the admin sees what is waiting.
+        .OrderByDescending(s => s.Answers.Any(a => a.Score == null))
+        .ThenBy(s => s.SubmittedAt)
+        .ToList();
+
+        return (true, null, result);
+    }
+
+    public async Task<(bool Success, string? Error, GradeEssayResultDto? Result)> GradeEssayAnswerAsync(Guid answerId, decimal score)
+    {
+        var answer = await _repo.GetAnswerWithContextAsync(answerId);
+        if (answer == null || answer.HomeworkQuestion.Kind != HomeworkQuestionKind.Essay)
+            return (false, "الإجابة غير موجودة.", null);
+
+        var submission = answer.HomeworkSubmission;
+        var homework = submission.Homework;
+        var weight = QuestionWeight(homework);
+
+        if (score < 0 || score > weight)
+            return (false, $"الدرجة يجب أن تكون بين 0 و {weight}.", null);
+
+        answer.EssayScore = Math.Round(score, 2);
+
+        var questionsById = homework.Questions.ToDictionary(q => q.Id);
+        submission.Score = ComputeScore(homework, submission.Answers, questionsById);
+        submission.IsManualEntry = false;
+
+        await _uow.SaveChangesAsync();
+
+        var pending = submission.Answers.Count(a => a.HomeworkQuestion.Kind == HomeworkQuestionKind.Essay && a.EssayScore == null);
+        return (true, null, new GradeEssayResultDto
+        {
+            AnswerScore = answer.EssayScore.Value,
+            SubmissionScore = submission.Score,
+            PendingReviewCount = pending
+        });
+    }
+
+    // Every question is worth the same share of the homework's total marks.
+    private static decimal QuestionWeight(Homework homework)
+        => homework.Questions.Count == 0 ? 0 : Math.Round(homework.TotalMarks / homework.Questions.Count, 2);
+
+    private static decimal ComputeScore(Homework homework, IEnumerable<HomeworkAnswer> answers, Dictionary<Guid, HomeworkQuestion> questionsById)
+    {
+        var count = homework.Questions.Count;
+        if (count == 0) return 0;
+        var unit = homework.TotalMarks / count;
+        decimal total = 0;
+        foreach (var a in answers)
+        {
+            var isEssay = questionsById.TryGetValue(a.HomeworkQuestionId, out var q) && q.Kind == HomeworkQuestionKind.Essay;
+            if (isEssay) total += a.EssayScore ?? 0;
+            else if (a.IsCorrect) total += unit;
+        }
+        return Math.Round(Math.Min(total, homework.TotalMarks), 2);
+    }
+
+    private static string? Truncate(string? value, int max)
+        => string.IsNullOrEmpty(value) ? value : (value.Length <= max ? value : value[..max]);
+
+    // The answer-upload endpoint stores student files under this prefix.
+    private const string AnswerUploadPrefix = "/uploads/homework-answers/";
+    private const int MaxEssayAnswerLength = 5000;
 
     private const int MaxQuestionTextLength = 1000;
     private const int MaxOptionTextLength = 300;
@@ -348,6 +498,23 @@ public class HomeworkService : IHomeworkService
                 return ($"نص السؤال {number} مطلوب.", null);
             if (q.Text.Trim().Length > MaxQuestionTextLength)
                 return ($"نص السؤال {number} طويل جدًا.", null);
+            var isEssay = string.Equals(q.Kind, "essay", StringComparison.OrdinalIgnoreCase);
+
+            if (isEssay)
+            {
+                // No options, no answer key: the student writes/uploads and the admin marks it.
+                questions.Add(new HomeworkQuestion
+                {
+                    Id = Guid.NewGuid(),
+                    QuestionNumber = number,
+                    Kind = HomeworkQuestionKind.Essay,
+                    Text = q.Text.Trim(),
+                    OptionsJson = null,
+                    CorrectOption = 0
+                });
+                continue;
+            }
+
             if (q.Options.Count < MinOptions || q.Options.Count > MaxOptions)
                 return ($"السؤال {number} يحتاج إلى من {MinOptions} إلى {MaxOptions} اختيارات.", null);
             if (q.Options.Any(string.IsNullOrWhiteSpace))
@@ -383,6 +550,7 @@ public class HomeworkService : IHomeworkService
         TotalMarks = h.TotalMarks,
         Status = h.Status.ToString().ToLowerInvariant(),
         QuestionCount = h.Questions.Count,
+        EssayCount = h.Questions.Count(q => q.Kind == HomeworkQuestionKind.Essay),
         CreatedAt = h.CreatedAt
     };
 
@@ -405,6 +573,7 @@ public class HomeworkService : IHomeworkService
             Id = q.Id,
             QuestionNumber = q.QuestionNumber,
             Text = q.Text,
+            Kind = q.Kind == HomeworkQuestionKind.Essay ? "essay" : "choice",
             Options = OptionsOf(q),
             CorrectOption = q.CorrectOption
         }).ToList()

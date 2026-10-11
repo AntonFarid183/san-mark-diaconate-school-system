@@ -20,6 +20,8 @@ public class HomeworkListItemDto
     public decimal TotalMarks { get; set; }
     public string Status { get; set; } = string.Empty; // draft / published / archived
     public int QuestionCount { get; set; }
+    public int EssayCount { get; set; }
+    public int PendingEssayCount { get; set; } // student answers still waiting for a mark
     public DateTime CreatedAt { get; set; }
 }
 
@@ -46,6 +48,7 @@ public class HomeworkQuestionAdminDto
     public Guid Id { get; set; }
     public int QuestionNumber { get; set; }
     public string? Text { get; set; }
+    public string Kind { get; set; } = "choice"; // choice / essay
     public List<string>? Options { get; set; }
     public int CorrectOption { get; set; }
 }
@@ -73,7 +76,8 @@ public class CreateHomeworkDto
 public class TypedQuestionDto
 {
     public string Text { get; set; } = string.Empty;
-    public List<string> Options { get; set; } = new(); // 2..10, in display order
+    public string Kind { get; set; } = "choice"; // choice / essay (essay: no options, marked by hand)
+    public List<string> Options { get; set; } = new(); // choice: 2..10, in display order
     public int CorrectOption { get; set; }
 }
 
@@ -103,6 +107,7 @@ public class StudentHomeworkDetailDto
 
     public bool HasSubmitted { get; set; }
     public decimal? Score { get; set; }
+    public bool HasPendingReview { get; set; } // some essay answers are not marked yet
     public List<StudentHomeworkQuestionDto> Questions { get; set; } = new();
 }
 
@@ -111,7 +116,15 @@ public class StudentHomeworkQuestionDto
     public Guid Id { get; set; }
     public int QuestionNumber { get; set; }
     public string? Text { get; set; }
+    public string Kind { get; set; } = "choice"; // choice / essay
     public List<string>? Options { get; set; }
+    public decimal MaxMark { get; set; }        // what this question is worth
+
+    // The student's own essay answer + mark (only after they submitted)
+    public string? AnswerText { get; set; }
+    public string? AnswerFileUrl { get; set; }
+    public string? AnswerFileName { get; set; }
+    public decimal? EssayScore { get; set; }
 
     // Only populated if the student already submitted
     public int? SelectedOption { get; set; }
@@ -127,7 +140,10 @@ public class SubmitHomeworkDto
 public class HomeworkAnswerDto
 {
     public Guid QuestionId { get; set; }
-    public int SelectedOption { get; set; }
+    public int? SelectedOption { get; set; }   // choice questions
+    public string? Text { get; set; }          // essay: typed answer
+    public string? FileUrl { get; set; }       // essay: uploaded via POST /homework/my/upload-answer
+    public string? FileName { get; set; }
 }
 
 public class SubmitHomeworkResultDto
@@ -136,6 +152,44 @@ public class SubmitHomeworkResultDto
     public decimal TotalMarks { get; set; }
     public int CorrectCount { get; set; }
     public int TotalQuestions { get; set; }
+    public int PendingReviewCount { get; set; }
+}
+
+// ── Essay review (admin) ─────────────────────────────────────────────
+
+public class EssayReviewSubmissionDto
+{
+    public Guid SubmissionId { get; set; }
+    public Guid StudentId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public DateTime SubmittedAt { get; set; }
+    public decimal Score { get; set; }
+    public List<EssayReviewAnswerDto> Answers { get; set; } = new();
+}
+
+public class EssayReviewAnswerDto
+{
+    public Guid AnswerId { get; set; }
+    public int QuestionNumber { get; set; }
+    public string QuestionText { get; set; } = string.Empty;
+    public string? Text { get; set; }
+    public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public decimal? Score { get; set; }
+    public decimal MaxMark { get; set; }
+}
+
+public class GradeEssayAnswerDto
+{
+    public decimal Score { get; set; }
+}
+
+public class GradeEssayResultDto
+{
+    public decimal AnswerScore { get; set; }
+    public decimal SubmissionScore { get; set; }
+    public int PendingReviewCount { get; set; }
 }
 
 // ── Manual grade entry (admin) ───────────────────────────────────────

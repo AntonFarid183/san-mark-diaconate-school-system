@@ -504,6 +504,9 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(a => a.HomeworkQuestionId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<HomeworkAnswer>()
+            .Property(a => a.EssayScore).HasPrecision(5, 2);
+
         // Seed homework subjects
         var subjectCopticId = Guid.Parse("00000000-0000-0000-0100-000000000001");
         var subjectLiturgicalId = Guid.Parse("00000000-0000-0000-0100-000000000002");

@@ -21,6 +21,10 @@ public interface IHomeworkService
     Task<(bool Success, string? Error, List<HomeworkGradingRosterItemDto>? Result)> GetGradingRosterAsync(Guid homeworkId);
     Task<(bool Success, string? Error)> SetManualGradesAsync(Guid homeworkId, ManualGradeEntryDto dto);
 
+    // Essay review — the admin marks the written answers
+    Task<(bool Success, string? Error, List<EssayReviewSubmissionDto>? Result)> GetEssayReviewAsync(Guid homeworkId);
+    Task<(bool Success, string? Error, GradeEssayResultDto? Result)> GradeEssayAnswerAsync(Guid answerId, decimal score);
+
     // Student
     Task<List<StudentHomeworkListItemDto>> GetAvailableForStudentAsync(Guid studentId);
     Task<(bool Success, string? Error, StudentHomeworkDetailDto? Result)> GetForStudentAsync(Guid homeworkId, Guid studentId);

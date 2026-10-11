@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { usePageTitle } from '../context/PageTitleContext';
+import { toAbsoluteBackendUrl } from '../config';
 
 const STATUS_LABELS = {
   draft: { label: 'مسودة', color: 'var(--text-muted)' },
@@ -15,7 +16,7 @@ const TYPED_OPTION_LABELS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', '
 const MIN_TYPED_OPTIONS = 2;
 const MAX_TYPED_OPTIONS = TYPED_OPTION_LABELS.length;
 
-const emptyTypedQuestion = () => ({ text: '', options: Array(MIN_TYPED_OPTIONS).fill(''), correct: 0 });
+const emptyTypedQuestion = (kind = 'choice') => ({ kind, text: '', options: Array(MIN_TYPED_OPTIONS).fill(''), correct: 0 });
 
 const emptyForm = {
   title: '', subjectId: '', stageId: '', gradeId: '',
@@ -50,6 +51,13 @@ export default function HomeworkManagementScreen() {
   const [rosterLoading, setRosterLoading] = useState(false);
   const [scoreInputs, setScoreInputs] = useState({});
   const [savingGrades, setSavingGrades] = useState(false);
+
+  // Essay review: the admin reads each student's written/uploaded answer and marks it.
+  const [reviewHomework, setReviewHomework] = useState(null);
+  const [reviewItems, setReviewItems] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [markInputs, setMarkInputs] = useState({});   // answerId -> typed mark
+  const [markingId, setMarkingId] = useState(null);
 
   useEffect(() => {
     apiClient.get('/homework/subjects').then(r => setSubjects(r.data)).catch(() => {});
@@ -150,15 +158,16 @@ export default function HomeworkManagementScreen() {
     }));
   };
 
-  const addTypedQuestion = () => {
-    setForm(f => ({ ...f, typedQuestions: [...f.typedQuestions, emptyTypedQuestion()] }));
+  const addTypedQuestion = (kind = 'choice') => {
+    setForm(f => ({ ...f, typedQuestions: [...f.typedQuestions, emptyTypedQuestion(kind)] }));
   };
 
   const removeTypedQuestion = (idx) => {
     setForm(f => ({ ...f, typedQuestions: f.typedQuestions.filter((_, i) => i !== idx) }));
   };
 
-  const isTypedQuestionComplete = (q) => q.text.trim() && q.options.every(o => o.trim());
+  // A choice question needs every option filled in; an essay only needs its text.
+  const isTypedQuestionComplete = (q) => q.text.trim() && (q.kind === 'essay' || q.options.every(o => o.trim()));
 
   const isFormValid = () => {
     if (!form.title.trim() || !form.subjectId || !form.stageId || !form.gradeId) return false;
@@ -180,11 +189,9 @@ export default function HomeworkManagementScreen() {
         totalMarks: Number(form.totalMarks),
         ...(isTyped
           ? {
-              questions: form.typedQuestions.map(q => ({
-                text: q.text.trim(),
-                options: q.options.map(o => o.trim()),
-                correctOption: q.correct,
-              })),
+              questions: form.typedQuestions.map(q => (q.kind === 'essay'
+                ? { kind: 'essay', text: q.text.trim(), options: [], correctOption: 0 }
+                : { kind: 'choice', text: q.text.trim(), options: q.options.map(o => o.trim()), correctOption: q.correct })),
             }
           : {
               materialUrl: form.materialUrl,
@@ -219,6 +226,41 @@ export default function HomeworkManagementScreen() {
       load();
     } catch {
       setMsg({ type: 'error', text: 'فشل الحذف.' });
+    }
+  };
+
+  const openEssayReview = async (hw) => {
+    setReviewHomework(hw);
+    setReviewLoading(true);
+    setMarkInputs({});
+    try {
+      const r = await apiClient.get(`/homework/${hw.id}/essay-review`);
+      setReviewItems(r.data);
+    } catch {
+      setMsg({ type: 'error', text: 'فشل تحميل الإجابات المقالية.' });
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const saveEssayMark = async (answer) => {
+    const raw = markInputs[answer.answerId];
+    const value = raw === undefined || raw === '' ? null : Number(raw);
+    if (value === null || Number.isNaN(value)) return;
+    setMarkingId(answer.answerId);
+    try {
+      const r = await apiClient.post(`/homework/answers/${answer.answerId}/grade`, { score: value });
+      setReviewItems(items => items.map(s => ({
+        ...s,
+        score: s.answers.some(a => a.answerId === answer.answerId) ? r.data.submissionScore : s.score,
+        answers: s.answers.map(a => a.answerId === answer.answerId ? { ...a, score: r.data.answerScore } : a),
+      })));
+      setMarkInputs(m => { const next = { ...m }; delete next[answer.answerId]; return next; });
+      load(); // refresh the "waiting" badge on the list
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'فشل حفظ الدرجة.' });
+    } finally {
+      setMarkingId(null);
     }
   };
 
@@ -296,10 +338,20 @@ export default function HomeworkManagementScreen() {
                     </span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-                    {hw.subjectName} — {hw.stageName} / {hw.gradeName} — {hw.questionCount} أسئلة — {hw.totalMarks} درجة
+                    {hw.subjectName} — {hw.stageName} / {hw.gradeName} — {hw.questionCount} أسئلة{hw.essayCount > 0 ? ` (منها ${hw.essayCount} مقالي)` : ''} — {hw.totalMarks} درجة
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {hw.essayCount > 0 && (
+                    <button onClick={() => openEssayReview(hw)} style={{ position: 'relative', padding: '0.4rem 0.9rem', borderRadius: '6px', border: '1px solid var(--accent-blue, #3b82f6)', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue, #3b82f6)', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit' }}>
+                      تصحيح المقالي
+                      {hw.pendingEssayCount > 0 && (
+                        <span style={{ position: 'absolute', top: '-8px', left: '-8px', minWidth: '20px', height: '20px', padding: '0 5px', borderRadius: '10px', background: 'var(--danger)', color: '#fff', fontSize: '0.7rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {hw.pendingEssayCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
                   {hw.status === 'published' && (
                     <button onClick={() => openGrading(hw)} style={{ padding: '0.4rem 0.9rem', borderRadius: '6px', border: '1px solid var(--accent-gold)', background: 'rgba(251,191,36,0.08)', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit' }}>
                       إدخال درجات يدوي
@@ -390,8 +442,27 @@ export default function HomeworkManagementScreen() {
                           </button>
                         )}
                       </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {[['choice', 'اختيار من متعدد', 'checklist'], ['essay', 'مقالي', 'edit_note']].map(([kind, label, icon]) => (
+                          <button key={kind} type="button" onClick={() => updateTypedQuestion(idx, { kind })} aria-pressed={q.kind === kind} style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.45rem',
+                            borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 600,
+                            border: `1px solid ${q.kind === kind ? 'var(--accent-gold)' : 'var(--glass-border)'}`,
+                            background: q.kind === kind ? 'rgba(251,191,36,0.14)' : 'transparent',
+                            color: q.kind === kind ? 'var(--accent-gold)' : 'var(--text-secondary)',
+                          }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{icon}</span>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                       <textarea className="premium-input" rows={2} placeholder="نص السؤال" value={q.text} onChange={e => updateTypedQuestion(idx, { text: e.target.value })} style={{ resize: 'vertical' }} />
-                      {q.options.map((_, i) => {
+                      {q.kind === 'essay' && (
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.8, margin: 0 }}>
+                          سؤال مقالي: لا توجد اختيارات. يجيب الطالب بالكتابة أو برفع صورة مكتوبة بخط اليد أو ملف PDF (أو بأكثر من طريقة)، وتصحّحه أنت وتضع له الدرجة.
+                        </p>
+                      )}
+                      {q.kind !== 'essay' && q.options.map((_, i) => {
                         const label = TYPED_OPTION_LABELS[i];
                         return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -409,7 +480,7 @@ export default function HomeworkManagementScreen() {
                         </div>
                         );
                       })}
-                      {q.options.length < MAX_TYPED_OPTIONS && (
+                      {q.kind !== 'essay' && q.options.length < MAX_TYPED_OPTIONS && (
                         <button type="button" onClick={() => addTypedOption(idx)} style={{ alignSelf: 'flex-start', background: 'none', border: '1px dashed var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.3rem 0.9rem', fontSize: '0.82rem', fontFamily: 'inherit' }}>
                           + إضافة اختيار
                         </button>
@@ -417,9 +488,14 @@ export default function HomeworkManagementScreen() {
                     </div>
                   ))}
                 </div>
-                <button type="button" className="btn-secondary" style={{ width: '100%', marginBottom: '1.5rem' }} onClick={addTypedQuestion}>
-                  + إضافة سؤال
-                </button>
+                <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem' }}>
+                  <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => addTypedQuestion('choice')}>
+                    + سؤال اختيارات
+                  </button>
+                  <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => addTypedQuestion('essay')}>
+                    + سؤال مقالي
+                  </button>
+                </div>
               </>
             ) : (
               <>
@@ -452,6 +528,76 @@ export default function HomeworkManagementScreen() {
               </button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>إلغاء</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Essay review modal */}
+      {reviewHomework && (
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '2rem' }} onClick={() => setReviewHomework(null)}>
+          <div className="glass-card" style={{ padding: '1.75rem', width: '760px', maxWidth: '96vw', maxHeight: '88vh', overflowY: 'auto', direction: 'rtl' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <h3 style={{ color: 'var(--accent-gold)' }}>تصحيح المقالي — {reviewHomework.title}</h3>
+              <span onClick={() => setReviewHomework(null)} style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem' }}>✕</span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              ضع درجة لكل إجابة (من 0 إلى قيمة السؤال). تُضاف إلى درجة الطالب تلقائيًا.
+            </p>
+
+            {reviewLoading ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>جاري التحميل...</p>
+            ) : reviewItems.length === 0 ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>لم يسلّم أي طالب إجابات مقالية بعد.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {reviewItems.map(sub => (
+                  <div key={sub.submissionId} style={{ border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--surface-1)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      <strong>{sub.studentName} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.78rem' }}>({sub.studentCode})</span></strong>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--accent-gold)', fontWeight: 700 }}>الدرجة الحالية: {sub.score} / {reviewHomework.totalMarks}</span>
+                    </div>
+                    {sub.answers.map(a => {
+                      const isImage = /\.(jpe?g|png|webp)$/i.test(a.fileUrl || '');
+                      const typed = markInputs[a.answerId];
+                      return (
+                        <div key={a.answerId} style={{ borderTop: '1px dashed var(--glass-border)', paddingTop: '0.75rem', marginTop: '0.75rem' }}>
+                          <p style={{ fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.8 }}>سؤال {a.questionNumber}: {a.questionText}</p>
+                          {a.text && <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.9, background: 'var(--surface-2)', padding: '0.6rem 0.8rem', borderRadius: '8px', marginBottom: '0.5rem' }}>{a.text}</p>}
+                          {a.fileUrl && (
+                            <div style={{ marginBottom: '0.5rem' }}>
+                              {isImage && (
+                                <a href={toAbsoluteBackendUrl(a.fileUrl)} target="_blank" rel="noopener noreferrer">
+                                  <img src={toAbsoluteBackendUrl(a.fileUrl)} alt="إجابة الطالب" style={{ maxWidth: '100%', maxHeight: '320px', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'block', marginBottom: '0.4rem' }} />
+                                </a>
+                              )}
+                              <a href={toAbsoluteBackendUrl(a.fileUrl)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>
+                                {isImage ? 'فتح الصورة' : 'فتح ملف PDF'}{a.fileName ? ` — ${a.fileName}` : ''}
+                              </a>
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                            <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>الدرجة (من {a.maxMark})</label>
+                            <input
+                              className="premium-input" type="number" min="0" max={a.maxMark} step="0.25"
+                              placeholder={a.score != null ? String(a.score) : '—'}
+                              value={typed ?? ''}
+                              onChange={e => setMarkInputs(m => ({ ...m, [a.answerId]: e.target.value }))}
+                              style={{ width: '100px', padding: '0.35rem 0.5rem' }}
+                            />
+                            <button className="btn-primary" style={{ width: 'auto', padding: '0.4rem 1.1rem', fontSize: '0.82rem' }} disabled={typed === undefined || typed === '' || markingId === a.answerId} onClick={() => saveEssayMark(a)}>
+                              {markingId === a.answerId ? 'جاري الحفظ...' : 'حفظ الدرجة'}
+                            </button>
+                            {a.score != null && typed === undefined && (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--success)' }}>✓ تم التصحيح: {a.score}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

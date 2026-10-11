@@ -159,6 +159,14 @@ public enum HymnSubmissionStatus
     ResubmissionRequested = 2
 }
 
+// Typed homeworks: a question is either multiple choice (auto-graded) or an essay the student
+// answers with text and/or an uploaded image/PDF and the admin marks by hand.
+public enum HomeworkQuestionKind
+{
+    MultipleChoice = 0,
+    Essay = 1
+}
+
 public enum HomeworkMaterialType
 {
     Pdf = 0,

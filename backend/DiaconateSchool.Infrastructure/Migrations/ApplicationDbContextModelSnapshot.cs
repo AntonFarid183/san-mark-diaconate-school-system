@@ -847,6 +847,19 @@ namespace DiaconateSchool.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AnswerFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AnswerFileUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AnswerText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("EssayScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<Guid>("HomeworkQuestionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -879,6 +892,9 @@ namespace DiaconateSchool.Infrastructure.Migrations
 
                     b.Property<Guid>("HomeworkId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
 
                     b.Property<string>("OptionsJson")
                         .HasColumnType("nvarchar(max)");

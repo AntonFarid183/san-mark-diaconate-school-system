@@ -33,12 +33,25 @@ export default function LandingFooter() {
 
         <div className="landing-footer-col">
           <h4>تواصل</h4>
-          <a href={SCHOOL_CONTACT.secretaryWhatsApp.link} {...external} className="landing-footer-brand-link"><BrandIcon name="whatsapp" size={20} />السكرتارية — <bdi dir="ltr">{SCHOOL_CONTACT.secretaryWhatsApp.number}</bdi></a>
-          <a href={SCHOOL_CONTACT.instituteWhatsApp.link} {...external} className="landing-footer-brand-link"><BrandIcon name="whatsapp" size={20} />المعهد — <bdi dir="ltr">{SCHOOL_CONTACT.instituteWhatsApp.number}</bdi></a>
-          <a href={`mailto:${SCHOOL_CONTACT.email}`}>{SCHOOL_CONTACT.email}</a>
+          {[SCHOOL_CONTACT.secretaryWhatsApp, SCHOOL_CONTACT.instituteWhatsApp].map(c => (
+            <a key={c.number} href={c.link} {...external} className="landing-footer-contact">
+              <BrandIcon name="whatsapp" size={22} />
+              <span className="landing-footer-contact-text">
+                <span>{c.label}</span>
+                <bdi dir="ltr">{c.number}</bdi>
+              </span>
+            </a>
+          ))}
+          <a href={`mailto:${SCHOOL_CONTACT.email}`} className="landing-footer-contact">
+            <BrandIcon name="email" size={22} />
+            <span className="landing-footer-contact-text">
+              <span>البريد الإلكتروني</span>
+              <bdi dir="ltr">{SCHOOL_CONTACT.email}</bdi>
+            </span>
+          </a>
           <div className="landing-footer-social">
-            <a href={SCHOOL_CONTACT.facebook} {...external} className="landing-footer-brand-link"><BrandIcon name="facebook" size={20} />فيسبوك</a>
-            <a href={SCHOOL_CONTACT.youtube} {...external} className="landing-footer-brand-link"><BrandIcon name="youtube" size={20} />يوتيوب</a>
+            <a href={SCHOOL_CONTACT.facebook} {...external} className="landing-footer-brand-link"><BrandIcon name="facebook" size={22} />فيسبوك</a>
+            <a href={SCHOOL_CONTACT.youtube} {...external} className="landing-footer-brand-link"><BrandIcon name="youtube" size={22} />يوتيوب</a>
           </div>
         </div>
       </div>

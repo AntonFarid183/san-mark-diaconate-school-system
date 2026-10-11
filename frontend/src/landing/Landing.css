@@ -2393,3 +2393,34 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Footer contact rows: logo | name above number, all rows share one left edge */
+.landing-footer-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.landing-footer-contact svg { flex-shrink: 0; }
+
+.landing-footer-contact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  line-height: 1.5;
+}
+
+.landing-footer-contact-text > span:first-child {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.landing-footer-contact-text bdi {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-all;
+}
+
+.landing-footer-contact:hover .landing-footer-contact-text bdi { color: var(--accent-gold); }

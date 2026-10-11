@@ -2,8 +2,8 @@
 const toWhatsAppLink = (localNumber) => `https://wa.me/20${localNumber.replace(/^0/, '')}`;
 
 export const SCHOOL_CONTACT = {
-  secretaryWhatsApp: { number: '01554883653', label: 'سكرتارية المدرسة', link: toWhatsAppLink('01554883653') },
-  instituteWhatsApp: { number: '01556534388', label: 'معهد تين ثينو للألحان', link: toWhatsAppLink('01556534388') },
+  secretaryWhatsApp: { number: '01554883653', label: 'سكرتارية مدرسة الشمامسة', link: toWhatsAppLink('01554883653') },
+  instituteWhatsApp: { number: '01556534388', label: 'سكرتارية معهد تين ثينو', link: toWhatsAppLink('01556534388') },
   email: 'Ptheorimos@gmail.com',
   facebook: 'https://www.facebook.com/share/19eYxXkLik/',
   youtube: 'https://youtube.com/channel/UCeTPsLSBZFKnU28ZSAfhhsg?si=S8Lbrc84Yt_se0gz',

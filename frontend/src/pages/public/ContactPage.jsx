@@ -10,15 +10,15 @@ const external = { target: '_blank', rel: 'noopener noreferrer' };
 
 const CHANNELS = [
   {
-    brand: 'whatsapp', title: 'واتساب سكرتارية المدرسة', value: SCHOOL_CONTACT.secretaryWhatsApp.number,
+    brand: 'whatsapp', title: SCHOOL_CONTACT.secretaryWhatsApp.label, value: SCHOOL_CONTACT.secretaryWhatsApp.number,
     hint: 'للاستفسار والتسجيل والمتابعة', href: SCHOOL_CONTACT.secretaryWhatsApp.link, action: 'ابدأ محادثة', external: true,
   },
   {
-    brand: 'whatsapp', title: 'واتساب معهد تين ثينو', value: SCHOOL_CONTACT.instituteWhatsApp.number,
+    brand: 'whatsapp', title: SCHOOL_CONTACT.instituteWhatsApp.label, value: SCHOOL_CONTACT.instituteWhatsApp.number,
     hint: 'للمرحلة الجامعية والكبار', href: SCHOOL_CONTACT.instituteWhatsApp.link, action: 'ابدأ محادثة', external: true,
   },
   {
-    icon: 'mail', title: 'البريد الإلكتروني', value: SCHOOL_CONTACT.email,
+    brand: 'email', title: 'البريد الإلكتروني', value: SCHOOL_CONTACT.email,
     hint: 'نرد على رسائلكم في أقرب وقت', href: `mailto:${SCHOOL_CONTACT.email}`, action: 'أرسل رسالة',
   },
   {
